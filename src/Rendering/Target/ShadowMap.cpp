@@ -6,8 +6,8 @@
  * @brief ShadowMap::ShadowMap
  */
 ShadowMap::ShadowMap()
-: m_uWidth(1280)
-, m_uHeight(720)
+: m_uWidth(1024)
+, m_uHeight(1024)
 , m_matProjection(1.0f)
 {
 	updateProjection();
@@ -30,7 +30,7 @@ bool ShadowMap::Initialize(void)
 	glGenFramebuffers(1, &m_uObject);
 	glGenTextures(1, &m_uTexture);
 
-	Resize(1280, 720);
+	Resize(1024, 1024);
 
 	GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
 	return(status == GL_FRAMEBUFFER_COMPLETE);
@@ -59,6 +59,12 @@ bool ShadowMap::Resize(unsigned int width, unsigned height)
 
 	{
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32F, width, height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+		//float color [4] = { 1.0f, 1.0f, 1.0f, 1.0f };
+		//glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, color);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 		glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, m_uTexture, 0);
@@ -81,6 +87,6 @@ bool ShadowMap::Resize(unsigned int width, unsigned height)
  */
 void ShadowMap::updateProjection()
 {
-	float ratio = m_uWidth/(float)m_uHeight;
-	m_matProjection = _perspective(75.0f, ratio, 1.0f, 1000.0f); // FIXME : spot light 75° hardcoded
+	// FIXME : spot light 45° hardcoded
+	m_matProjection = _perspective(45.0f, 1.0f, 1.0f, 100.0f);
 }

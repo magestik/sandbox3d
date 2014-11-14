@@ -108,6 +108,8 @@ void Rendering::onCreate(Mesh * m)
  */
 void Rendering::renderSceneToGBuffer(const mat4x4 & mView)
 {
+	glViewport(0, 0, m_gBuffer.GetWidth(), m_gBuffer.GetHeight());
+
 	GLuint uFBO = m_gBuffer.GetObject();
 
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, uFBO);
@@ -150,11 +152,16 @@ void Rendering::renderSceneToGBuffer(const mat4x4 & mView)
  */
 void Rendering::renderSceneToShadowMap(void)
 {
+	glViewport(0, 0, m_shadowMap.GetWidth(), m_shadowMap.GetHeight());
+
 	GLuint uFBO = m_shadowMap.GetObject();
 
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, uFBO);
 
 	glDrawBuffer(GL_NONE);
+
+	glPolygonOffset(10.0f, 1.0f);
+	glEnable(GL_POLYGON_OFFSET_FILL);
 
 	{
 		glClear(GL_DEPTH_BUFFER_BIT);
@@ -180,6 +187,8 @@ void Rendering::renderSceneToShadowMap(void)
 		glDisable(GL_DEPTH_TEST);
 	}
 
+	glDisable(GL_POLYGON_OFFSET_FILL);
+
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 
 	glDrawBuffer(GL_BACK);
@@ -191,6 +200,8 @@ void Rendering::renderSceneToShadowMap(void)
  */
 void Rendering::renderIntermediateToScreen(ERenderType eRenderType)
 {
+	glViewport(0, 0, m_gBuffer.GetWidth(), m_gBuffer.GetHeight());
+
 	GLuint uFBO = m_gBuffer.GetObject();
 
 	switch (eRenderType)
@@ -258,6 +269,8 @@ void Rendering::renderIntermediateToScreen(ERenderType eRenderType)
  */
 void Rendering::renderFinal(void)
 {
+	glViewport(0, 0, m_gBuffer.GetWidth(), m_gBuffer.GetHeight());
+
 	glEnable(GL_DEPTH_TEST);
 
 	mat4x4 mDepthView = _lookAt(m_pLight->GetPosition(), m_pLight->GetDirection(), vec3(0.0f, -1.0f, 0.0f));
@@ -273,15 +286,6 @@ void Rendering::renderFinal(void)
 		m_pFullscreenComposeShader->SetTexture2D("normalSampler",   1, m_gBuffer.GetTexture(GBuffer::NORMAL));
 		m_pFullscreenComposeShader->SetTexture2D("positionSampler", 2, m_gBuffer.GetTexture(GBuffer::POSITION));
 		m_pFullscreenComposeShader->SetTexture2D("shadowMap",		3, m_shadowMap.GetTexture());
-
-		//float color [4] = { 1.0f, 1.0f, 1.0f, 1.0f };
-		//glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, color);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
 		g_pQuadMesh->draw();
 

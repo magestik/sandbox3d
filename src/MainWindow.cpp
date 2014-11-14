@@ -68,7 +68,7 @@ void MainWindow::closeEvent(QCloseEvent * event)
  */
 void MainWindow::SetRenderTime(double t)
 {
-	if (t < 4.0)
+	if (t < 10.0)
 	{
 		QString str = QString("Render Time : %1 ms").arg(t);
 		ui->statusbar->showMessage(str);
@@ -76,7 +76,7 @@ void MainWindow::SetRenderTime(double t)
 	}
 	else
 	{
-		QString str = QString("Render Time : %1 ms (> 4 ms)").arg(t);
+		QString str = QString("Render Time : %1 ms (> 10 ms)").arg(t);
 		ui->statusbar->showMessage(str);
 		ui->statusbar->setStyleSheet("* {color : red; }");
 	}

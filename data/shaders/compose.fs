@@ -1,6 +1,6 @@
 #version 330
 
-#define EPSILON 0.00001
+#define USE_PCF 0
 
 uniform mat4x4 DepthTransformation;
 
@@ -15,6 +15,8 @@ uniform vec3 lightPos;
 in vec2 texCoord;
 
 out vec3 outColor;
+
+vec3 ambient = vec3(0.3, 0.0, 0.0);
 
 vec3 calcDirectionnalLight(vec3 WorldPos, vec3 WorldNormal)
 {
@@ -34,12 +36,11 @@ vec3 calcDirectionnalLight(vec3 WorldPos, vec3 WorldNormal)
 float getShadow(vec3 position)
 {
 	vec4 shadowCoord = vec4(position, 1.0) * DepthTransformation;
-	shadowCoord.xyz /= shadowCoord.w;
-	shadowCoord.xyz = shadowCoord.xyz * vec3(0.5, 0.5, 0.5) + vec3(0.5, 0.5, 0.5);
-	shadowCoord.z	+= EPSILON;
+	shadowCoord.xyz = (shadowCoord.xyz/shadowCoord.w) * vec3(0.5, 0.5, 0.5) + vec3(0.5, 0.5, 0.5);
 
-	#if 0
+	#if USE_PCF
 		float factor = 0.0;
+
 		factor += textureOffset(shadowMap, shadowCoord.xyz, ivec2(-1, -1));
 		factor += textureOffset(shadowMap, shadowCoord.xyz, ivec2(-1, 0));
 		factor += textureOffset(shadowMap, shadowCoord.xyz, ivec2(-1, 1));
@@ -64,6 +65,9 @@ void main(void)
 	vec3 position	= texture(positionSampler, texCoord).rgb;
 	vec3 normal	= texture(normalSampler, texCoord).rgb;
 
-	outColor = color * calcDirectionnalLight(position, normal) * getShadow(position);
+	vec3 diffuse = color * calcDirectionnalLight(position, normal);
+	float shadow_factor = getShadow(position);
+
+	outColor =  diffuse * shadow_factor + ambient;
 }
 
