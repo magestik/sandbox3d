@@ -75,6 +75,20 @@ Bool glXMakeCurrent( Display *dpy, GLXDrawable drawable, GLXContext ctx)
 	return(r);
 }
 
+/**
+ * @brief glXMakeContextCurrent
+ * @param display
+ * @param draw
+ * @param read
+ * @param ctx
+ * @return
+ */
+Bool glXMakeContextCurrent(Display * dpy,  GLXDrawable draw, GLXDrawable read, GLXContext ctx)
+{
+	Bool r = glX.MakeContextCurrent(dpy, draw, read, ctx);
+	glBreak_enable();
+	return(r);
+}
 
 /**
  * @brief glXGetProcAddress
@@ -85,11 +99,31 @@ pfn glXGetProcAddress(const GLubyte * procName)
 {
 	if (!strcmp(procName, "glXCreateContextAttribs") || !strcmp(procName, "glXCreateContextAttribsARB"))
 	{
-		return(&glXCreateContextAttribs);
+		return((void*)&glXCreateContextAttribs);
 	}
 	else if (!strcmp(procName, "glDebugMessageControl") || !strcmp(procName, "glDebugMessageControlARB"))
 	{
-		return(&glDebugMessageControl);
+		return((void*)&glDebugMessageControl);
+	}
+	else if (!strcmp(procName, "glDebugMessageInsert") || !strcmp(procName, "glDebugMessageInsertARB"))
+	{
+		return((void*)&glDebugMessageInsert);
+	}
+	else if (!strcmp(procName, "glDebugMessageCallback") || !strcmp(procName, "glDebugMessageCallbackARB"))
+	{
+		return((void*)&glDebugMessageCallback);
+	}
+	else if (!strcmp(procName, "glGetDebugMessageLog") || !strcmp(procName, "glGetDebugMessageLogARB"))
+	{
+		return((void*)&glGetDebugMessageLog);
+	}
+	else if (!strcmp(procName, "glPushDebugGroup") || !strcmp(procName, "glPushDebugGroupARB"))
+	{
+		return((void*)&glPushDebugGroup);
+	}
+	else if (!strcmp(procName, "glPopDebugGroup") || !strcmp(procName, "glPopDebugGroupARB"))
+	{
+		return((void*)&glPopDebugGroup);
 	}
 
 	return(glX.GetProcAddress(procName));

@@ -20,9 +20,10 @@ void glBreak_initialize(void)
 
 	memset(&glX, 0x0, sizeof(glX_ptrs));
 
-	glX.GetProcAddress	= dlsym(lib, "glXGetProcAddress");
-	glX.CreateContext	= dlsym(lib, "glXCreateContext");
-	glX.MakeCurrent		= dlsym(lib, "glXMakeCurrent");
+	glX.GetProcAddress			= dlsym(lib, "glXGetProcAddress");
+	glX.CreateContext			= dlsym(lib, "glXCreateContext");
+	glX.MakeCurrent				= dlsym(lib, "glXMakeCurrent");
+	glX.MakeContextCurrent		= dlsym(lib, "glXMakeContextCurrent");
 
 	glX.CreateContextAttribs	= glX.GetProcAddress("glXCreateContextAttribsARB");
 
