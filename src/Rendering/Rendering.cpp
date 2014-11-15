@@ -38,6 +38,7 @@ void Rendering::onInitializeComplete()
 	m_pLightPassShader			= nullptr;
 	m_pDepthOnlyPassShader		= new Shader(g_VertexShaders["depth_only.vs"], g_FragmentShaders["depth_only.fs"]);
 	m_pFullscreenDepthShader	= new Shader(g_VertexShaders["fullscreen.vs"], g_FragmentShaders["fullscreen_depth.fs"]);
+	m_pFullscreenNormalShader	= new Shader(g_VertexShaders["fullscreen.vs"], g_FragmentShaders["fullscreen_normal.fs"]);
 	m_pFullscreenComposeShader	= new Shader(g_VertexShaders["fullscreen.vs"], g_FragmentShaders["compose.fs"]);
 }
 
@@ -78,7 +79,9 @@ void Rendering::onUpdate(const mat4x4 & mView, bool bWireframe, ERenderType eRen
 	// Render Scene to Shadow Map
 	//
 
-	renderSceneToShadowMap();
+	{
+		renderSceneToShadowMap();
+	}
 
 	//
 	// Render G-Buffer to Screen
@@ -232,10 +235,12 @@ void Rendering::renderIntermediateToScreen(ERenderType eRenderType)
 
 		case NORMAL:
 		{
-			glBindFramebuffer(GL_READ_FRAMEBUFFER, uFBO);
-			glReadBuffer(GL_COLOR_ATTACHMENT2);
-			glBlitFramebuffer(0, 0, m_gBuffer.GetWidth(), m_gBuffer.GetHeight(), 0, 0, m_gBuffer.GetWidth(), m_gBuffer.GetHeight(), GL_COLOR_BUFFER_BIT, GL_NEAREST);
-			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+			m_pFullscreenNormalShader->SetAsCurrent();
+			{
+				m_pFullscreenDepthShader->SetTexture2D("texSampler", 0, m_gBuffer.GetTexture(GBuffer::NORMAL));
+				g_pQuadMesh->draw();
+			}
+			glUseProgram(0);
 		}
 		break;
 

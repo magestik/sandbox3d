@@ -11,12 +11,12 @@ public:
 
 	enum ETextureType
 	{
-		POSITION,
-		DIFFUSE,
-		NORMAL,
-		TEXCOORD,
-		DEPTH,
-		COUNT
+		POSITION	= 0,
+		DIFFUSE		= 1,
+		NORMAL		= 2,
+		TEXCOORD	= 3,
+		DEPTH		= 4,
+		COUNT		= 5
 	};
 
 	GBuffer(void);

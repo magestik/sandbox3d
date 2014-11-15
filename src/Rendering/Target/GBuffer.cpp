@@ -55,23 +55,40 @@ bool GBuffer::Resize(unsigned int width, unsigned height)
 {
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_uObject);
 
-	// Color Buffers
-	for (unsigned int i = 0 ; i < ETextureType::COUNT - 1; ++i)
+	// Position
 	{
-		glBindTexture(GL_TEXTURE_2D, m_uTexture[i]);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, width, height, 0, GL_RGB, GL_FLOAT, NULL);
+		glBindTexture(GL_TEXTURE_2D, m_uTexture[POSITION]);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, width, height, 0, GL_RGB, GL_FLOAT, NULL);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + i, GL_TEXTURE_2D, m_uTexture[i], 0);
+		glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + POSITION, GL_TEXTURE_2D, m_uTexture[POSITION], 0);
+	}
+
+	// Diffuse
+	{
+		glBindTexture(GL_TEXTURE_2D, m_uTexture[DIFFUSE]);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, width, height, 0, GL_RGB, GL_FLOAT, NULL);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + DIFFUSE, GL_TEXTURE_2D, m_uTexture[DIFFUSE], 0);
+	}
+
+	// Normal
+	{
+		glBindTexture(GL_TEXTURE_2D, m_uTexture[NORMAL]);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, width, height, 0, GL_RGB, GL_FLOAT, NULL);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + NORMAL, GL_TEXTURE_2D, m_uTexture[NORMAL], 0);
 	}
 
 	// Depth Buffer
 	{
-		glBindTexture(GL_TEXTURE_2D, m_uTexture[ETextureType::COUNT - 1]);
+		glBindTexture(GL_TEXTURE_2D, m_uTexture[DEPTH]);
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32F, width, height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, m_uTexture[ETextureType::COUNT - 1], 0);
+		glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, m_uTexture[DEPTH], 0);
 	}
 
 	glBindTexture(GL_TEXTURE_2D, 0);

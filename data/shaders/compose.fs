@@ -1,6 +1,6 @@
 #version 330
 
-#define USE_PCF 0
+#define USE_PCF 1
 
 uniform mat4x4 DepthTransformation;
 
@@ -24,11 +24,11 @@ vec3 calcDirectionnalLight(vec3 WorldPos, vec3 WorldNormal)
 	float lightDiffusePower = 1.0;
 
 	vec3 lightDir = normalize(lightPos - WorldPos);
- 
+
 	//Intensity of the diffuse light. Saturate to keep within the 0-1 range.
 	float NdotL = dot(WorldNormal, lightDir);
 	float intensity = clamp(NdotL, 0.0, 1.0);
- 
+
 	// Calculate the diffuse light factoring in light color, power and the attenuation
 	return(intensity * lightDiffuseColor * lightDiffusePower);
 }
@@ -61,9 +61,9 @@ float getShadow(vec3 position)
 
 void main(void)
 {
-	vec3 color	= texture(diffuseSampler, texCoord).rgb;
+	vec3 color		= texture(diffuseSampler, texCoord).rgb;
 	vec3 position	= texture(positionSampler, texCoord).rgb;
-	vec3 normal	= texture(normalSampler, texCoord).rgb;
+	vec3 normal		= texture(normalSampler, texCoord).rgb * 2.0 - 1.0;
 
 	vec3 diffuse = color * calcDirectionnalLight(position, normal);
 	float shadow_factor = getShadow(position);

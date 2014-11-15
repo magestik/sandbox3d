@@ -9,8 +9,9 @@ include_directories(include)
 
 add_subdirectory(external)
 
-include_directories(external/linear-algebra/include)
+include_directories(external/linear-algebra/include external/assimp/include)
 
+file(GLOB_RECURSE SHADERS_FILES data/shaders/*)
 file(GLOB_RECURSE UI_FILES ui/*.ui)
 file(GLOB_RECURSE SRC_FILES src/*.cpp src/*.h src/*.inl include/*.h include/*.inl)
 
@@ -44,11 +45,12 @@ ADD_DEFINITIONS(${QT_DEFINITIONS})
 # OpenGL
 find_package(OpenGL REQUIRED)
 
-find_library(ASSIMP_LIB assimp REQUIRED)
 
 # Compile application
-add_executable(${PROJECT_NAME} ${SRC_FILES} ${UI_FILES})
+add_executable(${PROJECT_NAME} ${SRC_FILES} ${UI_FILES} ${SHADERS_FILES})
 
 target_link_libraries(${PROJECT_NAME} glBreak)
+
+target_link_libraries(${PROJECT_NAME} assimp)
 
 target_link_libraries(${PROJECT_NAME} ${OPENGL_LIBRARIES} ${ASSIMP_LIB} Qt5::Core Qt5::Widgets Qt5::Gui Qt5::OpenGL)

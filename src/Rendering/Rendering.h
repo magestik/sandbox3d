@@ -75,5 +75,6 @@ private:
 	Shader * m_pDepthOnlyPassShader;
 
 	Shader * m_pFullscreenDepthShader;
+	Shader * m_pFullscreenNormalShader;
 	Shader * m_pFullscreenComposeShader;
 };
