@@ -4,6 +4,8 @@
 
 #include "utils.inl"
 
+#define LIGHT_PRE_PASS 0
+
 std::map<std::string, GPU::Shader<GL_FRAGMENT_SHADER> *> g_FragmentShaders;
 
 std::map<std::string, GPU::Shader<GL_VERTEX_SHADER> *> g_VertexShaders;
@@ -25,6 +27,7 @@ void Rendering::onInitializeComplete()
 {
 	m_gBuffer.Initialize();
 	m_shadowMap.Initialize();
+	m_lightAccumBuffer.Initialize();
 
 	{
 		vec3 light_pos(20.0f, 20.0f, 20.0f);
@@ -50,6 +53,7 @@ void Rendering::onInitializeComplete()
 void Rendering::onResize(int width, int height)
 {
 	m_gBuffer.Resize(width, height);
+	m_lightAccumBuffer.Resize(width, height);
 }
 
 /**
@@ -59,6 +63,12 @@ void Rendering::onResize(int width, int height)
  */
 void Rendering::onUpdate(const mat4x4 & mView, bool bWireframe, ERenderType eRenderType)
 {
+	//
+	// Render Scene to Shadow Map
+	//
+
+	renderSceneToShadowMap();
+
 	//
 	// Render Scene to G-Buffer
 	//
@@ -76,12 +86,14 @@ void Rendering::onUpdate(const mat4x4 & mView, bool bWireframe, ERenderType eRen
 	}
 
 	//
-	// Render Scene to Shadow Map
+	// Render Lights to Accumulation Buffer
 	//
 
-	{
-		renderSceneToShadowMap();
-	}
+#if LIGHT_PRE_PASS
+
+	renderLightsToAccumBuffer();
+
+#endif
 
 	//
 	// Render G-Buffer to Screen
@@ -94,7 +106,7 @@ void Rendering::onUpdate(const mat4x4 & mView, bool bWireframe, ERenderType eRen
 	else
 	{
 		renderFinal();
-		}
+	}
 }
 
 /**
@@ -113,12 +125,20 @@ void Rendering::renderSceneToGBuffer(const mat4x4 & mView)
 {
 	glViewport(0, 0, m_gBuffer.GetWidth(), m_gBuffer.GetHeight());
 
-	GLuint uFBO = m_gBuffer.GetObject();
+	GLuint uFBO = m_lightAccumBuffer.GetObject();
 
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, uFBO);
 
-	GLenum DrawBuffers[] = { GL_COLOR_ATTACHMENT0 , GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2 };
+#if LIGHT_PRE_PASS
+
+	glDrawBuffer(GL_COLOR_ATTACHMENT2); // normal
+
+#else
+
+	GLenum DrawBuffers[] = { GL_COLOR_ATTACHMENT0 , GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2 }; // position / diffuse / normal
 	glDrawBuffers(3, DrawBuffers);
+
+#endif
 
 	{
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -147,6 +167,16 @@ void Rendering::renderSceneToGBuffer(const mat4x4 & mView)
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 
 	glDrawBuffer(GL_BACK);
+}
+
+/**
+ * @brief Rendering::renderLightsToAccumBuffer
+ */
+void Rendering::renderLightsToAccumBuffer()
+{
+	glViewport(0, 0, m_lightAccumBuffer.GetWidth(), m_lightAccumBuffer.GetHeight());
+
+	// TODO : render lights
 }
 
 /**
@@ -274,6 +304,10 @@ void Rendering::renderIntermediateToScreen(ERenderType eRenderType)
  */
 void Rendering::renderFinal(void)
 {
+#if LIGHT_PRE_PASS
+
+#else
+
 	glViewport(0, 0, m_gBuffer.GetWidth(), m_gBuffer.GetHeight());
 
 	glEnable(GL_DEPTH_TEST);
@@ -299,4 +333,6 @@ void Rendering::renderFinal(void)
 	glUseProgram(0);
 
 	glDisable(GL_DEPTH_TEST);
+
+#endif
 }

@@ -16,6 +16,7 @@
 
 #include "Target/GBuffer.h"
 #include "Target/ShadowMap.h"
+#include "Target/LightAccumBuffer.h"
 
 // theses maps contains all shaders, compiled at launch time
 extern std::map<std::string, GPU::Shader<GL_FRAGMENT_SHADER> *>	g_FragmentShaders;
@@ -54,6 +55,8 @@ protected:
 
 	void	renderSceneToGBuffer		(const mat4x4 & mView);
 
+	void	renderLightsToAccumBuffer	(void);
+
 	void	renderSceneToShadowMap		(void);
 
 	void	renderIntermediateToScreen	(ERenderType eRenderType);
@@ -65,6 +68,8 @@ private:
 	GBuffer	m_gBuffer;
 
 	ShadowMap m_shadowMap;
+
+	LightAccumBuffer m_lightAccumBuffer;
 
 	std::vector<Mesh::Instance> m_aObjects;
 
