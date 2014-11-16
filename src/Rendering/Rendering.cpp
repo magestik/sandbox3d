@@ -125,7 +125,7 @@ void Rendering::renderSceneToGBuffer(const mat4x4 & mView)
 {
 	glViewport(0, 0, m_gBuffer.GetWidth(), m_gBuffer.GetHeight());
 
-	GLuint uFBO = m_lightAccumBuffer.GetObject();
+	GLuint uFBO = m_gBuffer.GetObject();
 
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, uFBO);
 
