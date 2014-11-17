@@ -92,6 +92,7 @@ bool GBuffer::Resize(unsigned int width, unsigned height)
 	}
 
 	glBindTexture(GL_TEXTURE_2D, 0);
+
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 
 	m_uWidth = width;

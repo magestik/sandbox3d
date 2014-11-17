@@ -52,7 +52,7 @@ DrawableSurface::~DrawableSurface(void)
 void DrawableSurface::ResetCamera(void)
 {
 	m_camera = Camera();
-	update();
+    update();
 }
 
 /**
@@ -61,7 +61,7 @@ void DrawableSurface::ResetCamera(void)
 void DrawableSurface::DebugDiffuse()
 {
 	m_eRenderType = Rendering::DIFFUSE;
-	update();
+    update();
 }
 
 /**
@@ -70,7 +70,7 @@ void DrawableSurface::DebugDiffuse()
 void DrawableSurface::DebugNormal()
 {
 	m_eRenderType = Rendering::NORMAL;
-	update();
+    update();
 }
 
 /**
@@ -79,7 +79,7 @@ void DrawableSurface::DebugNormal()
 void DrawableSurface::DebugPosition()
 {
 	m_eRenderType = Rendering::POSITION;
-	update();
+    update();
 }
 
 /**
@@ -97,7 +97,7 @@ void DrawableSurface::DebugDepth()
 void DrawableSurface::DebugShadows()
 {
 	m_eRenderType = Rendering::SHADOWS;
-	update();
+    update();
 }
 
 /**
@@ -106,7 +106,8 @@ void DrawableSurface::DebugShadows()
  */
 void DrawableSurface::DebugWireframe(bool d)
 {
-	m_bDebugWireframe = d;
+    m_bDebugWireframe = d;
+    update();
 }
 
 /**
@@ -115,7 +116,7 @@ void DrawableSurface::DebugWireframe(bool d)
 void DrawableSurface::DebugFinal()
 {
 	m_eRenderType = Rendering::FINAL;
-	update();
+    update();
 }
 
 /**
@@ -135,7 +136,7 @@ void DrawableSurface::initializeGL(void)
 	m_renderer.onInitializeComplete();
 
 	//m_renderer.onCreate(g_Meshes["demo.dae"]);
-	m_renderer.onCreate(g_Meshes["destroyed_house.obj"]);
+    m_renderer.onCreate(g_Meshes["destroyed_house.obj"]);
 }
 
 /**
@@ -145,8 +146,6 @@ void DrawableSurface::initializeGL(void)
  */
 void DrawableSurface::resizeGL(int w, int h)
 {
-	glViewport(0, 0, w, h);
-
 	m_renderer.onResize(w, h);
 }
 
@@ -177,6 +176,7 @@ void DrawableSurface::mousePressEvent(QMouseEvent * event)
 {
 	m_vLastPos.x = event->x();
 	m_vLastPos.y = event->y();
+    update();
 }
 
 /**
@@ -212,7 +212,7 @@ void DrawableSurface::mouseMoveEvent(QMouseEvent * event)
 
 	m_vLastPos = pos;
 
-	update();
+    update();
 }
 
 /**
@@ -222,6 +222,7 @@ void DrawableSurface::mouseMoveEvent(QMouseEvent * event)
 void DrawableSurface::mouseReleaseEvent(QMouseEvent * event)
 {
 	// ...
+    update();
 }
 
 /**
@@ -231,6 +232,7 @@ void DrawableSurface::mouseReleaseEvent(QMouseEvent * event)
 void DrawableSurface::wheelEvent(QWheelEvent * event)
 {
 	// ...
+    update();
 }
 
 /**

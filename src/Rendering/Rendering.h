@@ -7,6 +7,7 @@
 // std also needed
 #include <map>
 #include <vector>
+#include <string>
 
 // class definitions
 #include "Shader/Shader.h"

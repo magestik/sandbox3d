@@ -45,12 +45,13 @@ ADD_DEFINITIONS(${QT_DEFINITIONS})
 # OpenGL
 find_package(OpenGL REQUIRED)
 
-
 # Compile application
 add_executable(${PROJECT_NAME} ${SRC_FILES} ${UI_FILES} ${SHADERS_FILES})
 
 target_link_libraries(${PROJECT_NAME} glBreak)
 
 target_link_libraries(${PROJECT_NAME} assimp)
+
+target_link_libraries(${PROJECT_NAME} "rt")
 
 target_link_libraries(${PROJECT_NAME} ${OPENGL_LIBRARIES} ${ASSIMP_LIB} Qt5::Core Qt5::Widgets Qt5::Gui Qt5::OpenGL)

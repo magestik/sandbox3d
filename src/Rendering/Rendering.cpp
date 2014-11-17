@@ -310,7 +310,7 @@ void Rendering::renderFinal(void)
 
 	glViewport(0, 0, m_gBuffer.GetWidth(), m_gBuffer.GetHeight());
 
-	glEnable(GL_DEPTH_TEST);
+    glDepthMask(GL_FALSE);
 
 	mat4x4 mDepthView = _lookAt(m_pLight->GetPosition(), m_pLight->GetDirection(), vec3(0.0f, -1.0f, 0.0f));
 	mat4x4 mDepthViewProjection = m_shadowMap.GetProjection() * mDepthView;
@@ -332,7 +332,7 @@ void Rendering::renderFinal(void)
 	}
 	glUseProgram(0);
 
-	glDisable(GL_DEPTH_TEST);
+    glDepthMask(GL_TRUE);
 
 #endif
 }
