@@ -44,8 +44,6 @@
     </property>
     <addaction name="actionUndo"/>
     <addaction name="actionRedo"/>
-    <addaction name="separator"/>
-    <addaction name="actionResetCamera"/>
    </widget>
    <widget class="QMenu" name="menuDebug">
     <property name="title">
@@ -86,15 +84,25 @@
     </property>
     <addaction name="actionClear_color"/>
    </widget>
+   <widget class="QMenu" name="menuCamera">
+    <property name="title">
+     <string>Camera</string>
+    </property>
+    <addaction name="actionResetCamera"/>
+   </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
    <addaction name="menuDebug"/>
+   <addaction name="menuCamera"/>
    <addaction name="menuWindow"/>
    <addaction name="menuSettings"/>
    <addaction name="menuHelp"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <action name="actionOpen">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="text">
     <string>Open</string>
    </property>
@@ -103,6 +111,9 @@
    </property>
   </action>
   <action name="actionSave">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="text">
     <string>Save</string>
    </property>
@@ -206,7 +217,7 @@
   </action>
   <action name="actionResetCamera">
    <property name="text">
-    <string>Reset Camera</string>
+    <string>Reset</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+R</string>

@@ -1,7 +1,7 @@
 #include <QApplication>
 #include <QGLFormat>
 
-#include "MainWindow.h"
+#include "GUI/MainWindow.h"
 
 bool setDefaultFormatOpenGL(void)
 {

@@ -1,8 +1,6 @@
 #include "MeshListWidget.h"
 #include "ui_meshlistwidget.h"
 
-#include "Rendering/Rendering.h"
-
 #include "MainWindow.h"
 #include "DrawableSurface.h"
 

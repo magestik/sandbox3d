@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Rendering/Rendering.h"
+#include "../Rendering/Rendering.h"
 
 #include <QGLWidget>
 
