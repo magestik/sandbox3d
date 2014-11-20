@@ -12,13 +12,11 @@ std::map<std::string, GPU::Shader<GL_VERTEX_SHADER> *> g_VertexShaders;
 
 std::map<std::string, Mesh*> g_Meshes;
 
-Mesh * g_pCurrentMesh = nullptr;
-Mesh * g_pQuadMesh = nullptr;
-
 /**
  * @brief Rendering::onInitialize
  */
 Rendering::Rendering()
+: m_pQuadMesh(nullptr)
 {
 	// ...
 }
@@ -34,15 +32,72 @@ void Rendering::onInitializeComplete()
 		vec3 light_dir = - light_pos;
 		float light_angle = 75.0f;
 
-		m_pLight					= new Light::Spot(light_pos, light_dir, light_angle);
+		m_pLight = new Light::Spot(light_pos, light_dir, light_angle);
 	}
 
+	compileShaders();
+	generateMeshes();
+}
+
+/**
+ * @brief Compile all needed shaders
+ */
+void Rendering::compileShaders()
+{
 	m_pGeometryPassShader		= new Shader(g_VertexShaders["geometry_pass.vs"], g_FragmentShaders["geometry_pass.fs"]);
 	m_pLightPassShader			= nullptr;
 	m_pDepthOnlyPassShader		= new Shader(g_VertexShaders["depth_only.vs"], g_FragmentShaders["depth_only.fs"]);
 	m_pFullscreenDepthShader	= new Shader(g_VertexShaders["fullscreen.vs"], g_FragmentShaders["fullscreen_depth.fs"]);
 	m_pFullscreenNormalShader	= new Shader(g_VertexShaders["fullscreen.vs"], g_FragmentShaders["fullscreen_normal.fs"]);
 	m_pFullscreenComposeShader	= new Shader(g_VertexShaders["fullscreen.vs"], g_FragmentShaders["compose.fs"]);
+}
+
+/**
+ * @brief Generate simple mesh used for rendering (ie fullscreen quad, light volumes ...)
+ */
+void Rendering::generateMeshes()
+{
+	//
+	// Full Screen Quad
+	//
+	{
+		float points [] =
+		{
+			-1.0f, -1.0f, /* | */ 0.0f, 0.0f,
+			 1.0f, -1.0f, /* | */ 1.0f, 0.0f,
+			-1.0f,  1.0f, /* | */ 0.0f, 1.0f,
+			 1.0f,  1.0f, /* | */ 1.0f, 1.0f,
+		};
+
+		GPU::Buffer<GL_ARRAY_BUFFER> * vertexBuffer = new GPU::Buffer<GL_ARRAY_BUFFER>();
+
+		vertexBuffer->allocate(sizeof(points), GL_STATIC_DRAW, points);
+
+		std::vector<Mesh::VertexSpec> specs;
+
+		Mesh::VertexSpec SPEC_POS;
+		SPEC_POS.index = 0;
+		SPEC_POS.size = 2;
+		SPEC_POS.type = GL_FLOAT;
+		SPEC_POS.normalized = GL_FALSE;
+		SPEC_POS.stride = 4 * sizeof(float);
+		SPEC_POS.pointer = 0;
+
+		Mesh::VertexSpec SPEC_UV;
+		SPEC_UV.index = 2;
+		SPEC_UV.size = 2;
+		SPEC_UV.type = GL_FLOAT;
+		SPEC_UV.normalized = GL_FALSE;
+		SPEC_UV.stride = 4 * sizeof(float);
+		SPEC_UV.pointer = (void*)(sizeof(float)*2);
+
+		specs.push_back(SPEC_POS);
+		specs.push_back(SPEC_UV);
+
+		m_pQuadMesh = Mesh::Create(vertexBuffer, 4, GL_TRIANGLE_STRIP, specs);
+	}
+
+	// TODO : Sphere / Cone / Cube
 }
 
 /**
@@ -268,7 +323,7 @@ void Rendering::renderIntermediateToScreen(ERenderType eRenderType)
 			m_pFullscreenNormalShader->SetAsCurrent();
 			{
 				m_pFullscreenDepthShader->SetTexture2D("texSampler", 0, m_gBuffer.GetTexture(GBuffer::NORMAL));
-				g_pQuadMesh->draw();
+				m_pQuadMesh->draw();
 			}
 			glUseProgram(0);
 		}
@@ -279,7 +334,7 @@ void Rendering::renderIntermediateToScreen(ERenderType eRenderType)
 			m_pFullscreenDepthShader->SetAsCurrent();
 			{
 				m_pFullscreenDepthShader->SetTexture2D("texSampler", 0, m_gBuffer.GetTexture(GBuffer::DEPTH));
-				g_pQuadMesh->draw();
+				m_pQuadMesh->draw();
 			}
 			glUseProgram(0);
 		}
@@ -290,7 +345,7 @@ void Rendering::renderIntermediateToScreen(ERenderType eRenderType)
 			m_pFullscreenDepthShader->SetAsCurrent();
 			{
 				m_pFullscreenDepthShader->SetTexture2D("texSampler", 0, m_shadowMap.GetTexture());
-				g_pQuadMesh->draw();
+				m_pQuadMesh->draw();
 			}
 			glUseProgram(0);
 		}
@@ -310,7 +365,7 @@ void Rendering::renderFinal(void)
 
 	glViewport(0, 0, m_gBuffer.GetWidth(), m_gBuffer.GetHeight());
 
-    glDepthMask(GL_FALSE);
+	glDepthMask(GL_FALSE);
 
 	mat4x4 mDepthView = _lookAt(m_pLight->GetPosition(), m_pLight->GetDirection(), vec3(0.0f, -1.0f, 0.0f));
 	mat4x4 mDepthViewProjection = m_shadowMap.GetProjection() * mDepthView;
@@ -326,13 +381,13 @@ void Rendering::renderFinal(void)
 		m_pFullscreenComposeShader->SetTexture2D("positionSampler", 2, m_gBuffer.GetTexture(GBuffer::POSITION));
 		m_pFullscreenComposeShader->SetTexture2D("shadowMap",		3, m_shadowMap.GetTexture());
 
-		g_pQuadMesh->draw();
+		m_pQuadMesh->draw();
 
 		glBindTexture(GL_TEXTURE_2D, 0);
 	}
 	glUseProgram(0);
 
-    glDepthMask(GL_TRUE);
+	glDepthMask(GL_TRUE);
 
 #endif
 }

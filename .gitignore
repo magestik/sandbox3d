@@ -28,3 +28,7 @@
 *.app
 
 *~
+
+external/*
+build/*
+data/meshes/*

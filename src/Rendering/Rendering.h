@@ -25,8 +25,6 @@ extern std::map<std::string, GPU::Shader<GL_VERTEX_SHADER> *>	g_VertexShaders;
 
 extern std::map<std::string, Mesh*>			g_Meshes;
 
-extern Mesh * g_pQuadMesh;
-
 class Rendering
 {
 
@@ -54,6 +52,9 @@ public:
 
 protected:
 
+	void	compileShaders				(void);
+	void	generateMeshes				(void);
+
 	void	renderSceneToGBuffer		(const mat4x4 & mView);
 
 	void	renderLightsToAccumBuffer	(void);
@@ -76,11 +77,13 @@ private:
 
 	Light::Spot * m_pLight;
 
-	Shader * m_pGeometryPassShader;
-	Shader * m_pLightPassShader;
-	Shader * m_pDepthOnlyPassShader;
+	Shader *	m_pGeometryPassShader;
+	Shader *	m_pLightPassShader;
+	Shader *	m_pDepthOnlyPassShader;
 
-	Shader * m_pFullscreenDepthShader;
-	Shader * m_pFullscreenNormalShader;
-	Shader * m_pFullscreenComposeShader;
+	Shader *	m_pFullscreenDepthShader;
+	Shader *	m_pFullscreenNormalShader;
+	Shader *	m_pFullscreenComposeShader;
+
+	Mesh *		m_pQuadMesh;
 };

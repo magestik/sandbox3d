@@ -7,9 +7,9 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 # My Sources
 include_directories(include)
 
-add_subdirectory(external)
+include_directories(external/linear-algebra/include external/curves/src external/assimp/include)
 
-include_directories(external/linear-algebra/include external/assimp/include)
+add_subdirectory(external)
 
 file(GLOB_RECURSE SHADERS_FILES data/shaders/*)
 file(GLOB_RECURSE UI_FILES ui/*.ui)

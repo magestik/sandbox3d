@@ -4,6 +4,7 @@
 #include "Rendering/Rendering.h"
 
 #include "MainWindow.h"
+#include "DrawableSurface.h"
 
 #include <QGLWidget>
 
@@ -49,5 +50,10 @@ void MeshListWidget::handleSelectionChanged(const QItemSelection& selection)
 	QModelIndex index = selection.indexes().first();
 	QListWidgetItem * row = ui->listWidget->item(index.row());
 
-	static_cast<MainWindow*>(parent())->m_pDrawable->update();
+	std::string str = row->text().toStdString();
+
+	MainWindow * window = static_cast<MainWindow*>(parent());
+	DrawableSurface * surface = static_cast<DrawableSurface*>(window->m_pDrawable);
+
+	surface->AddObject(str);
 }

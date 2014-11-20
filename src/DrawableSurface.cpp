@@ -52,7 +52,22 @@ DrawableSurface::~DrawableSurface(void)
 void DrawableSurface::ResetCamera(void)
 {
 	m_camera = Camera();
-    update();
+	update();
+}
+
+/**
+ * @brief DrawableSurface::AddObject
+ * @param name
+ */
+void DrawableSurface::AddObject(const std::string & name)
+{
+	Mesh * mesh = g_Meshes[name];
+
+	if (nullptr != mesh)
+	{
+		m_renderer.onCreate(mesh);
+		update();
+	}
 }
 
 /**
@@ -61,7 +76,7 @@ void DrawableSurface::ResetCamera(void)
 void DrawableSurface::DebugDiffuse()
 {
 	m_eRenderType = Rendering::DIFFUSE;
-    update();
+	update();
 }
 
 /**
@@ -70,7 +85,7 @@ void DrawableSurface::DebugDiffuse()
 void DrawableSurface::DebugNormal()
 {
 	m_eRenderType = Rendering::NORMAL;
-    update();
+	update();
 }
 
 /**
@@ -79,7 +94,7 @@ void DrawableSurface::DebugNormal()
 void DrawableSurface::DebugPosition()
 {
 	m_eRenderType = Rendering::POSITION;
-    update();
+	update();
 }
 
 /**
@@ -97,7 +112,7 @@ void DrawableSurface::DebugDepth()
 void DrawableSurface::DebugShadows()
 {
 	m_eRenderType = Rendering::SHADOWS;
-    update();
+	update();
 }
 
 /**
@@ -106,8 +121,8 @@ void DrawableSurface::DebugShadows()
  */
 void DrawableSurface::DebugWireframe(bool d)
 {
-    m_bDebugWireframe = d;
-    update();
+	m_bDebugWireframe = d;
+	update();
 }
 
 /**
@@ -116,7 +131,7 @@ void DrawableSurface::DebugWireframe(bool d)
 void DrawableSurface::DebugFinal()
 {
 	m_eRenderType = Rendering::FINAL;
-    update();
+	update();
 }
 
 /**
@@ -134,9 +149,6 @@ void DrawableSurface::initializeGL(void)
 	loadMeshes();
 
 	m_renderer.onInitializeComplete();
-
-	//m_renderer.onCreate(g_Meshes["demo.dae"]);
-    m_renderer.onCreate(g_Meshes["destroyed_house.obj"]);
 }
 
 /**
@@ -176,7 +188,7 @@ void DrawableSurface::mousePressEvent(QMouseEvent * event)
 {
 	m_vLastPos.x = event->x();
 	m_vLastPos.y = event->y();
-    update();
+	update();
 }
 
 /**
@@ -212,7 +224,7 @@ void DrawableSurface::mouseMoveEvent(QMouseEvent * event)
 
 	m_vLastPos = pos;
 
-    update();
+	update();
 }
 
 /**
@@ -222,7 +234,7 @@ void DrawableSurface::mouseMoveEvent(QMouseEvent * event)
 void DrawableSurface::mouseReleaseEvent(QMouseEvent * event)
 {
 	// ...
-    update();
+	update();
 }
 
 /**
@@ -232,7 +244,7 @@ void DrawableSurface::mouseReleaseEvent(QMouseEvent * event)
 void DrawableSurface::wheelEvent(QWheelEvent * event)
 {
 	// ...
-    update();
+	update();
 }
 
 /**
@@ -410,51 +422,11 @@ void DrawableSurface::loadMeshes(void)
 	}
 
 	//
-	// Generate some simple Mesh
-	//
-	{
-		float points [] =
-		{
-			-1.0f, -1.0f, /* | */ 0.0f, 0.0f,
-			 1.0f, -1.0f, /* | */ 1.0f, 0.0f,
-			-1.0f,  1.0f, /* | */ 0.0f, 1.0f,
-			 1.0f,  1.0f, /* | */ 1.0f, 1.0f,
-		};
-
-		GPU::Buffer<GL_ARRAY_BUFFER> * vertexBuffer = new GPU::Buffer<GL_ARRAY_BUFFER>();
-
-		vertexBuffer->allocate(sizeof(points), GL_STATIC_DRAW, points);
-
-		std::vector<Mesh::VertexSpec> specs;
-
-		Mesh::VertexSpec SPEC_POS;
-		SPEC_POS.index = 0;
-		SPEC_POS.size = 2;
-		SPEC_POS.type = GL_FLOAT;
-		SPEC_POS.normalized = GL_FALSE;
-		SPEC_POS.stride = 4 * sizeof(float);
-		SPEC_POS.pointer = 0;
-
-		Mesh::VertexSpec SPEC_UV;
-		SPEC_UV.index = 2;
-		SPEC_UV.size = 2;
-		SPEC_UV.type = GL_FLOAT;
-		SPEC_UV.normalized = GL_FALSE;
-		SPEC_UV.stride = 4 * sizeof(float);
-		SPEC_UV.pointer = (void*)(sizeof(float)*2);
-
-		specs.push_back(SPEC_POS);
-		specs.push_back(SPEC_UV);
-
-		g_pQuadMesh = Mesh::Create(vertexBuffer, 4, GL_TRIANGLE_STRIP, specs);
-	}
-
-	//
 	// Tests success
 	//
 	if (!successful)
 	{
-		int ret = QMessageBox::warning(this, tr("Sandbox 3D"), tr("All Models were not compiled successfully !"));
+		int ret = QMessageBox::warning(this, tr("Sandbox 3D"), tr("All Models were not loaded successfully !"));
 	}
 }
 

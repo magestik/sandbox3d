@@ -14,6 +14,7 @@ public:
 	virtual ~DrawableSurface	(void);
 
 	void	ResetCamera			(void);
+	void	AddObject			(const std::string & name);
 
 	void	DebugFinal			(void);
 	void	DebugDiffuse		(void);
