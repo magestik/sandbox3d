@@ -13,6 +13,8 @@ class Buffer
 {
 public:
 
+	Buffer (const Buffer<T> &) = delete;
+
 	explicit Buffer(void)
 	{
 		glGenBuffers(1, &m_uObject);
@@ -27,6 +29,8 @@ public:
 
 private:
 
+	Buffer<T> & operator = (const Buffer<T> &) { /* ... */ }
+
 	GLuint m_uObject;
 };
 
@@ -34,6 +38,8 @@ template<GLenum T>
 class Shader
 {
 public:
+
+	Shader (const Shader<T> &) = delete;
 
 	explicit Shader(void)
 	{
@@ -58,6 +64,8 @@ public:
 
 private:
 
+	Shader<T> & operator = (const Shader<T> &) { /* ... */ }
+
 	GLuint m_uObject;
 
 };
@@ -66,6 +74,8 @@ template<GLenum T>
 class Texture
 {
 public:
+
+	Texture (const Texture<T> &) = delete;
 
 	explicit Texture(void)
 	{
@@ -80,6 +90,9 @@ public:
 	template<GLint internalFormat>
 	void init(GLsizei width, GLsizei height)
 	{
+		// Normally used to specify pixel data format/type
+		// But GL implementations check what we pass even if data is NULL !
+		// So we have to give acceptable USELESS parameters ...
 		GLenum format = getFormat(internalFormat);
 		GLenum type = getType(internalFormat);
 
@@ -107,6 +120,8 @@ public:
 	GLuint	GetObject (void) const { return(m_uObject); }
 
 private:
+
+	Texture<T> & operator = (const Texture<T> &) { /* ... */ }
 
 	GLuint m_uObject;
 

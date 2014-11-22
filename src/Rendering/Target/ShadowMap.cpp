@@ -37,10 +37,12 @@ bool ShadowMap::Resize(unsigned int width, unsigned height)
 {
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_uObject);
 
-	glBindTexture(GL_TEXTURE_2D, m_texture.GetObject());
+
 
 	{
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32F, width, height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+		m_texture.init<GL_DEPTH_COMPONENT32F>(width, height);
+
+		glBindTexture(GL_TEXTURE_2D, m_texture.GetObject());
 		//float color [4] = { 1.0f, 1.0f, 1.0f, 1.0f };
 		//glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, color);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE);
@@ -49,11 +51,10 @@ bool ShadowMap::Resize(unsigned int width, unsigned height)
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glBindTexture(GL_TEXTURE_2D, 0);
 
 		glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, m_texture.GetObject(), 0);
 	}
-
-	glBindTexture(GL_TEXTURE_2D, 0);
 
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 

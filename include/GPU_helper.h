@@ -130,6 +130,12 @@ inline GLenum getFormat(GLint internalFormat)
 	}
 }
 
+/**
+ * @brief getType
+ * @todo constexpr
+ * @param internalFormat
+ * @return
+ */
 inline GLenum getType(GLint internalFormat)
 {
 	switch (internalFormat)
