@@ -2,6 +2,8 @@
 
 #include "../utils.inl"
 
+#include <assert.h>
+
 /**
  * @brief ShadowMap::ShadowMap
  */
@@ -10,7 +12,11 @@ ShadowMap::ShadowMap()
 , m_uHeight(1024)
 , m_matProjection(1.0f)
 {
-	updateProjection();
+	glGenFramebuffers(1, &m_uObject);
+	Resize(m_uWidth, m_uHeight);
+
+	GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+	assert(status == GL_FRAMEBUFFER_COMPLETE);
 }
 
 /**
@@ -18,31 +24,7 @@ ShadowMap::ShadowMap()
  */
 ShadowMap::~ShadowMap()
 {
-	// ...
-}
-
-/**
- * @brief ShadowMap::Initialize
- * @return
- */
-bool ShadowMap::Initialize(void)
-{
-	glGenFramebuffers(1, &m_uObject);
-	glGenTextures(1, &m_uTexture);
-
-	Resize(1024, 1024);
-
-	GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-	return(status == GL_FRAMEBUFFER_COMPLETE);
-}
-
-/**
- * @brief GBuffer::Release
- */
-void ShadowMap::Release(void)
-{
 	glDeleteFramebuffers(1, &m_uObject);
-	glDeleteTextures(1, &m_uTexture);
 }
 
 /**
@@ -55,7 +37,7 @@ bool ShadowMap::Resize(unsigned int width, unsigned height)
 {
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_uObject);
 
-	glBindTexture(GL_TEXTURE_2D, m_uTexture);
+	glBindTexture(GL_TEXTURE_2D, m_texture.GetObject());
 
 	{
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32F, width, height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
@@ -67,7 +49,8 @@ bool ShadowMap::Resize(unsigned int width, unsigned height)
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, m_uTexture, 0);
+
+		glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, m_texture.GetObject(), 0);
 	}
 
 	glBindTexture(GL_TEXTURE_2D, 0);

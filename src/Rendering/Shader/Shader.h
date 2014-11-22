@@ -27,6 +27,9 @@ public:
 
 	void		SetTexture2D	(const char * name, int unit, GLuint texture);
 
+	template<GLenum T>
+	void SetTexture(const char * name, int unit, const GPU::Texture<T> & texture);
+
 private:
 
 	GPU::Shader<GL_VERTEX_SHADER> *		m_pVertexShader;

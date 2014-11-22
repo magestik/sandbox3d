@@ -16,15 +16,18 @@ std::map<std::string, Mesh*> g_Meshes;
  * @brief Rendering::onInitialize
  */
 Rendering::Rendering()
-: m_pQuadMesh(nullptr)
+: m_pGBuffer(nullptr)
+, m_pShadowMap(nullptr)
+, m_pQuadMesh(nullptr)
 {
 	// ...
 }
 
 void Rendering::onInitializeComplete()
 {
-	m_gBuffer.Initialize();
-	m_shadowMap.Initialize();
+	m_pGBuffer		= new GBuffer();
+	m_pShadowMap	= new ShadowMap();
+
 	m_lightAccumBuffer.Initialize();
 
 	{
@@ -71,7 +74,7 @@ void Rendering::generateMeshes()
 
 		GPU::Buffer<GL_ARRAY_BUFFER> * vertexBuffer = new GPU::Buffer<GL_ARRAY_BUFFER>();
 
-		vertexBuffer->allocate(sizeof(points), GL_STATIC_DRAW, points);
+		GPU::malloc(*vertexBuffer, sizeof(points), GL_STATIC_DRAW, points);
 
 		std::vector<Mesh::VertexSpec> specs;
 
@@ -107,7 +110,7 @@ void Rendering::generateMeshes()
  */
 void Rendering::onResize(int width, int height)
 {
-	m_gBuffer.Resize(width, height);
+	m_pGBuffer->Resize(width, height);
 	m_lightAccumBuffer.Resize(width, height);
 }
 
@@ -178,9 +181,9 @@ void Rendering::onCreate(Mesh * m)
  */
 void Rendering::renderSceneToGBuffer(const mat4x4 & mView)
 {
-	glViewport(0, 0, m_gBuffer.GetWidth(), m_gBuffer.GetHeight());
+	glViewport(0, 0, m_pGBuffer->GetWidth(), m_pGBuffer->GetHeight());
 
-	GLuint uFBO = m_gBuffer.GetObject();
+	GLuint uFBO = m_pGBuffer->GetObject();
 
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, uFBO);
 
@@ -200,7 +203,7 @@ void Rendering::renderSceneToGBuffer(const mat4x4 & mView)
 
 		glEnable(GL_DEPTH_TEST);
 
-		mat4x4 mCameraViewProjection = m_gBuffer.GetProjection() * mView;
+		mat4x4 mCameraViewProjection = m_pGBuffer->GetProjection() * mView;
 
 		m_pGeometryPassShader->SetAsCurrent();
 
@@ -240,9 +243,9 @@ void Rendering::renderLightsToAccumBuffer()
  */
 void Rendering::renderSceneToShadowMap(void)
 {
-	glViewport(0, 0, m_shadowMap.GetWidth(), m_shadowMap.GetHeight());
+	glViewport(0, 0, m_pShadowMap->GetWidth(), m_pShadowMap->GetHeight());
 
-	GLuint uFBO = m_shadowMap.GetObject();
+	GLuint uFBO = m_pShadowMap->GetObject();
 
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, uFBO);
 
@@ -257,7 +260,7 @@ void Rendering::renderSceneToShadowMap(void)
 		glEnable(GL_DEPTH_TEST);
 
 		mat4x4 mDepthView = _lookAt(m_pLight->GetPosition(), m_pLight->GetDirection(), vec3(0.0f, -1.0f, 0.0f));
-		mat4x4 mDepthViewProjection = m_shadowMap.GetProjection() * mDepthView;
+		mat4x4 mDepthViewProjection = m_pShadowMap->GetProjection() * mDepthView;
 
 		m_pDepthOnlyPassShader->SetAsCurrent();
 
@@ -288,9 +291,9 @@ void Rendering::renderSceneToShadowMap(void)
  */
 void Rendering::renderIntermediateToScreen(ERenderType eRenderType)
 {
-	glViewport(0, 0, m_gBuffer.GetWidth(), m_gBuffer.GetHeight());
+	glViewport(0, 0, m_pGBuffer->GetWidth(), m_pGBuffer->GetHeight());
 
-	GLuint uFBO = m_gBuffer.GetObject();
+	GLuint uFBO = m_pGBuffer->GetObject();
 
 	switch (eRenderType)
 	{
@@ -304,7 +307,7 @@ void Rendering::renderIntermediateToScreen(ERenderType eRenderType)
 		{
 			glBindFramebuffer(GL_READ_FRAMEBUFFER, uFBO);
 			glReadBuffer(GL_COLOR_ATTACHMENT0);
-			glBlitFramebuffer(0, 0, m_gBuffer.GetWidth(), m_gBuffer.GetHeight(), 0, 0, m_gBuffer.GetWidth(), m_gBuffer.GetHeight(), GL_COLOR_BUFFER_BIT, GL_NEAREST);
+			glBlitFramebuffer(0, 0, m_pGBuffer->GetWidth(), m_pGBuffer->GetHeight(), 0, 0, m_pGBuffer->GetWidth(), m_pGBuffer->GetHeight(), GL_COLOR_BUFFER_BIT, GL_NEAREST);
 			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 		}
 		break;
@@ -313,7 +316,7 @@ void Rendering::renderIntermediateToScreen(ERenderType eRenderType)
 		{
 			glBindFramebuffer(GL_READ_FRAMEBUFFER, uFBO);
 			glReadBuffer(GL_COLOR_ATTACHMENT1);
-			glBlitFramebuffer(0, 0, m_gBuffer.GetWidth(), m_gBuffer.GetHeight(), 0, 0, m_gBuffer.GetWidth(), m_gBuffer.GetHeight(), GL_COLOR_BUFFER_BIT, GL_NEAREST);
+			glBlitFramebuffer(0, 0, m_pGBuffer->GetWidth(), m_pGBuffer->GetHeight(), 0, 0, m_pGBuffer->GetWidth(), m_pGBuffer->GetHeight(), GL_COLOR_BUFFER_BIT, GL_NEAREST);
 			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 		}
 		break;
@@ -322,7 +325,7 @@ void Rendering::renderIntermediateToScreen(ERenderType eRenderType)
 		{
 			m_pFullscreenNormalShader->SetAsCurrent();
 			{
-				m_pFullscreenDepthShader->SetTexture2D("texSampler", 0, m_gBuffer.GetTexture(GBuffer::NORMAL));
+				m_pFullscreenDepthShader->SetTexture("texSampler", 0, m_pGBuffer->GetTexture(GBuffer::NORMAL));
 				m_pQuadMesh->draw();
 			}
 			glUseProgram(0);
@@ -333,7 +336,7 @@ void Rendering::renderIntermediateToScreen(ERenderType eRenderType)
 		{
 			m_pFullscreenDepthShader->SetAsCurrent();
 			{
-				m_pFullscreenDepthShader->SetTexture2D("texSampler", 0, m_gBuffer.GetTexture(GBuffer::DEPTH));
+				m_pFullscreenDepthShader->SetTexture("texSampler", 0, m_pGBuffer->GetTexture(GBuffer::DEPTH));
 				m_pQuadMesh->draw();
 			}
 			glUseProgram(0);
@@ -344,7 +347,8 @@ void Rendering::renderIntermediateToScreen(ERenderType eRenderType)
 		{
 			m_pFullscreenDepthShader->SetAsCurrent();
 			{
-				m_pFullscreenDepthShader->SetTexture2D("texSampler", 0, m_shadowMap.GetTexture());
+				const GPU::Texture<GL_TEXTURE_2D> & texture = m_pShadowMap->GetTexture();
+				m_pFullscreenDepthShader->SetTexture2D("texSampler", 0, texture.GetObject());
 				m_pQuadMesh->draw();
 			}
 			glUseProgram(0);
@@ -363,12 +367,12 @@ void Rendering::renderFinal(void)
 
 #else
 
-	glViewport(0, 0, m_gBuffer.GetWidth(), m_gBuffer.GetHeight());
+	glViewport(0, 0, m_pGBuffer->GetWidth(), m_pGBuffer->GetHeight());
 
 	glDepthMask(GL_FALSE);
 
 	mat4x4 mDepthView = _lookAt(m_pLight->GetPosition(), m_pLight->GetDirection(), vec3(0.0f, -1.0f, 0.0f));
-	mat4x4 mDepthViewProjection = m_shadowMap.GetProjection() * mDepthView;
+	mat4x4 mDepthViewProjection = m_pShadowMap->GetProjection() * mDepthView;
 
 	m_pFullscreenComposeShader->SetAsCurrent();
 	{
@@ -376,10 +380,10 @@ void Rendering::renderFinal(void)
 
 		m_pFullscreenComposeShader->SetUniform("lightPos", m_pLight->GetPosition());
 
-		m_pFullscreenComposeShader->SetTexture2D("diffuseSampler",  0, m_gBuffer.GetTexture(GBuffer::DIFFUSE));
-		m_pFullscreenComposeShader->SetTexture2D("normalSampler",   1, m_gBuffer.GetTexture(GBuffer::NORMAL));
-		m_pFullscreenComposeShader->SetTexture2D("positionSampler", 2, m_gBuffer.GetTexture(GBuffer::POSITION));
-		m_pFullscreenComposeShader->SetTexture2D("shadowMap",		3, m_shadowMap.GetTexture());
+		m_pFullscreenComposeShader->SetTexture("diffuseSampler", 0, m_pGBuffer->GetTexture(GBuffer::DIFFUSE));
+		m_pFullscreenComposeShader->SetTexture("normalSampler",	1, m_pGBuffer->GetTexture(GBuffer::NORMAL));
+		m_pFullscreenComposeShader->SetTexture("positionSampler", 2, m_pGBuffer->GetTexture(GBuffer::POSITION));
+		m_pFullscreenComposeShader->SetTexture("shadowMap",	3, m_pShadowMap->GetTexture());
 
 		m_pQuadMesh->draw();
 

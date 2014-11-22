@@ -93,3 +93,21 @@ void Shader::SetTexture2D(const char * name, int unit, GLuint texture)
 	glActiveTexture(GL_TEXTURE0 + unit);
 	glBindTexture(GL_TEXTURE_2D, texture);
 }
+
+/**
+ * @brief Shader::SetTexture
+ * @param name
+ * @param unit
+ * @param texture
+ */
+template<GLenum T>
+void Shader::SetTexture(const char * name, int unit, const GPU::Texture<T> & texture)
+{
+	SetUniform(name, unit);
+	glActiveTexture(GL_TEXTURE0 + unit);
+	glBindTexture(T, texture.GetObject());
+}
+
+template void Shader::SetTexture(const char * name, int unit, const GPU::Texture<GL_TEXTURE_1D> & texture);
+template void Shader::SetTexture(const char * name, int unit, const GPU::Texture<GL_TEXTURE_2D> & texture);
+template void Shader::SetTexture(const char * name, int unit, const GPU::Texture<GL_TEXTURE_3D> & texture);

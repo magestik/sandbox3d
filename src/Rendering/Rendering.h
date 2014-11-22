@@ -67,9 +67,8 @@ protected:
 
 private:
 
-	GBuffer	m_gBuffer;
-
-	ShadowMap m_shadowMap;
+	GBuffer	*	m_pGBuffer;
+	ShadowMap * m_pShadowMap;
 
 	LightAccumBuffer m_lightAccumBuffer;
 

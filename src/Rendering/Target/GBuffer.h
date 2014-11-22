@@ -22,14 +22,11 @@ public:
 	GBuffer(void);
 	~GBuffer(void);
 
-	bool	Initialize	(void);
-	void	Release		(void);
-
 	bool	Resize		(unsigned int width, unsigned height);
 
 	GLuint	GetObject	(void) { return(m_uObject); }
 
-	GLuint	GetTexture	(ETextureType type) { return(m_uTexture[type]); }
+	const GPU::Texture<GL_TEXTURE_2D> & GetTexture	(ETextureType type) { return(m_texture[type]); }
 
 	GLuint	GetWidth	(void) { return(m_uWidth); }
 	GLuint	GetHeight	(void) { return(m_uHeight); }
@@ -49,6 +46,6 @@ private:
 
 	GLuint m_uObject;
 
-	GLuint m_uTexture [COUNT];
+	GPU::Texture<GL_TEXTURE_2D> m_texture [COUNT];
 
 };

@@ -3,6 +3,8 @@
 #define GL3_PROTOTYPES 1
 #include <GL3/gl3.h>
 
+#include "GPU_helper.h"
+
 namespace GPU
 {
 
@@ -21,28 +23,7 @@ public:
 		glDeleteBuffers(1, &m_uObject);
 	}
 
-	bool allocate(size_t s, GLuint usage, void * pData = nullptr)
-	{
-		glBindBuffer(T, m_uObject);
-		glBufferData(T, s, pData, usage);
-		glBindBuffer(T, 0);
-	}
-
-	void * map(GLuint access)
-	{
-		glBindBuffer(T, m_uObject);
-		glMapBuffer(T, access);
-		glBindBuffer(T, m_uObject);
-	}
-
-	void unmap(void)
-	{
-		glBindBuffer(T, m_uObject);
-		glUnmapBuffer(m_uObject);
-		glBindBuffer(T, 0);
-	}
-
-	GLuint	GetObject (void) { return(m_uObject); }
+	GLuint	GetObject (void) const { return(m_uObject); }
 
 private:
 
@@ -73,7 +54,7 @@ public:
 		return(GL_TRUE == isCompiled);
 	}
 
-	GLuint	GetObject (void) { return(m_uObject); }
+	GLuint	GetObject (void) const { return(m_uObject); }
 
 private:
 
@@ -96,16 +77,34 @@ public:
 		glDeleteTextures(1, &m_uObject);
 	}
 
-	bool allocate(GLsizei width, GLsizei height, const void * pData = nullptr)
+	template<GLint internalFormat>
+	void init(GLsizei width, GLsizei height)
 	{
-		glBindTexture(T, m_uObject);
-		glTexImage2D(T, 0, GL_RGB32F, width, height, 0, GL_RGB, GL_FLOAT, pData);
+		GLenum format = getFormat(internalFormat);
+		GLenum type = getType(internalFormat);
+
+		glBindTexture(GL_TEXTURE_2D, m_uObject);
+		glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, format, type, nullptr);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		glBindTexture(T, 0);
+		glBindTexture(GL_TEXTURE_2D, 0);
 	}
 
-	GLuint	GetObject (void) { return(m_uObject); }
+	template<GLint internalFormat>
+	void init(GLsizei width, GLsizei height, const Buffer<GL_PIXEL_UNPACK_BUFFER> & buffer, GLenum format, GLenum type)
+	{
+		glBindBuffer(GL_PIXEL_UNPACK_BUFFER, buffer.GetObject());
+
+		glBindTexture(GL_TEXTURE_2D, m_uObject);
+		glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, format, type, NULL);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glBindTexture(GL_TEXTURE_2D, 0);
+
+		glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
+	}
+
+	GLuint	GetObject (void) const { return(m_uObject); }
 
 private:
 
@@ -114,3 +113,5 @@ private:
 };
 
 }
+
+#include "GPU_mem.h"

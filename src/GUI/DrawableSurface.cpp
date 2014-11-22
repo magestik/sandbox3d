@@ -379,8 +379,8 @@ void DrawableSurface::loadMeshes(void)
 				base += mesh->mNumVertices;
 			}
 
-			vertexBuffer->allocate(vertices.size() * sizeof(MeshVertex), GL_STATIC_DRAW, (void *)vertices.data());
-			indexBuffer->allocate(triangles.size() * sizeof(unsigned int), GL_STATIC_DRAW, (void *)triangles.data());
+			GPU::malloc(*vertexBuffer, vertices.size() * sizeof(MeshVertex), (void *)vertices.data());
+			GPU::malloc(*indexBuffer, triangles.size() * sizeof(unsigned int), (void *)triangles.data());
 
 			std::vector<Mesh::VertexSpec> specs;
 
