@@ -347,8 +347,7 @@ void Rendering::renderIntermediateToScreen(ERenderType eRenderType)
 		{
 			m_pFullscreenDepthShader->SetAsCurrent();
 			{
-				const GPU::Texture<GL_TEXTURE_2D> & texture = m_pShadowMap->GetTexture();
-				m_pFullscreenDepthShader->SetTexture2D("texSampler", 0, texture.GetObject());
+				m_pFullscreenDepthShader->SetTexture("texSampler", 0, m_pShadowMap->GetTexture());
 				m_pQuadMesh->draw();
 			}
 			glUseProgram(0);

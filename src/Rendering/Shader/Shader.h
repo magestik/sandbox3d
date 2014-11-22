@@ -25,8 +25,6 @@ public:
 	void		SetUniform		(const char * name, int n);
 	void		SetUniform		(const char * name, float n);
 
-	void		SetTexture2D	(const char * name, int unit, GLuint texture);
-
 	template<GLenum T>
 	void SetTexture(const char * name, int unit, const GPU::Texture<T> & texture);
 

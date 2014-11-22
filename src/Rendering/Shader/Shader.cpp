@@ -86,20 +86,6 @@ void Shader::SetUniform(const char * name, int n)
  * @param unit
  * @param texture
  */
-void Shader::SetTexture2D(const char * name, int unit, GLuint texture)
-{
-	assert(glIsTexture(texture));
-	SetUniform(name, unit);
-	glActiveTexture(GL_TEXTURE0 + unit);
-	glBindTexture(GL_TEXTURE_2D, texture);
-}
-
-/**
- * @brief Shader::SetTexture
- * @param name
- * @param unit
- * @param texture
- */
 template<GLenum T>
 void Shader::SetTexture(const char * name, int unit, const GPU::Texture<T> & texture)
 {
