@@ -33,7 +33,6 @@ DrawableSurface::DrawableSurface(QWidget *parent)
 , m_eRenderType(Rendering::FINAL)
 , m_bDebugWireframe(false)
 {
-	setAutoBufferSwap(false);
 	setFocusPolicy(Qt::StrongFocus);
 	makeCurrent();
 }
@@ -168,12 +167,14 @@ void DrawableSurface::paintGL(void)
 {
 	Timer t;
 
+	glFinish();
+
 	t.Start();
 
 	const mat4x4 & matView = m_camera.getViewMatrix();
 	m_renderer.onUpdate(matView, m_bDebugWireframe, m_eRenderType);
 
-	swapBuffers();
+	glFinish();
 
 	t.Stop();
 
