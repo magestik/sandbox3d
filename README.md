@@ -1,6 +1,22 @@
 sandbox3d
 =========
 
-A sandbox that I use to test some graphics algorithms.
+### Introduction
 
-Currently I use Qt and OpenGL.
+A sandbox that I use to test some graphic techniques.
+
+### Dependencies
+
+- Qt 5
+- OpenGL 3.3
+- CMake
+
+### TODO
+
+- Light pre-pass
+- Bloom
+- HDR
+- Fog
+- Ambient Occlusion
+
+Implement a way to select objects (pick buffer ?).
