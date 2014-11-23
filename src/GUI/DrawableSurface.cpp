@@ -6,6 +6,7 @@
 #include <QDir>
 #include <QMessageBox>
 #include <QMouseEvent>
+#include <QSplashScreen>
 
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
@@ -14,6 +15,8 @@
 #include <assert.h>
 
 #include <Misc/Timer.h>
+
+extern QSplashScreen * g_pSplashScreen;
 
 struct MeshVertex
 {
@@ -260,6 +263,8 @@ void DrawableSurface::loadShaders(void)
 
 	for (QString & filename : list)
 	{
+		g_pSplashScreen->showMessage("Loading shader '" + filename + "' ...");
+
 		QFile f(dir.filePath(filename));
 		f.open(QFile::ReadOnly);
 		QByteArray source = f.readAll();
@@ -294,132 +299,141 @@ void DrawableSurface::loadShaders(void)
 void DrawableSurface::loadMeshes(void)
 {
 	QDir dir("data/meshes");
+
+	const char ext [] =	"*.dae *.blend *.3ds *.ase *.obj *.ifc *.xgl *.zgl *.ply *.dxf *.lwo *.lws *.lxo *.stl *.x *.ac *.ms3d *.cob *.scn" /** Common interchange formats **/
+						"*.bvh *.csm" /** Motion Capture Formats **/
+						"*.xml *.irrmesh *.irr" /** Motion Capture Formats **/
+						"*.mdl *.md2 *.md3 *.pk3 *.mdc *.md5 *.smd *.vta *.m3 *.3d" /** Game file formats **/
+						"*.b3d *.q3d *.q3s *.nff *.nff *.off *.raw *.ter *.mdl *.hmp *.ndo"; /** Other file formats **/
+
+	QString filter(ext);
+	dir.setNameFilters(filter.split(' '));
+
 	QStringList list = dir.entryList(QDir::Files);
 
 	bool successful = true;
 
 	for (QString & filename : list)
 	{
+		g_pSplashScreen->showMessage("Loading mesh '" + filename + "' ...");
+
 		std::string filepath = dir.filePath(filename).toStdString();
 
-		if (filename.endsWith("obj") || filename.endsWith("dae"))
+		Assimp::Importer importer;
+
+		const aiScene * scene = importer.ReadFile(filepath.data(), aiProcessPreset_TargetRealtime_MaxQuality);
+
+		if (!scene)
 		{
-			Assimp::Importer importer;
-
-			const aiScene * scene = importer.ReadFile(filepath.data(), aiProcessPreset_TargetRealtime_MaxQuality);
-
-			if (!scene)
-			{
-				successful = false;
-				continue;
-			}
-
-			GPU::Buffer<GL_ARRAY_BUFFER> * vertexBuffer = new GPU::Buffer<GL_ARRAY_BUFFER>();
-			GPU::Buffer<GL_ELEMENT_ARRAY_BUFFER> * indexBuffer = new GPU::Buffer<GL_ELEMENT_ARRAY_BUFFER>();
-
-			std::vector<MeshVertex> vertices;
-			std::vector<unsigned int> triangles;
-
-			uint NumVertices = 0;
-			uint NumIndices = 0;
-
-			// Count the number of vertices and indices
-			for (int i = 0 ; i < scene->mNumMeshes ; i++)
-			{
-				NumVertices += scene->mMeshes[i]->mNumVertices;
-				NumIndices  += scene->mMeshes[i]->mNumFaces;
-			}
-
-			// Reserve space in the vectors for the vertex attributes and indices
-			vertices.reserve(NumVertices);
-			triangles.reserve(NumIndices*3);
-
-			int start = 0;
-			int base = 0;
-
-			for (int i = 0; i < scene->mNumMeshes; ++i)
-			{
-				aiMesh * mesh = scene->mMeshes[i];
-
-				// Populate the vertex attribute vectors
-				for (int j = 0 ; j < mesh->mNumVertices ; ++j)
-				{
-					MeshVertex vertex;
-
-					vertex.position.x = mesh->mVertices[j].x;
-					vertex.position.y = mesh->mVertices[j].y;
-					vertex.position.z = mesh->mVertices[j].z;
-
-					vertex.normal.x = mesh->mNormals[j].x;
-					vertex.normal.y = mesh->mNormals[j].y;
-					vertex.normal.z = mesh->mNormals[j].z;
-
-					if (mesh->HasTextureCoords(0))
-					{
-						vertex.uv.x = mesh->mTextureCoords[0][j].x;
-						vertex.uv.y = mesh->mTextureCoords[0][j].y;
-					}
-					else
-					{
-						vertex.uv.x = 0.0f;
-						vertex.uv.y = 0.0f;
-					}
-
-					vertices.push_back(vertex);
-				}
-
-				// Populate the index buffer
-				for (int j = 0 ; j < mesh->mNumFaces ; ++j)
-				{
-					const aiFace & Face = mesh->mFaces[j];
-					triangles.push_back(base + Face.mIndices[0]);
-					triangles.push_back(base + Face.mIndices[1]);
-					triangles.push_back(base + Face.mIndices[2]);
-				}
-
-				base += mesh->mNumVertices;
-			}
-
-			GPU::malloc(*vertexBuffer, vertices.size() * sizeof(MeshVertex), (void *)vertices.data());
-			GPU::malloc(*indexBuffer, triangles.size() * sizeof(unsigned int), (void *)triangles.data());
-
-			std::vector<Mesh::VertexSpec> specs;
-
-			Mesh::VertexSpec SPEC_POS;
-			SPEC_POS.index = 0;
-			SPEC_POS.size = 3;
-			SPEC_POS.type = GL_FLOAT;
-			SPEC_POS.normalized = GL_FALSE;
-			SPEC_POS.stride = sizeof(MeshVertex);
-			SPEC_POS.pointer = 0;
-
-			Mesh::VertexSpec SPEC_UV;
-			SPEC_UV.index = 2;
-			SPEC_UV.size = 2;
-			SPEC_UV.type = GL_FLOAT;
-			SPEC_UV.normalized = GL_FALSE;
-			SPEC_UV.stride = sizeof(MeshVertex);
-			SPEC_UV.pointer = (void*)(sizeof(float)*3);
-
-			Mesh::VertexSpec SPEC_NORMAL;
-			SPEC_NORMAL.index = 1;
-			SPEC_NORMAL.size = 3;
-			SPEC_NORMAL.type = GL_FLOAT;
-			SPEC_NORMAL.normalized = GL_FALSE;
-			SPEC_NORMAL.stride = sizeof(MeshVertex);
-			SPEC_NORMAL.pointer = (void*)(sizeof(float)*5);
-
-			specs.push_back(SPEC_POS);
-			specs.push_back(SPEC_UV);
-			specs.push_back(SPEC_NORMAL);
-
-			Mesh * mesh = Mesh::Create(vertexBuffer, triangles.size(), GL_TRIANGLES, specs, indexBuffer, GL_UNSIGNED_INT);
-
-			g_Meshes.insert(std::pair<std::string, Mesh*>(filename.toStdString(), mesh));
-
-			QDockWidget * dock = static_cast<MainWindow*>(parent())->m_pMeshListDock;
-			static_cast<MeshListWidget*>(dock)->addMesh(filename);
+			successful = false;
+			continue;
 		}
+
+		GPU::Buffer<GL_ARRAY_BUFFER> * vertexBuffer = new GPU::Buffer<GL_ARRAY_BUFFER>();
+		GPU::Buffer<GL_ELEMENT_ARRAY_BUFFER> * indexBuffer = new GPU::Buffer<GL_ELEMENT_ARRAY_BUFFER>();
+
+		std::vector<MeshVertex> vertices;
+		std::vector<unsigned int> triangles;
+
+		uint NumVertices = 0;
+		uint NumIndices = 0;
+
+		// Count the number of vertices and indices
+		for (int i = 0 ; i < scene->mNumMeshes ; i++)
+		{
+			NumVertices += scene->mMeshes[i]->mNumVertices;
+			NumIndices  += scene->mMeshes[i]->mNumFaces;
+		}
+
+		// Reserve space in the vectors for the vertex attributes and indices
+		vertices.reserve(NumVertices);
+		triangles.reserve(NumIndices*3);
+
+		int start = 0;
+		int base = 0;
+
+		for (int i = 0; i < scene->mNumMeshes; ++i)
+		{
+			aiMesh * mesh = scene->mMeshes[i];
+
+			// Populate the vertex attribute vectors
+			for (int j = 0 ; j < mesh->mNumVertices ; ++j)
+			{
+				MeshVertex vertex;
+
+				vertex.position.x = mesh->mVertices[j].x;
+				vertex.position.y = mesh->mVertices[j].y;
+				vertex.position.z = mesh->mVertices[j].z;
+
+				vertex.normal.x = mesh->mNormals[j].x;
+				vertex.normal.y = mesh->mNormals[j].y;
+				vertex.normal.z = mesh->mNormals[j].z;
+
+				if (mesh->HasTextureCoords(0))
+				{
+					vertex.uv.x = mesh->mTextureCoords[0][j].x;
+					vertex.uv.y = mesh->mTextureCoords[0][j].y;
+				}
+				else
+				{
+					vertex.uv.x = 0.0f;
+					vertex.uv.y = 0.0f;
+				}
+
+				vertices.push_back(vertex);
+			}
+
+			// Populate the index buffer
+			for (int j = 0 ; j < mesh->mNumFaces ; ++j)
+			{
+				const aiFace & Face = mesh->mFaces[j];
+				triangles.push_back(base + Face.mIndices[0]);
+				triangles.push_back(base + Face.mIndices[1]);
+				triangles.push_back(base + Face.mIndices[2]);
+			}
+
+			base += mesh->mNumVertices;
+		}
+
+		GPU::malloc(*vertexBuffer, vertices.size() * sizeof(MeshVertex), (void *)vertices.data());
+		GPU::malloc(*indexBuffer, triangles.size() * sizeof(unsigned int), (void *)triangles.data());
+
+		std::vector<Mesh::VertexSpec> specs;
+
+		Mesh::VertexSpec SPEC_POS;
+		SPEC_POS.index = 0;
+		SPEC_POS.size = 3;
+		SPEC_POS.type = GL_FLOAT;
+		SPEC_POS.normalized = GL_FALSE;
+		SPEC_POS.stride = sizeof(MeshVertex);
+		SPEC_POS.pointer = 0;
+
+		Mesh::VertexSpec SPEC_UV;
+		SPEC_UV.index = 2;
+		SPEC_UV.size = 2;
+		SPEC_UV.type = GL_FLOAT;
+		SPEC_UV.normalized = GL_FALSE;
+		SPEC_UV.stride = sizeof(MeshVertex);
+		SPEC_UV.pointer = (void*)(sizeof(float)*3);
+
+		Mesh::VertexSpec SPEC_NORMAL;
+		SPEC_NORMAL.index = 1;
+		SPEC_NORMAL.size = 3;
+		SPEC_NORMAL.type = GL_FLOAT;
+		SPEC_NORMAL.normalized = GL_FALSE;
+		SPEC_NORMAL.stride = sizeof(MeshVertex);
+		SPEC_NORMAL.pointer = (void*)(sizeof(float)*5);
+
+		specs.push_back(SPEC_POS);
+		specs.push_back(SPEC_UV);
+		specs.push_back(SPEC_NORMAL);
+
+		Mesh * mesh = Mesh::Create(vertexBuffer, triangles.size(), GL_TRIANGLES, specs, indexBuffer, GL_UNSIGNED_INT);
+
+		g_Meshes.insert(std::pair<std::string, Mesh*>(filename.toStdString(), mesh));
+
+		QDockWidget * dock = static_cast<MainWindow*>(parent())->m_pMeshListDock;
+		static_cast<MeshListWidget*>(dock)->addMesh(filename);
 	}
 
 	//

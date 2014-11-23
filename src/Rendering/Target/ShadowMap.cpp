@@ -37,8 +37,6 @@ bool ShadowMap::Resize(unsigned int width, unsigned height)
 {
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_uObject);
 
-
-
 	{
 		m_texture.init<GL_DEPTH_COMPONENT32F>(width, height);
 

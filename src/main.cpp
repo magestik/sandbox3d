@@ -1,7 +1,10 @@
 #include <QApplication>
 #include <QGLFormat>
+#include <QSplashScreen>
 
 #include "GUI/MainWindow.h"
+
+QSplashScreen * g_pSplashScreen = nullptr;
 
 bool setDefaultFormatOpenGL(void)
 {
@@ -29,8 +32,19 @@ int main(int argc, char ** argv)
 		return(-1);
 	}
 
+
+	QPixmap pixmap("splash.png");
+	QSplashScreen splash(pixmap);
+	splash.show();
+
+	g_pSplashScreen = &splash;
+
+	app.processEvents();
+
 	MainWindow w;
 	w.show();
+
+	splash.finish(&w);
 
 	return(app.exec());
 }
