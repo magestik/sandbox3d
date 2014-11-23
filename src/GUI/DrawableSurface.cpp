@@ -7,6 +7,9 @@
 #include <QMessageBox>
 #include <QMouseEvent>
 #include <QSplashScreen>
+#include <QFileSystemWatcher>
+
+#include <QDebug>
 
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
@@ -38,6 +41,15 @@ DrawableSurface::DrawableSurface(QWidget *parent)
 {
 	setFocusPolicy(Qt::StrongFocus);
 	makeCurrent();
+
+	QFileSystemWatcher watcher;
+	watcher.addPath("data/shaders");
+	connect(&watcher, SIGNAL(directoryChanged(QString)), this, SLOT(reloadShader(QString)));
+
+
+	QStringList directoryList = watcher.directories();
+	Q_FOREACH(QString directory, directoryList)
+			qDebug() << "Directory name" << directory <<"\n";
 }
 
 /**
@@ -164,7 +176,7 @@ void DrawableSurface::initializeGL(void)
 
 		loadShaders();
 
-		glFinish();
+		glFinish(); // remove this ?
 		t.Stop();
 
 		printf("Shaders loading time = %f ms\n", t.getElapsedTimeInMs());
@@ -178,10 +190,24 @@ void DrawableSurface::initializeGL(void)
 
 		loadMeshes();
 
-		glFinish();
+		glFinish(); // remove this ?
 		t.Stop();
 
 		printf("Meshes loading time = %f ms\n", t.getElapsedTimeInMs());
+	}
+
+	{
+		Timer t;
+
+		glFinish();
+		t.Start();
+
+		loadSprites();
+
+		glFinish(); // remove this ?
+		t.Stop();
+
+		printf("Sprites loading time = %f ms\n", t.getElapsedTimeInMs());
 	}
 
 	m_renderer.onInitializeComplete();
@@ -490,6 +516,175 @@ void DrawableSurface::loadMeshes(void)
 	{
 		int ret = QMessageBox::warning(this, tr("Sandbox 3D"), tr("All Models were not loaded successfully !"));
 	}
+}
+
+#define USE_PBO 0
+
+/**
+ * @brief DrawableSurface::loadSprites
+ */
+void DrawableSurface::loadSprites()
+{
+	QDir dir("data/sprites");
+
+	const char ext [] =	"*.bmp *.gif *.jpg *.jpeg *.png *.pbm *.pgm *.ppm *.tiff *.xbm *.xpm";
+
+	QString filter(ext);
+	dir.setNameFilters(filter.split(' '));
+
+	QStringList list = dir.entryList(QDir::Files);
+
+	printf("Using technique %d \n", USE_PBO);
+
+	double totalTime = 0.0f;
+
+#if USE_PBO == 1
+	int offset = 0;
+	const int totalBufferSize = 4096*4096*4*sizeof(char);
+	GPU::Buffer<GL_PIXEL_UNPACK_BUFFER> * pBuffer = new GPU::Buffer<GL_PIXEL_UNPACK_BUFFER>();
+	GPU::realloc(*pBuffer, totalBufferSize, GL_STATIC_DRAW);
+#endif
+
+	for (QString & filename : list)
+	{
+		g_pSplashScreen->showMessage("Loading sprite '" + filename + "' ...");
+#if USE_PBO == 0 || USE_PBO == 1
+		QImage img(dir.filePath(filename));
+		QImage tex = QGLWidget::convertToGLFormat(img);
+
+		Timer t;
+
+		t.Start();
+		{
+			GPU::Texture<GL_TEXTURE_2D> * pTexture = new GPU::Texture<GL_TEXTURE_2D>();
+			glBindTexture(GL_TEXTURE_2D, pTexture->GetObject());
+#if USE_PBO == 0
+			glBindTexture(GL_TEXTURE_2D, pTexture->GetObject());
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, tex.width(), tex.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, tex.bits());
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+			glBindTexture(GL_TEXTURE_2D, 0);
+#elif USE_PBO == 1
+			size_t size = (tex.width() * tex.height() * 4 * sizeof(char));
+
+			if (size > totalBufferSize)
+			{
+				continue;
+			}
+
+			glBindBuffer(GL_PIXEL_UNPACK_BUFFER, pBuffer->GetObject());
+
+			int nextOffset = offset + size;
+			if (nextOffset > totalBufferSize)
+			{
+				void * ptr = glMapBufferRange(GL_PIXEL_UNPACK_BUFFER, 0, size, GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT);
+				memcpy(ptr, tex.bits(), size);
+				glUnmapBuffer(GL_PIXEL_UNPACK_BUFFER);
+
+				glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, tex.width(), tex.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, BUFFER_OFFSET(0));
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+
+				offset = size;
+			}
+			else
+			{
+				void * ptr = glMapBufferRange(GL_PIXEL_UNPACK_BUFFER, offset, size, GL_MAP_WRITE_BIT | GL_MAP_UNSYNCHRONIZED_BIT);
+				memcpy(ptr, tex.bits(), size);
+				glUnmapBuffer(GL_PIXEL_UNPACK_BUFFER);
+
+				glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, tex.width(), tex.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, BUFFER_OFFSET(offset));
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+
+				offset = nextOffset % totalBufferSize;
+			}
+
+			glBindTexture(GL_TEXTURE_2D, 0);
+			glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
+
+
+
+			if (0 == offset)
+			{
+				GPU::realloc(*pBuffer, totalBufferSize);
+			}
+
+			// pTexture->init<GL_RGBA>(tex.width(), tex.height(), *pBuffer, GL_RGBA, GL_UNSIGNED_BYTE);
+#endif
+		}
+		t.Stop();
+
+		double elapsed = t.getElapsedTimeInMs();
+		totalTime += elapsed;
+		printf("CPU time : %f \n", elapsed);
+#elif USE_PBO == 2
+		loadTexture(dir.filePath(filename));
+#endif
+	}
+
+	printf("Total Time elapsed : %f \n", totalTime);
+
+#if 0
+	Timer t;
+
+	t.Start();
+	glFinish();
+	t.Stop();
+
+	printf("Finish CPU time : %f \n", t.getElapsedTimeInMs());
+#endif
+}
+
+/**
+ * @brief DrawableSurface::loadTexture
+ * @param filename
+ */
+void DrawableSurface::loadTexture(const QString & filename)
+{
+	QImage img(filename);
+
+	QImage tex = QGLWidget::convertToGLFormat(img);
+
+	GPU::Texture<GL_TEXTURE_2D> * pTexture = new GPU::Texture<GL_TEXTURE_2D>();
+
+	Timer t;
+
+	t.Start();
+
+	size_t size = (tex.width() * tex.height() * 4 * sizeof(char));
+
+	static GPU::Buffer<GL_PIXEL_UNPACK_BUFFER> * pBuffer = new GPU::Buffer<GL_PIXEL_UNPACK_BUFFER>();
+
+	GPU::realloc(*pBuffer, size, GL_STATIC_DRAW); // this will invalidate the previous buffer
+
+	GPU::memcpy(*pBuffer, (void *)tex.bits(), size);
+
+	pTexture->init<GL_RGBA>(tex.width(), tex.height(), *pBuffer, GL_RGBA, GL_UNSIGNED_BYTE);
+
+	t.Stop();
+
+	printf("CPU time : %f \n", t.getElapsedTimeInMs());
+}
+
+/**
+ * @brief DrawableSurface::loadShader
+ * @param filename
+ */
+void DrawableSurface::loadShader(const QString & filename)
+{
+	// TODO
+}
+
+/**
+ * @brief DrawableSurface::reloadShader
+ * @param filename
+ */
+void DrawableSurface::reloadShader(const QString & filename)
+{
+	std::string str = filename.toStdString();
+	printf("file modified : %s \n", str.c_str());
+	loadShader(filename);
 }
 
 /**

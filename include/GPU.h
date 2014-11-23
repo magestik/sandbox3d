@@ -5,6 +5,8 @@
 
 #include "GPU_helper.h"
 
+#define BUFFER_OFFSET(i) ((char*)NULL+(i))
+
 namespace GPU
 {
 

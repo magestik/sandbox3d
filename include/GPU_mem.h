@@ -72,7 +72,7 @@ template<GLenum T>
 void memcpy(const Buffer<T> & buffer, const void * pData, size_t s)
 {
 	glBindBuffer(T, buffer.GetObject());
-	void * ptr = glMapBuffer(T, GL_WRITE_ONLY);
+	void * ptr = glMapBufferRange(T, 0, s, GL_MAP_WRITE_BIT);
 	::memcpy(ptr, pData, s);
 	glUnmapBuffer(T);
 	glBindBuffer(T, 0);
@@ -84,10 +84,10 @@ void memcpy(const Buffer<T> & buffer, const void * pData, size_t s)
  * @return
  */
 template<GLenum T>
-void memcpy(const void * pData, const Buffer<T> & buffer, size_t s)
+void memcpy(void * pData, const Buffer<T> & buffer, size_t s)
 {
 	glBindBuffer(T, buffer.GetObject());
-	const void * ptr = glMapBuffer(T, GL_READ_ONLY);
+	const void * ptr = glMapBufferRange(T, 0, s, GL_READ_ONLY);
 	::memcpy(pData, ptr, s);
 	glUnmapBuffer(T);
 	glBindBuffer(T, 0);

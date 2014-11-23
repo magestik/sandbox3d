@@ -41,6 +41,10 @@ private:
 
 	void	loadShaders			(void);
 	void	loadMeshes			(void);
+	void	loadSprites			(void);
+
+	void	loadTexture			(const QString & filename);
+	void	loadShader			(const QString & filename);
 
 	// Rendering
 	Camera		m_camera;
@@ -59,6 +63,8 @@ private:
 signals:
 
 public slots:
+
+	void reloadShader(const QString & filename);
 
 	void setClearColor(const QColor & color);
 };
