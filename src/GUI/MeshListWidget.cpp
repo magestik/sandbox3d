@@ -19,6 +19,8 @@ ui(new Ui::MeshListWidget)
 	connect(ui->listWidget->selectionModel(),
 	   SIGNAL(selectionChanged(QItemSelection,QItemSelection)),
 	   this, SLOT(handleSelectionChanged(QItemSelection)));
+
+	setWindowFlags(Qt::Window);
 }
 
 /**

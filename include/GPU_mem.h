@@ -14,7 +14,7 @@ namespace GPU
  * @param pData
  */
 template<GLenum T>
-inline void malloc(const Buffer<T> & buffer, size_t s, const void * pData = nullptr)
+inline void realloc(const Buffer<T> & buffer, size_t s, const void * pData = nullptr)
 {
 	glBindBuffer(T, buffer.GetObject());
 	glBufferData(T, s, pData, GL_STATIC_DRAW);
@@ -29,7 +29,7 @@ inline void malloc(const Buffer<T> & buffer, size_t s, const void * pData = null
  * @param pData
  */
 template<GLenum T>
-inline void malloc(const Buffer<T> & buffer, size_t s, GLenum usage, const void * pData = nullptr)
+inline void realloc(const Buffer<T> & buffer, size_t s, GLenum usage, const void * pData = nullptr)
 {
 	glBindBuffer(T, buffer.GetObject());
 	glBufferData(T, s, pData, usage);

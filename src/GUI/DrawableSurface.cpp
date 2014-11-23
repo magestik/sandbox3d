@@ -68,7 +68,14 @@ void DrawableSurface::AddObject(const std::string & name)
 	if (nullptr != mesh)
 	{
 		m_renderer.onCreate(mesh);
+		QString str("Mesh '%1' added to scene");
+		static_cast<MainWindow*>(parent())->SetStatus(str.arg(name.c_str()));
 		update();
+	}
+	else
+	{
+		QString str("Mesh '%1' does not exist");
+		static_cast<MainWindow*>(parent())->SetStatus(str.arg(name.c_str()));
 	}
 }
 
@@ -147,8 +154,35 @@ void DrawableSurface::initializeGL(void)
 
 	glEnable(GL_CULL_FACE);
 
-	loadShaders();
-	loadMeshes();
+	glGenQueries(1, &m_query);
+
+	{
+		Timer t;
+
+		glFinish();
+		t.Start();
+
+		loadShaders();
+
+		glFinish();
+		t.Stop();
+
+		printf("Shaders loading time = %f ms\n", t.getElapsedTimeInMs());
+	}
+
+	{
+		Timer t;
+
+		glFinish();
+		t.Start();
+
+		loadMeshes();
+
+		glFinish();
+		t.Stop();
+
+		printf("Meshes loading time = %f ms\n", t.getElapsedTimeInMs());
+	}
 
 	m_renderer.onInitializeComplete();
 }
@@ -170,18 +204,28 @@ void DrawableSurface::paintGL(void)
 {
 	Timer t;
 
-	glFinish();
+	glBeginQuery(GL_TIME_ELAPSED, m_query);
 
 	t.Start();
-
-	const mat4x4 & matView = m_camera.getViewMatrix();
-	m_renderer.onUpdate(matView, m_bDebugWireframe, m_eRenderType);
-
-	glFinish();
-
+	{
+		const mat4x4 & matView = m_camera.getViewMatrix();
+		m_renderer.onUpdate(matView, m_bDebugWireframe, m_eRenderType);
+	}
 	t.Stop();
 
-	static_cast<MainWindow*>(parent())->SetRenderTime(t.getElapsedTimeInMs());
+	glEndQuery(GL_TIME_ELAPSED);
+
+	GLint done = 0;
+
+	while (!done)
+	{
+		glGetQueryObjectiv(m_query, GL_QUERY_RESULT_AVAILABLE, &done);
+	}
+
+	GLuint elapsed_time;
+	glGetQueryObjectuiv(m_query, GL_QUERY_RESULT, &elapsed_time);
+
+	static_cast<MainWindow*>(parent())->SetRenderTime(t.getElapsedTimeInMs(), elapsed_time / 1000000.0);
 }
 
 /**
@@ -395,8 +439,11 @@ void DrawableSurface::loadMeshes(void)
 			base += mesh->mNumVertices;
 		}
 
-		GPU::malloc(*vertexBuffer, vertices.size() * sizeof(MeshVertex), (void *)vertices.data());
-		GPU::malloc(*indexBuffer, triangles.size() * sizeof(unsigned int), (void *)triangles.data());
+		GPU::realloc(*vertexBuffer, vertices.size() * sizeof(MeshVertex));
+		GPU::realloc(*indexBuffer, triangles.size() * sizeof(unsigned int));
+
+		GPU::memcpy(*vertexBuffer, (void *)vertices.data(), vertices.size() * sizeof(MeshVertex));
+		GPU::memcpy(*indexBuffer, (void *)triangles.data(), triangles.size() * sizeof(unsigned int));
 
 		std::vector<Mesh::VertexSpec> specs;
 

@@ -53,6 +53,9 @@ private:
 	Rendering::ERenderType	m_eRenderType;
 	bool					m_bDebugWireframe;
 
+	//
+	unsigned int m_query;
+
 signals:
 
 public slots:

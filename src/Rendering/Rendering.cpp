@@ -74,7 +74,7 @@ void Rendering::generateMeshes()
 
 		GPU::Buffer<GL_ARRAY_BUFFER> * vertexBuffer = new GPU::Buffer<GL_ARRAY_BUFFER>();
 
-		GPU::malloc(*vertexBuffer, sizeof(points), GL_STATIC_DRAW, points);
+		GPU::realloc(*vertexBuffer, sizeof(points), GL_STATIC_DRAW, points);
 
 		std::vector<Mesh::VertexSpec> specs;
 

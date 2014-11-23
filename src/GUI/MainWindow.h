@@ -21,7 +21,8 @@ public:
 
 	void		closeEvent		(QCloseEvent * event);
 
-	void		SetRenderTime	(double t);
+	void		SetRenderTime	(double cpu_time, double gpu_time);
+	void		SetStatus		(const QString & str);
 
 private:
 

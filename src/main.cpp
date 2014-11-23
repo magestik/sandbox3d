@@ -35,6 +35,7 @@ int main(int argc, char ** argv)
 
 	QPixmap pixmap("splash.png");
 	QSplashScreen splash(pixmap);
+	splash.setWindowFlags(splash.windowFlags() | Qt::WindowStaysOnTopHint);
 	splash.show();
 
 	g_pSplashScreen = &splash;
