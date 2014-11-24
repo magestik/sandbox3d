@@ -4,6 +4,8 @@
 
 #include <QGLWidget>
 
+#define NB_BUFFER 10
+
 class DrawableSurface : public QGLWidget
 {
 	Q_OBJECT
@@ -59,6 +61,9 @@ private:
 
 	//
 	unsigned int m_query;
+
+	GPU::Buffer<GL_PIXEL_UNPACK_BUFFER> * m_apBuffer [NB_BUFFER];
+	GPU::Buffer<GL_PIXEL_UNPACK_BUFFER> * m_pSpecial;
 
 signals:
 

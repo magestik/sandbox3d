@@ -168,6 +168,13 @@ void DrawableSurface::initializeGL(void)
 
 	glGenQueries(1, &m_query);
 
+	for (int i = 0; i < NB_BUFFER; ++i)
+	{
+		m_apBuffer[i] = new GPU::Buffer<GL_PIXEL_UNPACK_BUFFER>();
+	}
+
+	m_pSpecial = new GPU::Buffer<GL_PIXEL_UNPACK_BUFFER>();
+
 	{
 		Timer t;
 
@@ -204,7 +211,7 @@ void DrawableSurface::initializeGL(void)
 
 		loadSprites();
 
-		glFinish(); // remove this ?
+		//glFinish(); // remove this ?
 		t.Stop();
 
 		printf("Sprites loading time = %f ms\n", t.getElapsedTimeInMs());
@@ -518,7 +525,7 @@ void DrawableSurface::loadMeshes(void)
 	}
 }
 
-#define USE_PBO 0
+#define USE_PBO 1
 
 /**
  * @brief DrawableSurface::loadSprites
@@ -539,10 +546,16 @@ void DrawableSurface::loadSprites()
 	double totalTime = 0.0f;
 
 #if USE_PBO == 1
+
+	const int totalBufferSize = 2048*2048*4*sizeof(char);
+
+	for (int i = 0; i < NB_BUFFER; ++i)
+	{
+		GPU::realloc(*(m_apBuffer[i]), totalBufferSize, GL_STREAM_DRAW);
+	}
+
+	int buf = 0;
 	int offset = 0;
-	const int totalBufferSize = 4096*4096*4*sizeof(char);
-	GPU::Buffer<GL_PIXEL_UNPACK_BUFFER> * pBuffer = new GPU::Buffer<GL_PIXEL_UNPACK_BUFFER>();
-	GPU::realloc(*pBuffer, totalBufferSize, GL_STATIC_DRAW);
 #endif
 
 	for (QString & filename : list)
@@ -557,60 +570,76 @@ void DrawableSurface::loadSprites()
 		t.Start();
 		{
 			GPU::Texture<GL_TEXTURE_2D> * pTexture = new GPU::Texture<GL_TEXTURE_2D>();
+
 			glBindTexture(GL_TEXTURE_2D, pTexture->GetObject());
-#if USE_PBO == 0
-			glBindTexture(GL_TEXTURE_2D, pTexture->GetObject());
-			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, tex.width(), tex.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, tex.bits());
+
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, tex.width(), tex.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-			glBindTexture(GL_TEXTURE_2D, 0);
+
+#if USE_PBO == 0
+			glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, tex.width(), tex.height(), GL_RGBA, GL_UNSIGNED_BYTE, tex.bits());
 #elif USE_PBO == 1
 			size_t size = (tex.width() * tex.height() * 4 * sizeof(char));
 
 			if (size > totalBufferSize)
 			{
+				GPU::realloc(*m_pSpecial, size, GL_STREAM_DRAW);
+
+				glBindBuffer(GL_PIXEL_UNPACK_BUFFER, m_pSpecial->GetObject());
+
+				void * ptr = glMapBufferRange(GL_PIXEL_UNPACK_BUFFER, 0, size, GL_MAP_WRITE_BIT);
+				memcpy(ptr, tex.bits(), size);
+				glUnmapBuffer(GL_PIXEL_UNPACK_BUFFER);
+
+				glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, tex.width(), tex.height(), GL_RGBA, GL_UNSIGNED_BYTE, BUFFER_OFFSET(0));
+
+				offset = size;
+
+				glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
+
 				continue;
 			}
-
-			glBindBuffer(GL_PIXEL_UNPACK_BUFFER, pBuffer->GetObject());
 
 			int nextOffset = offset + size;
 			if (nextOffset > totalBufferSize)
 			{
-				void * ptr = glMapBufferRange(GL_PIXEL_UNPACK_BUFFER, 0, size, GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT);
+				buf = (buf + 1) % NB_BUFFER;
+
+				glBindBuffer(GL_PIXEL_UNPACK_BUFFER, m_apBuffer[buf]->GetObject());
+
+				void * ptr = glMapBufferRange(GL_PIXEL_UNPACK_BUFFER, 0, size, GL_MAP_WRITE_BIT);
 				memcpy(ptr, tex.bits(), size);
 				glUnmapBuffer(GL_PIXEL_UNPACK_BUFFER);
 
-				glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, tex.width(), tex.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, BUFFER_OFFSET(0));
-				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+				glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, tex.width(), tex.height(), GL_RGBA, GL_UNSIGNED_BYTE, BUFFER_OFFSET(0));
 
 				offset = size;
+
+				glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
 			}
 			else
 			{
+				glBindBuffer(GL_PIXEL_UNPACK_BUFFER, m_apBuffer[buf]->GetObject());
+
 				void * ptr = glMapBufferRange(GL_PIXEL_UNPACK_BUFFER, offset, size, GL_MAP_WRITE_BIT | GL_MAP_UNSYNCHRONIZED_BIT);
 				memcpy(ptr, tex.bits(), size);
 				glUnmapBuffer(GL_PIXEL_UNPACK_BUFFER);
 
-				glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, tex.width(), tex.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, BUFFER_OFFSET(offset));
-				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+				glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, tex.width(), tex.height(), GL_RGBA, GL_UNSIGNED_BYTE, BUFFER_OFFSET(offset));
 
 				offset = nextOffset % totalBufferSize;
+
+				glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
 			}
 
 			glBindTexture(GL_TEXTURE_2D, 0);
-			glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
-
-
 
 			if (0 == offset)
 			{
-				GPU::realloc(*pBuffer, totalBufferSize);
+				++buf;
+				GPU::realloc(*(m_apBuffer[buf]), totalBufferSize, GL_STREAM_DRAW);
 			}
-
-			// pTexture->init<GL_RGBA>(tex.width(), tex.height(), *pBuffer, GL_RGBA, GL_UNSIGNED_BYTE);
 #endif
 		}
 		t.Stop();
