@@ -1,8 +1,8 @@
-#pragma once
+﻿#pragma once
 
-#include "../Mesh.h"
+#include "../SubMesh.h"
 
-class MeshIndexed : public Mesh
+class MeshIndexed : public SubMesh
 {
 public:
 

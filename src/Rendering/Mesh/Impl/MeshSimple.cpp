@@ -1,4 +1,4 @@
-#include "MeshSimple.h"
+﻿#include "MeshSimple.h"
 
 /**
  * @brief MeshSimple::MeshSimple
@@ -9,14 +9,14 @@
  * @param pIndexBuffer
  * @param type
  */
-MeshSimple::MeshSimple(GPU::Buffer<GL_ARRAY_BUFFER> * pVertexBuffer, GLsizei count, GLenum mode, const std::vector<Mesh::VertexSpec> & specs)
-: Mesh(count, mode)
+MeshSimple::MeshSimple(GPU::Buffer<GL_ARRAY_BUFFER> * pVertexBuffer, GLsizei count, GLenum mode, const std::vector<VertexSpec> & specs)
+: SubMesh(count, mode)
 {
 	glBindVertexArray(m_uObject);
 
 	glBindBuffer(GL_ARRAY_BUFFER, pVertexBuffer->GetObject());
 
-	for (const Mesh::VertexSpec & spec : specs)
+	for (const VertexSpec & spec : specs)
 	{
 		glEnableVertexAttribArray(spec.index);
 		glVertexAttribPointer(spec.index, spec.size, spec.type, spec.normalized, spec.stride, spec.pointer);

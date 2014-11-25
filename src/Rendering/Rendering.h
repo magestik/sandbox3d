@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 // Maths
 #include <Vector.h>
@@ -14,6 +14,7 @@
 #include "Camera/Camera.h"
 #include "Light/Light.h"
 #include "Mesh/Mesh.h"
+#include "Mesh/SubMesh.h"
 
 #include "Target/GBuffer.h"
 #include "Target/ShadowMap.h"
@@ -23,7 +24,7 @@
 extern std::map<std::string, GPU::Shader<GL_FRAGMENT_SHADER> *>	g_FragmentShaders;
 extern std::map<std::string, GPU::Shader<GL_VERTEX_SHADER> *>	g_VertexShaders;
 
-extern std::map<std::string, Mesh*>			g_Meshes;
+extern std::map<std::string, Mesh>			g_Meshes;
 
 class Rendering
 {
@@ -48,7 +49,7 @@ public:
 
 	void	onUpdate				(const mat4x4 & mView, bool bWireframe, ERenderType eRenderType = FINAL);
 
-	void	onCreate				(Mesh * m);
+	void	onCreate				(const Mesh & m);
 
 protected:
 
@@ -84,5 +85,5 @@ private:
 	Shader *	m_pFullscreenNormalShader;
 	Shader *	m_pFullscreenComposeShader;
 
-	Mesh *		m_pQuadMesh;
+	SubMesh *	m_pQuadMesh;
 };

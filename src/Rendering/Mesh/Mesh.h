@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include <GPU.h>
 
@@ -7,19 +7,12 @@
 
 #include <vector>
 
+class SubMesh;
+
 class Mesh
 {
-public:
 
-	struct VertexSpec
-	{
-		GLuint		index;
-		GLint		size;
-		GLenum		type;
-		GLboolean	normalized;
-		GLsizei		stride;
-		GLvoid *	pointer;
-	};
+public:
 
 	struct Instance
 	{
@@ -28,21 +21,15 @@ public:
 		const Mesh * mesh;
 	};
 
+	explicit Mesh(void);
+	explicit Mesh(const std::vector<SubMesh*> & submeshes);
 	virtual ~Mesh(void);
 
-	virtual void draw(void) const = 0;
-
-	static Mesh * Create(GPU::Buffer<GL_ARRAY_BUFFER> * pVertexBuffer, GLsizei count, GLenum mode, const std::vector<Mesh::VertexSpec> & specs);
-	static Mesh * Create(GPU::Buffer<GL_ARRAY_BUFFER> * pVertexBuffer, GLsizei count, GLenum mode, const std::vector<VertexSpec> & specs, GPU::Buffer<GL_ELEMENT_ARRAY_BUFFER> * pIndexBuffer, GLenum type);
+	void draw(void) const;
 
 	Instance Instantiate() const { return(Instance(this)); }
 
-protected:
+private:
 
-	explicit Mesh(GLsizei iCount, GLenum eMode);
-
-	GLuint m_uObject;
-
-	GLsizei m_iCount;
-	GLenum m_eMode;
+	std::vector<SubMesh*> m_aSubMeshes;
 };

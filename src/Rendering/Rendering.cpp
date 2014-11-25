@@ -1,4 +1,4 @@
-#include "Rendering.h"
+﻿#include "Rendering.h"
 
 #include <assert.h>
 
@@ -10,7 +10,7 @@ std::map<std::string, GPU::Shader<GL_FRAGMENT_SHADER> *> g_FragmentShaders;
 
 std::map<std::string, GPU::Shader<GL_VERTEX_SHADER> *> g_VertexShaders;
 
-std::map<std::string, Mesh*> g_Meshes;
+std::map<std::string, Mesh> g_Meshes;
 
 /**
  * @brief Rendering::onInitialize
@@ -76,9 +76,9 @@ void Rendering::generateMeshes()
 
 		GPU::realloc(*vertexBuffer, sizeof(points), GL_STATIC_DRAW, points);
 
-		std::vector<Mesh::VertexSpec> specs;
+		std::vector<SubMesh::VertexSpec> specs;
 
-		Mesh::VertexSpec SPEC_POS;
+		SubMesh::VertexSpec SPEC_POS;
 		SPEC_POS.index = 0;
 		SPEC_POS.size = 2;
 		SPEC_POS.type = GL_FLOAT;
@@ -86,7 +86,7 @@ void Rendering::generateMeshes()
 		SPEC_POS.stride = 4 * sizeof(float);
 		SPEC_POS.pointer = 0;
 
-		Mesh::VertexSpec SPEC_UV;
+		SubMesh::VertexSpec SPEC_UV;
 		SPEC_UV.index = 2;
 		SPEC_UV.size = 2;
 		SPEC_UV.type = GL_FLOAT;
@@ -97,7 +97,7 @@ void Rendering::generateMeshes()
 		specs.push_back(SPEC_POS);
 		specs.push_back(SPEC_UV);
 
-		m_pQuadMesh = Mesh::Create(vertexBuffer, 4, GL_TRIANGLE_STRIP, specs);
+		m_pQuadMesh = SubMesh::Create(vertexBuffer, 4, GL_TRIANGLE_STRIP, specs);
 	}
 
 	// TODO : Sphere / Cone / Cube
@@ -171,9 +171,9 @@ void Rendering::onUpdate(const mat4x4 & mView, bool bWireframe, ERenderType eRen
  * @brief Rendering::onCreate
  * @param m
  */
-void Rendering::onCreate(Mesh * m)
+void Rendering::onCreate(const Mesh & m)
 {
-	m_aObjects.push_back(m->Instantiate());
+	m_aObjects.push_back(m.Instantiate());
 }
 
 /**

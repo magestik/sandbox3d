@@ -1,19 +1,25 @@
-#include "Mesh.h"
+﻿#include "Mesh.h"
 
 #include "Impl/MeshSimple.h"
 #include "Impl/MeshIndexed.h"
 
 /**
  * @brief Mesh::Mesh
- * @param uObject
- * @param iCount
- * @param eMode
  */
-Mesh::Mesh(GLsizei iCount, GLenum eMode)
-: m_iCount(iCount)
-, m_eMode(eMode)
+Mesh::Mesh(void)
+: m_aSubMeshes()
 {
-	glGenVertexArrays(1, &m_uObject);
+	// ...
+}
+
+/**
+ * @brief Mesh::Mesh
+ * @param submeshes
+ */
+Mesh::Mesh(const std::vector<SubMesh*> & submeshes)
+: m_aSubMeshes(submeshes)
+{
+	// ...
 }
 
 /**
@@ -21,36 +27,16 @@ Mesh::Mesh(GLsizei iCount, GLenum eMode)
  */
 Mesh::~Mesh()
 {
-	glDeleteVertexArrays(1, &m_uObject);
-	m_uObject = 0;
+	// ...
 }
 
 /**
- * @brief Mesh::Create
- * @param pVertexBuffer
- * @param count
- * @param mode
- * @param specs
- * @return
+ * @brief Mesh::draw
  */
-Mesh * Mesh::Create(GPU::Buffer<GL_ARRAY_BUFFER> * pVertexBuffer, GLsizei count, GLenum mode, const std::vector<Mesh::VertexSpec> & specs)
+void Mesh::draw() const
 {
-	Mesh * pMesh = new MeshSimple(pVertexBuffer, count, mode, specs);
-	return(pMesh);
-}
-
-/**
- * @brief Mesh::Create
- * @param pVertexBuffer
- * @param count
- * @param mode
- * @param specs
- * @param pIndexBuffer
- * @param type
- * @return
- */
-Mesh * Mesh::Create(GPU::Buffer<GL_ARRAY_BUFFER> * pVertexBuffer, GLsizei count, GLenum mode, const std::vector<Mesh::VertexSpec> & specs, GPU::Buffer<GL_ELEMENT_ARRAY_BUFFER> * pIndexBuffer, GLenum type)
-{
-	Mesh * pMesh = new MeshIndexed(pVertexBuffer, count, mode, specs, pIndexBuffer, type);
-	return(pMesh);
+	for (SubMesh * m : m_aSubMeshes)
+	{
+		m->draw();
+	}
 }

@@ -75,20 +75,10 @@ void DrawableSurface::ResetCamera(void)
  */
 void DrawableSurface::AddObject(const std::string & name)
 {
-	Mesh * mesh = g_Meshes[name];
-
-	if (nullptr != mesh)
-	{
-		m_renderer.onCreate(mesh);
-		QString str("Mesh '%1' added to scene");
-		static_cast<MainWindow*>(parent())->SetStatus(str.arg(name.c_str()));
-		update();
-	}
-	else
-	{
-		QString str("Mesh '%1' does not exist");
-		static_cast<MainWindow*>(parent())->SetStatus(str.arg(name.c_str()));
-	}
+	m_renderer.onCreate(g_Meshes[name]);
+	QString str("Mesh '%1' added to scene");
+	static_cast<MainWindow*>(parent())->SetStatus(str.arg(name.c_str()));
+	update();
 }
 
 /**
@@ -160,9 +150,9 @@ void DrawableSurface::DebugFinal()
  */
 void DrawableSurface::initializeGL(void)
 {
-	GLint v;
-	glGetIntegerv(GL_CONTEXT_FLAGS, &v);
-	assert (v & GL_CONTEXT_FLAG_DEBUG_BIT);
+///	GLint v;
+///	glGetIntegerv(GL_CONTEXT_FLAGS, &v);
+///	assert (v & GL_CONTEXT_FLAG_DEBUG_BIT);
 
 	glEnable(GL_CULL_FACE);
 
@@ -406,11 +396,37 @@ void DrawableSurface::loadMeshes(void)
 			continue;
 		}
 
-		GPU::Buffer<GL_ARRAY_BUFFER> * vertexBuffer = new GPU::Buffer<GL_ARRAY_BUFFER>();
-		GPU::Buffer<GL_ELEMENT_ARRAY_BUFFER> * indexBuffer = new GPU::Buffer<GL_ELEMENT_ARRAY_BUFFER>();
+		std::vector<SubMesh::VertexSpec> specs;
 
-		std::vector<MeshVertex> vertices;
-		std::vector<unsigned int> triangles;
+		SubMesh::VertexSpec SPEC_POS;
+		SPEC_POS.index = 0;
+		SPEC_POS.size = 3;
+		SPEC_POS.type = GL_FLOAT;
+		SPEC_POS.normalized = GL_FALSE;
+		SPEC_POS.stride = sizeof(MeshVertex);
+		SPEC_POS.pointer = 0;
+
+		SubMesh::VertexSpec SPEC_UV;
+		SPEC_UV.index = 2;
+		SPEC_UV.size = 2;
+		SPEC_UV.type = GL_FLOAT;
+		SPEC_UV.normalized = GL_FALSE;
+		SPEC_UV.stride = sizeof(MeshVertex);
+		SPEC_UV.pointer = (void*)(sizeof(float)*3);
+
+		SubMesh::VertexSpec SPEC_NORMAL;
+		SPEC_NORMAL.index = 1;
+		SPEC_NORMAL.size = 3;
+		SPEC_NORMAL.type = GL_FLOAT;
+		SPEC_NORMAL.normalized = GL_FALSE;
+		SPEC_NORMAL.stride = sizeof(MeshVertex);
+		SPEC_NORMAL.pointer = (void*)(sizeof(float)*5);
+
+		specs.push_back(SPEC_POS);
+		specs.push_back(SPEC_UV);
+		specs.push_back(SPEC_NORMAL);
+
+		std::vector<SubMesh*> meshes;
 
 		uint NumVertices = 0;
 		uint NumIndices = 0;
@@ -422,16 +438,27 @@ void DrawableSurface::loadMeshes(void)
 			NumIndices  += scene->mMeshes[i]->mNumFaces;
 		}
 
-		// Reserve space in the vectors for the vertex attributes and indices
-		vertices.reserve(NumVertices);
-		triangles.reserve(NumIndices*3);
+		// Reserve GPU memory for the vertex attributes and indices
+		GPU::Buffer<GL_ARRAY_BUFFER> * vertexBuffer = new GPU::Buffer<GL_ARRAY_BUFFER>();
+		GPU::Buffer<GL_ELEMENT_ARRAY_BUFFER> * indexBuffer = new GPU::Buffer<GL_ELEMENT_ARRAY_BUFFER>();
 
-		int start = 0;
-		int base = 0;
+		GPU::realloc(*vertexBuffer, NumVertices * sizeof(MeshVertex));
+		GPU::realloc(*indexBuffer, NumIndices * 3 * sizeof(unsigned int));
+
+		void * pVertexGPU = GPU::mmap(*vertexBuffer, GL_WRITE_ONLY);
+		void * pIndexGPU = GPU::mmap(*indexBuffer, GL_WRITE_ONLY);
+
+		int baseVertex = 0;
 
 		for (int i = 0; i < scene->mNumMeshes; ++i)
 		{
 			aiMesh * mesh = scene->mMeshes[i];
+
+			std::vector<MeshVertex> vertices;
+			std::vector<unsigned int> triangles;
+
+			vertices.reserve(mesh->mNumVertices);
+			triangles.reserve(mesh->mNumFaces*3);
 
 			// Populate the vertex attribute vectors
 			for (int j = 0 ; j < mesh->mNumVertices ; ++j)
@@ -464,53 +491,29 @@ void DrawableSurface::loadMeshes(void)
 			for (int j = 0 ; j < mesh->mNumFaces ; ++j)
 			{
 				const aiFace & Face = mesh->mFaces[j];
-				triangles.push_back(base + Face.mIndices[0]);
-				triangles.push_back(base + Face.mIndices[1]);
-				triangles.push_back(base + Face.mIndices[2]);
+				triangles.push_back(baseVertex + Face.mIndices[0]);
+				triangles.push_back(baseVertex + Face.mIndices[1]);
+				triangles.push_back(baseVertex + Face.mIndices[2]);
 			}
 
-			base += mesh->mNumVertices;
+			memcpy(pVertexGPU, (void *)vertices.data(), vertices.size() * sizeof(MeshVertex));
+			memcpy(pIndexGPU, (void *)triangles.data(), triangles.size() * sizeof(unsigned int));
+
+			pVertexGPU = (void*)(((char*)pVertexGPU) + vertices.size() * sizeof(MeshVertex));
+			pIndexGPU = (void*)(((char*)pIndexGPU) + triangles.size() * sizeof(unsigned int));
+
+			baseVertex += vertices.size();
+
+			SubMesh * submesh = SubMesh::Create(vertexBuffer, NumIndices * 3, GL_TRIANGLES, specs, indexBuffer, GL_UNSIGNED_INT);
+			meshes.push_back(submesh);
 		}
 
-		GPU::realloc(*vertexBuffer, vertices.size() * sizeof(MeshVertex));
-		GPU::realloc(*indexBuffer, triangles.size() * sizeof(unsigned int));
+		GPU::munmap(*vertexBuffer);
+		GPU::munmap(*indexBuffer);
 
-		GPU::memcpy(*vertexBuffer, (void *)vertices.data(), vertices.size() * sizeof(MeshVertex));
-		GPU::memcpy(*indexBuffer, (void *)triangles.data(), triangles.size() * sizeof(unsigned int));
 
-		std::vector<Mesh::VertexSpec> specs;
-
-		Mesh::VertexSpec SPEC_POS;
-		SPEC_POS.index = 0;
-		SPEC_POS.size = 3;
-		SPEC_POS.type = GL_FLOAT;
-		SPEC_POS.normalized = GL_FALSE;
-		SPEC_POS.stride = sizeof(MeshVertex);
-		SPEC_POS.pointer = 0;
-
-		Mesh::VertexSpec SPEC_UV;
-		SPEC_UV.index = 2;
-		SPEC_UV.size = 2;
-		SPEC_UV.type = GL_FLOAT;
-		SPEC_UV.normalized = GL_FALSE;
-		SPEC_UV.stride = sizeof(MeshVertex);
-		SPEC_UV.pointer = (void*)(sizeof(float)*3);
-
-		Mesh::VertexSpec SPEC_NORMAL;
-		SPEC_NORMAL.index = 1;
-		SPEC_NORMAL.size = 3;
-		SPEC_NORMAL.type = GL_FLOAT;
-		SPEC_NORMAL.normalized = GL_FALSE;
-		SPEC_NORMAL.stride = sizeof(MeshVertex);
-		SPEC_NORMAL.pointer = (void*)(sizeof(float)*5);
-
-		specs.push_back(SPEC_POS);
-		specs.push_back(SPEC_UV);
-		specs.push_back(SPEC_NORMAL);
-
-		Mesh * mesh = Mesh::Create(vertexBuffer, triangles.size(), GL_TRIANGLES, specs, indexBuffer, GL_UNSIGNED_INT);
-
-		g_Meshes.insert(std::pair<std::string, Mesh*>(filename.toStdString(), mesh));
+		Mesh fullMesh(meshes);
+		g_Meshes.insert(std::pair<std::string, Mesh>(filename.toStdString(), fullMesh));
 
 		QDockWidget * dock = static_cast<MainWindow*>(parent())->m_pMeshListDock;
 		static_cast<MeshListWidget*>(dock)->addMesh(filename);

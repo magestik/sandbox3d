@@ -1,12 +1,12 @@
-#pragma once
+﻿#pragma once
 
-#include "../Mesh.h"
+#include "../SubMesh.h"
 
-class MeshSimple : public Mesh
+class MeshSimple : public SubMesh
 {
 public:
 
-	explicit MeshSimple(GPU::Buffer<GL_ARRAY_BUFFER> * pVertexBuffer, GLsizei count, GLenum mode, const std::vector<Mesh::VertexSpec> & specs);
+	explicit MeshSimple(GPU::Buffer<GL_ARRAY_BUFFER> * pVertexBuffer, GLsizei count, GLenum mode, const std::vector<SubMesh::VertexSpec> & specs);
 	virtual ~MeshSimple(void);
 
 	virtual void draw(void) const;

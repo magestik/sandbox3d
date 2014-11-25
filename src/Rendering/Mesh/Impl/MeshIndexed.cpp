@@ -1,4 +1,4 @@
-#include "MeshIndexed.h"
+﻿#include "MeshIndexed.h"
 
 /**
  * @brief MeshIndexed::MeshIndexed
@@ -10,7 +10,7 @@
  * @param type
  */
 MeshIndexed::MeshIndexed(GPU::Buffer<GL_ARRAY_BUFFER> * pVertexBuffer, GLsizei count, GLenum mode, const std::vector<VertexSpec> & specs, GPU::Buffer<GL_ELEMENT_ARRAY_BUFFER> * pIndexBuffer, GLenum type)
-: Mesh(count, mode)
+: SubMesh(count, mode)
 , m_eType(type)
 {
 	glBindVertexArray(m_uObject);
