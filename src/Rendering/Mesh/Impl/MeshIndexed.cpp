@@ -9,9 +9,10 @@
  * @param pIndexBuffer
  * @param type
  */
-MeshIndexed::MeshIndexed(GPU::Buffer<GL_ARRAY_BUFFER> * pVertexBuffer, GLsizei count, GLenum mode, const std::vector<VertexSpec> & specs, GPU::Buffer<GL_ELEMENT_ARRAY_BUFFER> * pIndexBuffer, GLenum type)
+MeshIndexed::MeshIndexed(GPU::Buffer<GL_ARRAY_BUFFER> * pVertexBuffer, GLsizei count, GLenum mode, const std::vector<VertexSpec> & specs, GPU::Buffer<GL_ELEMENT_ARRAY_BUFFER> * pIndexBuffer, unsigned int offset, GLenum type)
 : SubMesh(count, mode)
 , m_eType(type)
+, m_iOffset(offset)
 {
 	glBindVertexArray(m_uObject);
 
@@ -44,6 +45,6 @@ MeshIndexed::~MeshIndexed(void)
 void MeshIndexed::draw(void) const
 {
 	glBindVertexArray(m_uObject);
-	glDrawElements(m_eMode, m_iCount, m_eType, nullptr);
+	glDrawElements(m_eMode, m_iCount, m_eType, BUFFER_OFFSET(m_iOffset));
 	glBindVertexArray(0);
 }

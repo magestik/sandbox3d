@@ -396,36 +396,6 @@ void DrawableSurface::loadMeshes(void)
 			continue;
 		}
 
-		std::vector<SubMesh::VertexSpec> specs;
-
-		SubMesh::VertexSpec SPEC_POS;
-		SPEC_POS.index = 0;
-		SPEC_POS.size = 3;
-		SPEC_POS.type = GL_FLOAT;
-		SPEC_POS.normalized = GL_FALSE;
-		SPEC_POS.stride = sizeof(MeshVertex);
-		SPEC_POS.pointer = 0;
-
-		SubMesh::VertexSpec SPEC_UV;
-		SPEC_UV.index = 2;
-		SPEC_UV.size = 2;
-		SPEC_UV.type = GL_FLOAT;
-		SPEC_UV.normalized = GL_FALSE;
-		SPEC_UV.stride = sizeof(MeshVertex);
-		SPEC_UV.pointer = (void*)(sizeof(float)*3);
-
-		SubMesh::VertexSpec SPEC_NORMAL;
-		SPEC_NORMAL.index = 1;
-		SPEC_NORMAL.size = 3;
-		SPEC_NORMAL.type = GL_FLOAT;
-		SPEC_NORMAL.normalized = GL_FALSE;
-		SPEC_NORMAL.stride = sizeof(MeshVertex);
-		SPEC_NORMAL.pointer = (void*)(sizeof(float)*5);
-
-		specs.push_back(SPEC_POS);
-		specs.push_back(SPEC_UV);
-		specs.push_back(SPEC_NORMAL);
-
 		std::vector<SubMesh*> meshes;
 
 		uint NumVertices = 0;
@@ -448,7 +418,8 @@ void DrawableSurface::loadMeshes(void)
 		void * pVertexGPU = GPU::mmap(*vertexBuffer, GL_WRITE_ONLY);
 		void * pIndexGPU = GPU::mmap(*indexBuffer, GL_WRITE_ONLY);
 
-		int baseVertex = 0;
+		unsigned int vertex_offset = 0;
+		unsigned int index_offset = 0;
 
 		for (int i = 0; i < scene->mNumMeshes; ++i)
 		{
@@ -491,9 +462,9 @@ void DrawableSurface::loadMeshes(void)
 			for (int j = 0 ; j < mesh->mNumFaces ; ++j)
 			{
 				const aiFace & Face = mesh->mFaces[j];
-				triangles.push_back(baseVertex + Face.mIndices[0]);
-				triangles.push_back(baseVertex + Face.mIndices[1]);
-				triangles.push_back(baseVertex + Face.mIndices[2]);
+				triangles.push_back(Face.mIndices[0]);
+				triangles.push_back(Face.mIndices[1]);
+				triangles.push_back(Face.mIndices[2]);
 			}
 
 			memcpy(pVertexGPU, (void *)vertices.data(), vertices.size() * sizeof(MeshVertex));
@@ -502,15 +473,45 @@ void DrawableSurface::loadMeshes(void)
 			pVertexGPU = (void*)(((char*)pVertexGPU) + vertices.size() * sizeof(MeshVertex));
 			pIndexGPU = (void*)(((char*)pIndexGPU) + triangles.size() * sizeof(unsigned int));
 
-			baseVertex += vertices.size();
+			std::vector<SubMesh::VertexSpec> specs;
 
-			SubMesh * submesh = SubMesh::Create(vertexBuffer, NumIndices * 3, GL_TRIANGLES, specs, indexBuffer, GL_UNSIGNED_INT);
+			SubMesh::VertexSpec SPEC_POS;
+			SPEC_POS.index = 0;
+			SPEC_POS.size = 3;
+			SPEC_POS.type = GL_FLOAT;
+			SPEC_POS.normalized = GL_FALSE;
+			SPEC_POS.stride = sizeof(MeshVertex);
+			SPEC_POS.pointer = BUFFER_OFFSET(vertex_offset);
+
+			SubMesh::VertexSpec SPEC_UV;
+			SPEC_UV.index = 2;
+			SPEC_UV.size = 2;
+			SPEC_UV.type = GL_FLOAT;
+			SPEC_UV.normalized = GL_FALSE;
+			SPEC_UV.stride = sizeof(MeshVertex);
+			SPEC_UV.pointer = BUFFER_OFFSET(vertex_offset+sizeof(float)*3);
+
+			SubMesh::VertexSpec SPEC_NORMAL;
+			SPEC_NORMAL.index = 1;
+			SPEC_NORMAL.size = 3;
+			SPEC_NORMAL.type = GL_FLOAT;
+			SPEC_NORMAL.normalized = GL_FALSE;
+			SPEC_NORMAL.stride = sizeof(MeshVertex);
+			SPEC_NORMAL.pointer = BUFFER_OFFSET(vertex_offset+sizeof(float)*5);
+
+			specs.push_back(SPEC_POS);
+			specs.push_back(SPEC_UV);
+			specs.push_back(SPEC_NORMAL);
+
+			SubMesh * submesh = SubMesh::Create(vertexBuffer, triangles.size(), GL_TRIANGLES, specs, indexBuffer, index_offset, GL_UNSIGNED_INT);
 			meshes.push_back(submesh);
+
+			vertex_offset += vertices.size() * sizeof(MeshVertex);
+			index_offset += triangles.size() * sizeof(unsigned int);
 		}
 
 		GPU::munmap(*vertexBuffer);
 		GPU::munmap(*indexBuffer);
-
 
 		Mesh fullMesh(meshes);
 		g_Meshes.insert(std::pair<std::string, Mesh>(filename.toStdString(), fullMesh));
