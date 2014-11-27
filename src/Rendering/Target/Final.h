@@ -5,14 +5,14 @@
 #include <Vector.h>
 #include <Matrix.h>
 
-class LightAccumBuffer
+class Final
 {
 public:
 
-	LightAccumBuffer	(void);
-	~LightAccumBuffer	(void);
+	Final(void);
+	~Final(void);
 
-	bool	init	(const GPU::Texture<GL_TEXTURE_2D> * pTexture);
+	bool	init	(const GPU::Texture<GL_TEXTURE_2D> * pColorTexture, const GPU::Texture<GL_TEXTURE_2D> * pDepthTexture);
 	void	free	(void);
 
 	bool	enable	(void);

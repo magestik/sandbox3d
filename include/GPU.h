@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #define GL3_PROTOTYPES 1
 #include <GL3/gl3.h>

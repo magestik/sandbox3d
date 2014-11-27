@@ -1,32 +1,31 @@
-#include "GBuffer.h"
+#include "Final.h"
 
 #include "../utils.inl"
 
-#include <assert.h>
-
 /**
- * @brief GBuffer::GBuffer
+ * @brief Final::Final
  */
-GBuffer::GBuffer()
+Final::Final(void)
 : m_uObject(0)
 {
 	// ...
 }
 
 /**
- * @brief GBuffer::~GBuffer
+ * @brief Final::~Final
  */
-GBuffer::~GBuffer()
+Final::~Final(void)
 {
 	// ...
 }
 
 /**
- * @brief GBuffer::init
+ * @brief Final::init
+ * @param pColorTexture
  * @param pDepthTexture
  * @return
  */
-bool GBuffer::init(const GPU::Texture<GL_TEXTURE_2D> * pColorTexture, const GPU::Texture<GL_TEXTURE_2D> * pDepthTexture)
+bool Final::init(const GPU::Texture<GL_TEXTURE_2D> * pColorTexture, const GPU::Texture<GL_TEXTURE_2D> * pDepthTexture)
 {
 	glGenFramebuffers(1, &m_uObject);
 
@@ -43,37 +42,43 @@ bool GBuffer::init(const GPU::Texture<GL_TEXTURE_2D> * pColorTexture, const GPU:
 }
 
 /**
- * @brief GBuffer::free
+ * @brief Final::free
  */
-void GBuffer::free()
+void Final::free(void)
 {
 	glDeleteFramebuffers(1, &m_uObject);
 }
 
 /**
- * @brief GBuffer::enable
+ * @brief Final::enable
  * @return
  */
-bool GBuffer::enable(void)
+bool Final::enable(void)
 {
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_uObject);
 	glDrawBuffer(GL_COLOR_ATTACHMENT0);
 
 	glEnable(GL_DEPTH_TEST);
+	glDepthFunc(GL_EQUAL);
+
+	glDepthMask(GL_FALSE);
 
 	return(true);
 }
 
 /**
- * @brief GBuffer::disable
+ * @brief Final::disable
  * @return
  */
-bool GBuffer::disable(void)
+bool Final::disable()
 {
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 	glDrawBuffer(GL_BACK);
 
 	glDisable(GL_DEPTH_TEST);
+	glDepthFunc(GL_LESS);
+
+	glDepthMask(GL_TRUE);
 
 	return(true);
 }

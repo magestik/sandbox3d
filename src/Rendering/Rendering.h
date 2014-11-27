@@ -19,6 +19,7 @@
 #include "Target/GBuffer.h"
 #include "Target/ShadowMap.h"
 #include "Target/LightAccumBuffer.h"
+#include "Target/Final.h"
 
 // theses maps contains all shaders, compiled at launch time
 extern std::map<std::string, GPU::Shader<GL_FRAGMENT_SHADER> *>	g_FragmentShaders;
@@ -34,7 +35,7 @@ public:
 	enum ERenderType
 	{
 		FINAL,
-		POSITION,
+		LIGHT_BUFFER,
 		NORMAL,
 		DIFFUSE,
 		DEPTH,
@@ -64,18 +65,25 @@ protected:
 
 	void	renderIntermediateToScreen	(ERenderType eRenderType);
 
-	void	renderFinal					(void);
+	void	renderFinal					(const mat4x4 & mView);
 
 private:
 
-	GBuffer	*	m_pGBuffer;
-	ShadowMap * m_pShadowMap;
+	unsigned int m_uWidth;
+	unsigned int m_uHeight;
 
-	LightAccumBuffer m_lightAccumBuffer;
+	mat4x4 m_matProjection;
+
+	GBuffer				m_GBuffer;
+	Final				m_Compose;
+	LightAccumBuffer	m_LightAccumBuffer;
 
 	std::vector<Mesh::Instance> m_aObjects;
 
+	ShadowMap * m_pShadowMap;
 	Light::Spot * m_pLight;
+
+	Shader *	m_pComposeShader;
 
 	Shader *	m_pGeometryPassShader;
 	Shader *	m_pLightPassShader;
@@ -85,5 +93,18 @@ private:
 	Shader *	m_pFullscreenNormalShader;
 	Shader *	m_pFullscreenComposeShader;
 
+	Shader *	m_pDirectionnalLightShader;
+
 	SubMesh *	m_pQuadMesh;
+
+	enum ETarget
+	{
+		TARGET_DEPTH,
+		TARGET_NORMALS,
+		TARGET_LIGHTS,
+		TARGET_POSTFX1,
+		TARGET_POSTFX2
+	};
+
+	GPU::Texture<GL_TEXTURE_2D> * m_apTargets [5];
 };

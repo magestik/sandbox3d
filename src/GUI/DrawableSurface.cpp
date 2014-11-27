@@ -95,7 +95,7 @@ void DrawableSurface::DebugNormal()
  */
 void DrawableSurface::DebugPosition()
 {
-	m_eRenderType = Rendering::POSITION;
+	m_eRenderType = Rendering::LIGHT_BUFFER;
 	update();
 }
 
@@ -141,9 +141,9 @@ void DrawableSurface::DebugFinal()
  */
 void DrawableSurface::initializeGL(void)
 {
-///	GLint v;
-///	glGetIntegerv(GL_CONTEXT_FLAGS, &v);
-///	assert (v & GL_CONTEXT_FLAG_DEBUG_BIT);
+	GLint v;
+	glGetIntegerv(GL_CONTEXT_FLAGS, &v);
+	assert (v & GL_CONTEXT_FLAG_DEBUG_BIT);
 
 	glEnable(GL_CULL_FACE);
 
@@ -216,6 +216,7 @@ void DrawableSurface::resizeGL(int w, int h)
  */
 void DrawableSurface::paintGL(void)
 {
+	GLuint elapsed_time = 0;
 	Timer t;
 
 	glBeginQuery(GL_TIME_ELAPSED, m_query);
@@ -236,7 +237,6 @@ void DrawableSurface::paintGL(void)
 		glGetQueryObjectiv(m_query, GL_QUERY_RESULT_AVAILABLE, &done);
 	}
 
-	GLuint elapsed_time;
 	glGetQueryObjectuiv(m_query, GL_QUERY_RESULT, &elapsed_time);
 
 	static_cast<MainWindow*>(parent())->SetRenderTime(t.getElapsedTimeInMs(), elapsed_time / 1000000.0);

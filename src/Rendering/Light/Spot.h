@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include <Vector.h>
 #include <Matrix.h>
@@ -17,11 +17,15 @@ public:
 	const vec3 & GetDirection(void) const { return(m_vDirection); }
 	float GetAngle(void) const { return(m_fAngle); }
 
+	const vec3 & GetColor(void) const { return(m_vColor); }
+
 private:
 
 	vec3 m_vPosition;
 	vec3 m_vDirection;
 	float m_fAngle;
+
+	vec3 m_vColor;
 
 };
 

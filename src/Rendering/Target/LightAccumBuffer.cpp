@@ -6,11 +6,9 @@
  * @brief LightAccumBuffer::LightAccumBuffer
  */
 LightAccumBuffer::LightAccumBuffer()
-: m_uWidth(1280)
-, m_uHeight(720)
-, m_matProjection(1.0f)
+: m_uObject(0)
 {
-	updateProjection();
+	// ...
 }
 
 /**
@@ -21,65 +19,59 @@ LightAccumBuffer::~LightAccumBuffer()
 	// ...
 }
 
-
 /**
- * @brief LightAccumBuffer::Initialize
+ * @brief LightAccumBuffer::init
+ * @param pTexture
  * @return
  */
-bool LightAccumBuffer::Initialize(void)
+bool LightAccumBuffer::init(const GPU::Texture<GL_TEXTURE_2D> * pTexture)
 {
 	glGenFramebuffers(1, &m_uObject);
-	glGenTextures(1, &m_uTexture);
 
-	Resize(m_uWidth, m_uHeight);
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_uObject);
 
-	GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+	glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, pTexture->GetObject(), 0);
+
+	GLenum status = glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER);
+
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+
 	return(status == GL_FRAMEBUFFER_COMPLETE);
 }
 
 /**
- * @brief LightAccumBuffer::Release
- */
-void LightAccumBuffer::Release(void)
-{
-	glDeleteFramebuffers(1, &m_uObject);
-	glDeleteTextures(1, &m_uTexture);
-}
-
-/**
- * @brief LightAccumBuffer::Resize
- * @param width
- * @param height
+ * @brief LightAccumBuffer::free
  * @return
  */
-bool LightAccumBuffer::Resize(unsigned int width, unsigned height)
+void LightAccumBuffer::free(void)
 {
-	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_uObject);
-
-	glBindTexture(GL_TEXTURE_2D, m_uTexture);
-
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, width, height, 0, GL_RGB, GL_FLOAT, NULL);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_uTexture, 0);
-
-	glBindTexture(GL_TEXTURE_2D, 0);
-
-	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-
-	m_uWidth = width;
-	m_uHeight = height;
-
-	updateProjection();
-
-	return true;
+	glDeleteFramebuffers(1, &m_uObject);
 }
 
 /**
- * @brief LightAccumBuffer::updateProjection
+ * @brief LightAccumBuffer::enable
+ * @return
  */
-void LightAccumBuffer::updateProjection()
+bool LightAccumBuffer::enable(void)
 {
-	float ratio = m_uWidth/(float)m_uHeight;
-	m_matProjection = _perspective(75.0f, ratio, 1.0f, 1000.0f);
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_uObject);
+	glDrawBuffer(GL_COLOR_ATTACHMENT0);
+
+	glDepthMask(GL_FALSE);
+
+	return(true);
+}
+
+/**
+ * @brief LightAccumBuffer::disable
+ * @return
+ */
+bool LightAccumBuffer::disable(void)
+{
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+	glDrawBuffer(GL_BACK);
+
+	glDepthMask(GL_TRUE);
+
+	return(true);
 }
