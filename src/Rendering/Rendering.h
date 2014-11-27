@@ -36,8 +36,7 @@ public:
 	{
 		FINAL,
 		LIGHT_BUFFER,
-		NORMAL,
-		DIFFUSE,
+		NORMAL_BUFFER,
 		DEPTH,
 		SHADOWS
 	};

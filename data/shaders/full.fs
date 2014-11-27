@@ -42,15 +42,19 @@ float getShadow(vec3 position)
 	#endif
 }
 
+vec3 getLight(vec4 position)
+{
+	vec2 fragcoord = position.xy/position.w * 0.5 + 0.5;
+	return texture(lightSampler, fragcoord).rgb;
+}
+
 void main(void)
 {
 	vec3 diffuse = vec3(0.5, 0.5, 0.5);
 
-	vec2 fragcoord = outLightCoord.xy/outLightCoord.w * 0.5 + 0.5;
-	vec3 light_precalculated = texture(lightSampler, fragcoord).rgb;
-
 	float shadow_factor = getShadow(outPosition);
+	vec3 light_factor = getLight(outLightCoord);
 
-	outColor = diffuse * shadow_factor * light_precalculated + ambient;
+	outColor = diffuse * shadow_factor * light_factor + ambient;
 }
 

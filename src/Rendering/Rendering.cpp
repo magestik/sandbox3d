@@ -10,6 +10,8 @@ std::map<std::string, GPU::Shader<GL_VERTEX_SHADER> *> g_VertexShaders;
 
 std::map<std::string, Mesh> g_Meshes;
 
+#define SHADOW_MAP_SIZE 1024
+
 /**
  * @brief Rendering::onInitialize
  */
@@ -46,6 +48,7 @@ void Rendering::onInitializeComplete()
 
 		m_pLight = new Light::Spot(light_pos, light_dir, light_angle);
 		m_pShadowMap = new ShadowMap();
+		m_pShadowMap->init(SHADOW_MAP_SIZE, SHADOW_MAP_SIZE);
 	}
 
 	compileShaders();
@@ -206,21 +209,12 @@ void Rendering::onCreate(const Mesh & m)
  */
 void Rendering::renderSceneToShadowMap(void)
 {
-	glViewport(0, 0, m_pShadowMap->GetWidth(), m_pShadowMap->GetHeight());
+	glViewport(0, 0, SHADOW_MAP_SIZE, SHADOW_MAP_SIZE);
 
-	GLuint uFBO = m_pShadowMap->GetObject();
-
-	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, uFBO);
-
-	glDrawBuffer(GL_NONE);
-
-	glPolygonOffset(10.0f, 1.0f);
-	glEnable(GL_POLYGON_OFFSET_FILL);
+	m_pShadowMap->enable();
 
 	{
 		glClear(GL_DEPTH_BUFFER_BIT);
-
-		glEnable(GL_DEPTH_TEST);
 
 		mat4x4 mDepthView = _lookAt(m_pLight->GetPosition(), m_pLight->GetDirection(), vec3(0.0f, -1.0f, 0.0f));
 		mat4x4 mDepthViewProjection = m_pShadowMap->GetProjection() * mDepthView;
@@ -237,15 +231,9 @@ void Rendering::renderSceneToShadowMap(void)
 		}
 
 		glUseProgram(0);
-
-		glDisable(GL_DEPTH_TEST);
 	}
 
-	glDisable(GL_POLYGON_OFFSET_FILL);
-
-	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-
-	glDrawBuffer(GL_BACK);
+	m_pShadowMap->disable();
 }
 
 /**
@@ -273,14 +261,12 @@ void Rendering::renderIntermediateToScreen(ERenderType eRenderType)
 		}
 		break;
 
-		case NORMAL:
+		case NORMAL_BUFFER:
 		{
-			m_pFullscreenNormalShader->SetAsCurrent();
-			{
-				m_pFullscreenDepthShader->SetTexture("texSampler", 0, *(m_apTargets[TARGET_NORMALS]));
-				m_pQuadMesh->draw();
-			}
-			glUseProgram(0);
+			glBindFramebuffer(GL_READ_FRAMEBUFFER, m_GBuffer.GetObject());
+			glReadBuffer(GL_COLOR_ATTACHMENT0);
+			glBlitFramebuffer(0, 0, m_uWidth, m_uHeight, 0, 0, m_uWidth, m_uHeight, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+			glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
 		}
 		break;
 

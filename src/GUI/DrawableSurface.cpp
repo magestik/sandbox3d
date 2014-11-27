@@ -73,27 +73,18 @@ void DrawableSurface::AddObject(const std::string & name)
 }
 
 /**
- * @brief DrawableSurface::DebugDiffuse
- */
-void DrawableSurface::DebugDiffuse()
-{
-	m_eRenderType = Rendering::DIFFUSE;
-	update();
-}
-
-/**
  * @brief DrawableSurface::DebugNormal
  */
 void DrawableSurface::DebugNormal()
 {
-	m_eRenderType = Rendering::NORMAL;
+	m_eRenderType = Rendering::NORMAL_BUFFER;
 	update();
 }
 
 /**
  * @brief DrawableSurface::DebugPosition
  */
-void DrawableSurface::DebugPosition()
+void DrawableSurface::DebugLights()
 {
 	m_eRenderType = Rendering::LIGHT_BUFFER;
 	update();

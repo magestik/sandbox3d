@@ -7,34 +7,31 @@
 /**
  * @brief ShadowMap::ShadowMap
  */
-ShadowMap::ShadowMap()
-: m_uWidth(1024)
-, m_uHeight(1024)
+ShadowMap::ShadowMap(void)
+: m_uObject(0)
 , m_matProjection(1.0f)
 {
-	glGenFramebuffers(1, &m_uObject);
-	Resize(m_uWidth, m_uHeight);
-
-	GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-	assert(status == GL_FRAMEBUFFER_COMPLETE);
+	// ...
 }
 
 /**
  * @brief ShadowMap::~ShadowMap
  */
-ShadowMap::~ShadowMap()
+ShadowMap::~ShadowMap(void)
 {
-	glDeleteFramebuffers(1, &m_uObject);
+	// ...
 }
 
 /**
- * @brief GBuffer::Initialize
+ * @brief ShadowMap::init
  * @param width
  * @param height
  * @return
  */
-bool ShadowMap::Resize(unsigned int width, unsigned height)
+bool ShadowMap::init(unsigned int width, unsigned height)
 {
+	glGenFramebuffers(1, &m_uObject);
+
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_uObject);
 
 	{
@@ -54,21 +51,52 @@ bool ShadowMap::Resize(unsigned int width, unsigned height)
 		glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, m_texture.GetObject(), 0);
 	}
 
+	m_matProjection = _perspective(45.0f, 1.0f, 1.0f, 100.0f); // FIXME : spot light 45° hardcoded
+
+	GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 
-	m_uWidth = width;
-	m_uHeight = height;
-
-	updateProjection();
-
-	return true;
+	return (status == GL_FRAMEBUFFER_COMPLETE);
 }
 
 /**
- * @brief ShadowMap::updateProjection
+ * @brief ShadowMap::free
  */
-void ShadowMap::updateProjection()
+void ShadowMap::free(void)
 {
-	// FIXME : spot light 45° hardcoded
-	m_matProjection = _perspective(45.0f, 1.0f, 1.0f, 100.0f);
+	glDeleteFramebuffers(1, &m_uObject);
+}
+
+/**
+ * @brief ShadowMap::enable
+ * @return
+ */
+bool ShadowMap::enable(void)
+{
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_uObject);
+	glDrawBuffer(GL_NONE);
+
+	glEnable(GL_DEPTH_TEST);
+
+	glPolygonOffset(10.0f, 1.0f);
+	glEnable(GL_POLYGON_OFFSET_FILL);
+
+	return(true);
+}
+
+/**
+ * @brief ShadowMap::disable
+ * @return
+ */
+bool ShadowMap::disable(void)
+{
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+	glDrawBuffer(GL_BACK);
+
+	glDisable(GL_DEPTH_TEST);
+
+	glDisable(GL_POLYGON_OFFSET_FILL);
+
+	return(true);
 }

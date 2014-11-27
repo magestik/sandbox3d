@@ -19,9 +19,8 @@ public:
 	void	AddObject			(const std::string & name);
 
 	void	DebugFinal			(void);
-	void	DebugDiffuse		(void);
 	void	DebugNormal			(void);
-	void	DebugPosition		(void);
+	void	DebugLights			(void);
 	void	DebugDepth			(void);
 	void	DebugShadows		(void);
 

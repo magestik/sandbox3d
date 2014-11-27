@@ -71,7 +71,7 @@
      <x>0</x>
      <y>0</y>
      <width>1280</width>
-     <height>23</height>
+     <height>19</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -105,10 +105,11 @@
       <string>Render</string>
      </property>
      <addaction name="actionFinal"/>
-     <addaction name="actionDiffuse"/>
+     <addaction name="separator"/>
      <addaction name="actionNormal"/>
-     <addaction name="actionPosition"/>
      <addaction name="actionDepth"/>
+     <addaction name="actionLights"/>
+     <addaction name="separator"/>
      <addaction name="actionShadows"/>
     </widget>
     <addaction name="actionWireframe"/>
@@ -296,12 +297,12 @@
     <string>Ctrl+F3</string>
    </property>
   </action>
-  <action name="actionPosition">
+  <action name="actionLights">
    <property name="checkable">
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>Position</string>
+    <string>Lights</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+F4</string>

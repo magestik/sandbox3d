@@ -12,16 +12,15 @@ public:
 	ShadowMap(void);
 	~ShadowMap(void);
 
-	void	Release		(void);
+	bool	init	(unsigned int width, unsigned height);
+	void	free	(void);
 
-	bool	Resize		(unsigned int width, unsigned height);
+	bool	enable	(void);
+	bool	disable	(void);
 
 	GLuint	GetObject	(void) { return(m_uObject); }
 
 	const GPU::Texture<GL_TEXTURE_2D> &	GetTexture	(void) { return(m_texture); }
-
-	GLuint	GetWidth	(void) { return(m_uWidth); }
-	GLuint	GetHeight	(void) { return(m_uHeight); }
 
 	const mat4x4 &	GetProjection (void) const { return(m_matProjection); }
 
@@ -31,12 +30,9 @@ protected:
 
 private:
 
-	unsigned int m_uWidth;
-	unsigned int m_uHeight;
+	GLuint m_uObject;
 
 	mat4x4 m_matProjection;
-
-	GLuint m_uObject;
 
 	GPU::Texture<GL_TEXTURE_2D> m_texture;
 
