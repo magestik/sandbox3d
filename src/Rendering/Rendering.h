@@ -47,7 +47,7 @@ public:
 
 	void	onResize				(int width, int height);
 
-	void	onUpdate				(const mat4x4 & mView, bool bWireframe, ERenderType eRenderType = FINAL);
+	void	onUpdate				(const mat4x4 & mView, const vec4 & clearColor, bool bWireframe, ERenderType eRenderType = FINAL);
 
 	void	onCreate				(const Mesh & m);
 
@@ -64,7 +64,7 @@ protected:
 
 	void	renderIntermediateToScreen	(ERenderType eRenderType);
 
-	void	renderFinal					(const mat4x4 & mView);
+	void	renderFinal					(const mat4x4 & mView, const vec4 & clearColor);
 
 private:
 

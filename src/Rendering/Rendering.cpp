@@ -145,7 +145,7 @@ void Rendering::onResize(int width, int height)
  * @param mProjection
  * @param mView
  */
-void Rendering::onUpdate(const mat4x4 & mView, bool bWireframe, ERenderType eRenderType)
+void Rendering::onUpdate(const mat4x4 & mView, const vec4 & clearColor, bool bWireframe, ERenderType eRenderType)
 {
 	//
 	// Render Scene to G-Buffer
@@ -180,7 +180,7 @@ void Rendering::onUpdate(const mat4x4 & mView, bool bWireframe, ERenderType eRen
 			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 		}
 
-		renderFinal(mView);
+		renderFinal(mView, clearColor);
 
 		if (bWireframe)
 		{
@@ -304,6 +304,7 @@ void Rendering::renderSceneToGBuffer(const mat4x4 & mView)
 	m_GBuffer.enable();
 
 	{
+		glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		mat4x4 mCameraViewProjection = m_matProjection * mView;
@@ -336,6 +337,7 @@ void Rendering::renderLightsToAccumBuffer()
 	m_LightAccumBuffer.enable();
 
 	{
+		glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 
 		m_pDirectionnalLightShader->SetAsCurrent();
@@ -359,13 +361,14 @@ void Rendering::renderLightsToAccumBuffer()
  * @brief Rendering::renderFinal
  * @param mViewProjection
  */
-void Rendering::renderFinal(const mat4x4 & mView)
+void Rendering::renderFinal(const mat4x4 & mView, const vec4 & clearColor)
 {
 	glViewport(0, 0, m_uWidth, m_uHeight);
 
 	m_Compose.enable();
 
 	{
+		glClearColor(clearColor.x, clearColor.y, clearColor.z, clearColor.w);
 		glClear(GL_COLOR_BUFFER_BIT);
 
 		mat4x4 mCameraViewProjection = m_matProjection * mView;

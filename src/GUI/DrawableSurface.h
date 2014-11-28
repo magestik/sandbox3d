@@ -64,6 +64,8 @@ private:
 	GPU::Buffer<GL_PIXEL_UNPACK_BUFFER> * m_apBuffer [NB_BUFFER];
 	GPU::Buffer<GL_PIXEL_UNPACK_BUFFER> * m_pSpecial;
 
+	vec4 m_vClearColor;
+
 signals:
 
 public slots:

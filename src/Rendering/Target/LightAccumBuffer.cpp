@@ -59,6 +59,9 @@ bool LightAccumBuffer::enable(void)
 
 	glDepthMask(GL_FALSE);
 
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_ONE, GL_ONE);
+
 	return(true);
 }
 
@@ -72,6 +75,9 @@ bool LightAccumBuffer::disable(void)
 	glDrawBuffer(GL_BACK);
 
 	glDepthMask(GL_TRUE);
+
+	glDisable(GL_BLEND);
+	glBlendFunc(GL_ONE, GL_ZERO);
 
 	return(true);
 }

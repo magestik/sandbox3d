@@ -52,7 +52,11 @@ find_package(OpenGL REQUIRED)
 # Compile application
 add_executable(${PROJECT_NAME} ${SRC_FILES} ${UI_FILES} ${SHADERS_FILES})
 
-target_link_libraries(${PROJECT_NAME} glBreak)
+
+IF(CMAKE_BUILD_TYPE MATCHES Debug)
+	message("Debug build.")
+	target_link_libraries(${PROJECT_NAME} glBreak)
+ENDIF()
 
 target_link_libraries(${PROJECT_NAME} assimp)
 

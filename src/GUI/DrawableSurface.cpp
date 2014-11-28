@@ -29,6 +29,7 @@ DrawableSurface::DrawableSurface(QWidget *parent)
 , m_vLastPos(0, 0)
 , m_eRenderType(Rendering::FINAL)
 , m_bDebugWireframe(false)
+, m_vClearColor(0.0f, 0.0f, 0.0f, 0.0f)
 {
 	setFocusPolicy(Qt::StrongFocus);
 	makeCurrent();
@@ -215,7 +216,7 @@ void DrawableSurface::paintGL(void)
 	t.Start();
 	{
 		const mat4x4 & matView = m_camera.getViewMatrix();
-		m_renderer.onUpdate(matView, m_bDebugWireframe, m_eRenderType);
+		m_renderer.onUpdate(matView, m_vClearColor, m_bDebugWireframe, m_eRenderType);
 	}
 	t.Stop();
 
@@ -252,7 +253,7 @@ void DrawableSurface::mouseMoveEvent(QMouseEvent * event)
 {
 	ivec2 pos(event->x(), event->y());
 
-	//if (event->button() & Qt::MidButton)
+	//if (event->button() & Qt::LeftButton)
 	{
 		ivec2 diff = pos - m_vLastPos;
 
@@ -261,12 +262,6 @@ void DrawableSurface::mouseMoveEvent(QMouseEvent * event)
 			// Translate X/Y
 			vec2 translation(diff.x / 100.0f, diff.y / -100.0f);
 			m_camera.TranslateXY(translation);
-		}
-		else if (event->modifiers() & Qt::ShiftModifier)
-		{
-			// Translate Z
-			float translation = diff.y / -100.0f;
-			m_camera.TranslateZ(translation);
 		}
 		else
 		{
@@ -296,7 +291,8 @@ void DrawableSurface::mouseReleaseEvent(QMouseEvent * event)
  */
 void DrawableSurface::wheelEvent(QWheelEvent * event)
 {
-	// ...
+	float translation = event->delta() / -100.0f;
+	m_camera.TranslateZ(translation);
 	update();
 }
 
@@ -581,6 +577,6 @@ void DrawableSurface::reloadShader(const QString & filename)
  */
 void DrawableSurface::setClearColor(const QColor & color)
 {
-	qglClearColor(color);
+	m_vClearColor = vec4(color.redF(), color.greenF(), color.blueF(), color.alphaF());
 	update();
 }

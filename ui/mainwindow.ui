@@ -100,22 +100,15 @@
     <property name="title">
      <string>Debug</string>
     </property>
-    <widget class="QMenu" name="menuBuffer">
-     <property name="title">
-      <string>Render</string>
-     </property>
-     <addaction name="actionFinal"/>
-     <addaction name="separator"/>
-     <addaction name="actionNormal"/>
-     <addaction name="actionDepth"/>
-     <addaction name="actionLights"/>
-     <addaction name="separator"/>
-     <addaction name="actionShadows"/>
-    </widget>
     <addaction name="actionWireframe"/>
     <addaction name="actionShow_bounding_boxes"/>
     <addaction name="actionFaceCulling"/>
-    <addaction name="menuBuffer"/>
+    <addaction name="separator"/>
+    <addaction name="actionFinal"/>
+    <addaction name="actionNormal"/>
+    <addaction name="actionDepth"/>
+    <addaction name="actionLights"/>
+    <addaction name="actionShadows"/>
    </widget>
    <widget class="QMenu" name="menuWindow">
     <property name="title">
@@ -294,7 +287,7 @@
     <string>Normal</string>
    </property>
    <property name="shortcut">
-    <string>Ctrl+F3</string>
+    <string>Ctrl+F2</string>
    </property>
   </action>
   <action name="actionLights">
@@ -316,7 +309,7 @@
     <string>Depth</string>
    </property>
    <property name="shortcut">
-    <string>Ctrl+F5</string>
+    <string>Ctrl+F3</string>
    </property>
   </action>
   <action name="actionFinal">
@@ -341,7 +334,7 @@
     <string>Shadows</string>
    </property>
    <property name="shortcut">
-    <string>Ctrl+F6</string>
+    <string>Ctrl+F5</string>
    </property>
   </action>
  </widget>
