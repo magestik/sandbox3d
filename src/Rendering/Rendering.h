@@ -25,6 +25,8 @@
 extern std::map<std::string, GPU::Shader<GL_FRAGMENT_SHADER> *>	g_FragmentShaders;
 extern std::map<std::string, GPU::Shader<GL_VERTEX_SHADER> *>	g_VertexShaders;
 
+extern std::map<std::string, GPU::Texture<GL_TEXTURE_2D> *> g_Textures;
+
 extern std::map<std::string, Mesh>			g_Meshes;
 
 class Rendering
@@ -85,7 +87,8 @@ private:
 	Shader *	m_pComposeShader;
 
 	Shader *	m_pGeometryPassShader;
-	Shader *	m_pLightPassShader;
+	Shader *	m_pGeometryWithNormalMapPassShader;
+
 	Shader *	m_pDepthOnlyPassShader;
 
 	Shader *	m_pFullscreenDepthShader;

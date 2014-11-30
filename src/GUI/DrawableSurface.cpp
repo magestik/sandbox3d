@@ -362,9 +362,7 @@ void DrawableSurface::loadMeshes(void)
 	{
 		g_pSplashScreen->showMessage("Loading mesh '" + filename + "' ...");
 
-		std::string filepath = dir.filePath(filename).toStdString();
-
-		Mesh fullMesh = loadMesh(filepath);
+		Mesh fullMesh = loadMesh(dir, filename);
 
 		g_Meshes.insert(std::pair<std::string, Mesh>(filename.toStdString(), fullMesh));
 
@@ -522,46 +520,6 @@ void DrawableSurface::loadSprites()
 }
 
 /**
- * @brief DrawableSurface::loadTexture
- * @param filename
- */
-void DrawableSurface::loadTexture(const QString & filename)
-{
-	QImage img(filename);
-
-	QImage tex = QGLWidget::convertToGLFormat(img);
-
-	GPU::Texture<GL_TEXTURE_2D> * pTexture = new GPU::Texture<GL_TEXTURE_2D>();
-
-	Timer t;
-
-	t.Start();
-
-	size_t size = (tex.width() * tex.height() * 4 * sizeof(char));
-
-	static GPU::Buffer<GL_PIXEL_UNPACK_BUFFER> * pBuffer = new GPU::Buffer<GL_PIXEL_UNPACK_BUFFER>();
-
-	GPU::realloc(*pBuffer, size, GL_STATIC_DRAW); // this will invalidate the previous buffer
-
-	GPU::memcpy(*pBuffer, (void *)tex.bits(), size);
-
-	pTexture->init<GL_RGBA>(tex.width(), tex.height(), *pBuffer, GL_RGBA, GL_UNSIGNED_BYTE);
-
-	t.Stop();
-
-	printf("CPU time : %f \n", t.getElapsedTimeInMs());
-}
-
-/**
- * @brief DrawableSurface::loadShader
- * @param filename
- */
-void DrawableSurface::loadShader(const QString & filename)
-{
-	// TODO
-}
-
-/**
  * @brief DrawableSurface::reloadShader
  * @param filename
  */
@@ -569,7 +527,7 @@ void DrawableSurface::reloadShader(const QString & filename)
 {
 	std::string str = filename.toStdString();
 	printf("file modified : %s \n", str.c_str());
-	loadShader(filename);
+	//loadShader(filename);
 }
 
 /**

@@ -44,9 +44,6 @@ private:
 	void	loadMeshes			(void);
 	void	loadSprites			(void);
 
-	void	loadTexture			(const QString & filename);
-	void	loadShader			(const QString & filename);
-
 	// Rendering
 	Camera		m_camera;
 	Rendering	m_renderer;

@@ -1,11 +1,44 @@
 ﻿#include "MeshLoader.h"
+#include "TextureLoader.h"
 
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 
-Mesh loadMesh(const std::string & filepath)
+#include "../../Rendering/Rendering.h"
+
+void loadAllMaterials(const aiScene * scene, const QDir & dir)
 {
+	aiTextureType aSupportedTextureTypes [] = { aiTextureType_DIFFUSE, aiTextureType_SPECULAR, aiTextureType_HEIGHT };
+
+	for (int i = 0; i < scene->mNumMaterials; ++i)
+	{
+		aiMaterial * material = scene->mMaterials[i];
+
+		for (aiTextureType type : aSupportedTextureTypes)
+		{
+			aiString str;
+
+			material->GetTexture(type, 0, &str);
+
+			if (g_Textures.find(str.C_Str()) == g_Textures.end())
+			{
+				QString texture_filename(str.C_Str());
+				GPU::Texture<GL_TEXTURE_2D> * texture = loadTexture(dir, texture_filename);
+
+				if (texture != nullptr)
+				{
+					g_Textures.insert(std::pair<std::string, GPU::Texture<GL_TEXTURE_2D> *>(texture_filename.toStdString(), texture));
+				}
+			}
+		}
+	}
+}
+
+Mesh loadMesh(const QDir & dir, const QString & filename)
+{
+	std::string filepath = dir.filePath(filename).toStdString();
+
 	Assimp::Importer importer;
 
 	const aiScene * scene = importer.ReadFile(filepath.data(), aiProcessPreset_TargetRealtime_MaxQuality);
@@ -14,6 +47,8 @@ Mesh loadMesh(const std::string & filepath)
 	{
 		return(Mesh());
 	}
+
+	loadAllMaterials(scene, dir);
 
 	std::vector<SubMesh*> meshes;
 
@@ -50,6 +85,12 @@ Mesh loadMesh(const std::string & filepath)
 		vertices.reserve(mesh->mNumVertices);
 		triangles.reserve(mesh->mNumFaces*3);
 
+		aiString str;
+		scene->mMaterials[mesh->mMaterialIndex]->GetTexture(aiTextureType_HEIGHT, 0, &str);
+		std::string texture_name(str.C_Str());
+
+		bool hasNormalMap = (g_Textures.find(texture_name) != g_Textures.end()) && mesh->HasTangentsAndBitangents();
+
 		// Populate the vertex attribute vectors
 		for (int j = 0 ; j < mesh->mNumVertices ; ++j)
 		{
@@ -59,9 +100,36 @@ Mesh loadMesh(const std::string & filepath)
 			vertex.position.y = mesh->mVertices[j].y;
 			vertex.position.z = mesh->mVertices[j].z;
 
-			vertex.normal.x = mesh->mNormals[j].x;
-			vertex.normal.y = mesh->mNormals[j].y;
-			vertex.normal.z = mesh->mNormals[j].z;
+			if (hasNormalMap)
+			{
+				vec3 tangent = vec3(mesh->mTangents[j].x, mesh->mTangents[j].y, mesh->mTangents[j].z);
+				vec3 bitangent = vec3(mesh->mBitangents[j].x, mesh->mBitangents[j].y, mesh->mBitangents[j].z);
+				vec3 normal = vec3(mesh->mNormals[j].x, mesh->mNormals[j].y, mesh->mNormals[j].z);
+
+				mat3x3 TBN = transpose(mat3x3(normal, bitangent, tangent));
+
+				float r = 0.5f * sqrt(1 + TBN[0][0] + TBN[1][1] + TBN[2][2]);
+				vec4 q = normalize(vec4(r, 0.25f * (TBN[2][1] - TBN[1][2]), 0.25f * (TBN[0][2] - TBN[2][0]), 0.25f * (TBN[1][0] - TBN[0][1])));
+
+				if (q.w < 0.0f)
+				{
+					vertex.normal.x = -q.x;
+					vertex.normal.y = -q.y;
+					vertex.normal.z = -q.z;
+				}
+				else
+				{
+					vertex.normal.x = q.x;
+					vertex.normal.y = q.y;
+					vertex.normal.z = q.z;
+				}
+			}
+			else
+			{
+				vertex.normal.x = mesh->mNormals[j].x;
+				vertex.normal.y = mesh->mNormals[j].y;
+				vertex.normal.z = mesh->mNormals[j].z;
+			}
 
 			if (mesh->HasTextureCoords(0))
 			{
@@ -124,6 +192,11 @@ Mesh loadMesh(const std::string & filepath)
 
 		SubMesh * submesh = SubMesh::Create(vertexBuffer, triangles.size(), GL_TRIANGLES, specs, indexBuffer, index_offset, GL_UNSIGNED_INT);
 		meshes.push_back(submesh);
+
+		if (hasNormalMap)
+		{
+			submesh->m_pNormalMap = g_Textures[texture_name];
+		}
 
 		vertex_offset += vertices.size() * sizeof(SubMesh::VertexSimple);
 		index_offset += triangles.size() * sizeof(unsigned int);

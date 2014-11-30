@@ -29,14 +29,3 @@ Mesh::~Mesh()
 {
 	// ...
 }
-
-/**
- * @brief Mesh::draw
- */
-void Mesh::draw() const
-{
-	for (SubMesh * m : m_aSubMeshes)
-	{
-		m->draw();
-	}
-}

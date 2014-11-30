@@ -17,6 +17,7 @@ public:
 	struct Instance
 	{
 		Instance(const Mesh * m) : transformation(1.0f), mesh(m) { /* ... */ }
+		const std::vector<SubMesh*> & getDrawCommands() const { return(mesh->m_aSubMeshes); }
 		mat4x4 transformation;
 		const Mesh * mesh;
 	};
@@ -25,11 +26,9 @@ public:
 	explicit Mesh(const std::vector<SubMesh*> & submeshes);
 	virtual ~Mesh(void);
 
-	void draw(void) const;
-
 	Instance Instantiate() const { return(Instance(this)); }
 
-private:
+//private:
 
 	std::vector<SubMesh*> m_aSubMeshes;
 };

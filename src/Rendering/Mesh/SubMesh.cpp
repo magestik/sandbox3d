@@ -11,6 +11,7 @@
 SubMesh::SubMesh(GLsizei iCount, GLenum eMode)
 : m_iCount(iCount)
 , m_eMode(eMode)
+, m_pNormalMap(nullptr)
 {
 	glGenVertexArrays(1, &m_uObject);
 }
@@ -48,8 +49,8 @@ SubMesh * SubMesh::Create(GPU::Buffer<GL_ARRAY_BUFFER> * pVertexBuffer, GLsizei 
  * @param type
  * @return
  */
-SubMesh * SubMesh::Create(GPU::Buffer<GL_ARRAY_BUFFER> * pVertexBuffer, GLsizei count, GLenum mode, const std::vector<VertexSpec> & specs, GPU::Buffer<GL_ELEMENT_ARRAY_BUFFER> * pIndexBuffer, unsigned int offset, GLenum type)
+SubMesh * SubMesh::Create(GPU::Buffer<GL_ARRAY_BUFFER> * pVertexBuffer, GLsizei count, GLenum mode, const std::vector<VertexSpec> & specs, GPU::Buffer<GL_ELEMENT_ARRAY_BUFFER> * pIndexBuffer, unsigned int firstIndex, GLenum type)
 {
-	SubMesh * pMesh = new MeshIndexed(pVertexBuffer, count, mode, specs, pIndexBuffer, offset, type);
+	SubMesh * pMesh = new MeshIndexed(pVertexBuffer, count, mode, specs, pIndexBuffer, firstIndex, type);
 	return(pMesh);
 }

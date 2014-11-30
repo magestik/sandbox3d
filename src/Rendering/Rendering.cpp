@@ -8,6 +8,8 @@ std::map<std::string, GPU::Shader<GL_FRAGMENT_SHADER> *> g_FragmentShaders;
 
 std::map<std::string, GPU::Shader<GL_VERTEX_SHADER> *> g_VertexShaders;
 
+std::map<std::string, GPU::Texture<GL_TEXTURE_2D> *> g_Textures;
+
 std::map<std::string, Mesh> g_Meshes;
 
 #define SHADOW_MAP_SIZE 1024
@@ -64,9 +66,11 @@ void Rendering::compileShaders()
 
 	m_pComposeShader			= new Shader(g_VertexShaders["full.vs"], g_FragmentShaders["full.fs"]);
 
-	m_pGeometryPassShader		= new Shader(g_VertexShaders["geometry_pass.vs"], g_FragmentShaders["geometry_pass.fs"]);
-	m_pLightPassShader			= nullptr;
+	m_pGeometryPassShader				= new Shader(g_VertexShaders["geometry_pass.vs"], g_FragmentShaders["geometry_pass.fs"]);
+	m_pGeometryWithNormalMapPassShader	= new Shader(g_VertexShaders["geometry_normalmap_pass.vs"], g_FragmentShaders["geometry_normalmap_pass.fs"]);
+
 	m_pDepthOnlyPassShader		= new Shader(g_VertexShaders["depth_only.vs"], g_FragmentShaders["depth_only.fs"]);
+
 	m_pFullscreenDepthShader	= new Shader(g_VertexShaders["fullscreen.vs"], g_FragmentShaders["fullscreen_depth.fs"]);
 	m_pFullscreenNormalShader	= new Shader(g_VertexShaders["fullscreen.vs"], g_FragmentShaders["fullscreen_normal.fs"]);
 	m_pFullscreenComposeShader	= new Shader(g_VertexShaders["fullscreen.vs"], g_FragmentShaders["compose.fs"]);
@@ -227,7 +231,11 @@ void Rendering::renderSceneToShadowMap(void)
 
 			m_pDepthOnlyPassShader->SetUniform("ModelViewProjection", MVP);
 
-			object.mesh->draw();
+			// TODO : remove loop and directly use glDrawElements on the full buffer
+			for (SubMesh * m : object.getDrawCommands())
+			{
+				m->draw();
+			}
 		}
 
 		glUseProgram(0);
@@ -309,19 +317,42 @@ void Rendering::renderSceneToGBuffer(const mat4x4 & mView)
 
 		mat4x4 mCameraViewProjection = m_matProjection * mView;
 
-		m_pGeometryPassShader->SetAsCurrent();
+		// OPTIMIZE THIS !!!!!
 
 		for (Mesh::Instance & object : m_aObjects)
 		{
 			mat4x4 MVP = mCameraViewProjection * object.transformation;
 
-			m_pGeometryPassShader->SetUniform("ModelViewProjection", MVP);
-			m_pGeometryPassShader->SetUniform("Model", object.transformation);
+			for (SubMesh * m : object.getDrawCommands())
+			{
+				const GPU::Texture<GL_TEXTURE_2D> * pNormalMap = m->getNormalMap();
 
-			object.mesh->draw();
+				if (nullptr != pNormalMap)
+				{
+					m_pGeometryWithNormalMapPassShader->SetAsCurrent();
+
+					m_pGeometryWithNormalMapPassShader->SetUniform("ModelViewProjection", MVP);
+					m_pGeometryWithNormalMapPassShader->SetUniform("Model", object.transformation);
+
+					m_pGeometryWithNormalMapPassShader->SetTexture("normalMap", 0, *pNormalMap);
+
+					m->draw();
+
+					glUseProgram(0);
+				}
+				else
+				{
+					m_pGeometryPassShader->SetAsCurrent();
+
+					m_pGeometryPassShader->SetUniform("ModelViewProjection", MVP);
+					m_pGeometryPassShader->SetUniform("Model", object.transformation);
+
+					m->draw();
+
+					glUseProgram(0);
+				}
+			}
 		}
-
-		glUseProgram(0);
 	}
 
 	m_GBuffer.disable();
@@ -390,7 +421,10 @@ void Rendering::renderFinal(const mat4x4 & mView, const vec4 & clearColor)
 			m_pComposeShader->SetUniform("DepthTransformation", mDepthViewProjection);
 			m_pComposeShader->SetTexture("shadowMap",	3, m_pShadowMap->GetTexture());
 
-			object.mesh->draw();
+			for (SubMesh * m : object.getDrawCommands())
+			{
+				m->draw();
+			}
 		}
 
 		glUseProgram(0);
