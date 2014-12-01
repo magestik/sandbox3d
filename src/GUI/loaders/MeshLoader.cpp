@@ -7,6 +7,56 @@
 
 #include "../../Rendering/Rendering.h"
 
+#include <QDebug>
+
+vec3 qrot(vec4 q, vec3 v)
+{
+	return v + 2.0*cross(q.xyz, cross(q.xyz,v) + q.w*v);
+}
+
+inline vec4 MatrixToQuaternion(const mat3x3 & a)
+{
+	vec4 q;
+
+	float trace = a[0][0] + a[1][1] + a[2][2]; // I removed + 1.0f; see discussion with Ethan
+
+	if (trace > 0.0f) // I changed M_EPSILON to 0
+	{
+		float s = 0.5f / sqrtf(trace + 1.0f);
+		q.w = 0.25f / s;
+		q.x = (a[2][1] - a[1][2]) * s;
+		q.y = (a[0][2] - a[2][0]) * s;
+		q.z = (a[1][0] - a[0][1]) * s;
+	}
+	else
+	{
+		if (a[0][0] > a[1][1] && a[0][0] > a[2][2] )
+		{
+			float s = 2.0f * sqrtf(1.0f + a[0][0] - a[1][1] - a[2][2]);
+			q.w = (a[2][1] - a[1][2]) / s;
+			q.x = 0.25f * s;
+			q.y = (a[0][1] + a[1][0]) / s;
+			q.z = (a[0][2] + a[2][0]) / s;
+		}
+		else if (a[1][1] > a[2][2])
+		{
+			float s = 2.0f * sqrtf(1.0f + a[1][1] - a[0][0] - a[2][2]);
+			q.w = (a[0][2] - a[2][0]) / s;
+			q.x = (a[0][1] + a[1][0]) / s;
+			q.y = 0.25f * s;
+			q.z = (a[1][2] + a[2][1] ) / s;
+		}
+		else
+		{
+			float s = 2.0f * sqrtf(1.0f + a[2][2] - a[0][0] - a[1][1]);
+			q.w = (a[1][0] - a[0][1]) / s;
+			q.x = (a[0][2] + a[2][0]) / s;
+			q.y = (a[1][2] + a[2][1]) / s;
+			q.z = 0.25f * s;
+		}
+	}
+}
+
 void loadAllMaterials(const aiScene * scene, const QDir & dir)
 {
 	aiTextureType aSupportedTextureTypes [] = { aiTextureType_DIFFUSE, aiTextureType_SPECULAR, aiTextureType_HEIGHT };
@@ -100,35 +150,15 @@ Mesh loadMesh(const QDir & dir, const QString & filename)
 			vertex.position.y = mesh->mVertices[j].y;
 			vertex.position.z = mesh->mVertices[j].z;
 
-			if (hasNormalMap)
+			vertex.normal.x = mesh->mNormals[j].x;
+			vertex.normal.y = mesh->mNormals[j].y;
+			vertex.normal.z = mesh->mNormals[j].z;
+
+			if (mesh->HasTangentsAndBitangents())
 			{
-				vec3 tangent = vec3(mesh->mTangents[j].x, mesh->mTangents[j].y, mesh->mTangents[j].z);
-				vec3 bitangent = vec3(mesh->mBitangents[j].x, mesh->mBitangents[j].y, mesh->mBitangents[j].z);
-				vec3 normal = vec3(mesh->mNormals[j].x, mesh->mNormals[j].y, mesh->mNormals[j].z);
-
-                mat3x3 TBN = mat3x3(tangent, bitangent, normal);
-
-				float r = 0.5f * sqrt(1 + TBN[0][0] + TBN[1][1] + TBN[2][2]);
-                vec4 q = normalize(vec4(0.25f * (TBN[2][1] - TBN[1][2]), 0.25f * (TBN[0][2] - TBN[2][0]), 0.25f * (TBN[1][0] - TBN[0][1]), r));
-
-				if (q.w < 0.0f)
-				{
-					vertex.normal.x = -q.x;
-					vertex.normal.y = -q.y;
-					vertex.normal.z = -q.z;
-				}
-				else
-				{
-					vertex.normal.x = q.x;
-					vertex.normal.y = q.y;
-					vertex.normal.z = q.z;
-                }
-			}
-			else
-			{
-				vertex.normal.x = mesh->mNormals[j].x;
-				vertex.normal.y = mesh->mNormals[j].y;
-				vertex.normal.z = mesh->mNormals[j].z;
+				vertex.tangent.x = mesh->mTangents[j].x;
+				vertex.tangent.y = mesh->mTangents[j].y;
+				vertex.tangent.z = mesh->mTangents[j].z;
 			}
 
 			if (mesh->HasTextureCoords(0))
@@ -163,32 +193,41 @@ Mesh loadMesh(const QDir & dir, const QString & filename)
 		std::vector<SubMesh::VertexSpec> specs;
 
 		SubMesh::VertexSpec SPEC_POS;
-		SPEC_POS.index = 0;
-		SPEC_POS.size = 3;
-		SPEC_POS.type = GL_FLOAT;
-		SPEC_POS.normalized = GL_FALSE;
-		SPEC_POS.stride = sizeof(SubMesh::VertexSimple);
-		SPEC_POS.pointer = BUFFER_OFFSET(vertex_offset);
+		SPEC_POS.index			= 0;
+		SPEC_POS.size			= 3;
+		SPEC_POS.type			= GL_FLOAT;
+		SPEC_POS.normalized		= GL_FALSE;
+		SPEC_POS.stride			= sizeof(SubMesh::VertexSimple);
+		SPEC_POS.pointer		= BUFFER_OFFSET(vertex_offset);
 
 		SubMesh::VertexSpec SPEC_UV;
-		SPEC_UV.index = 2;
-		SPEC_UV.size = 2;
-		SPEC_UV.type = GL_FLOAT;
-		SPEC_UV.normalized = GL_FALSE;
-		SPEC_UV.stride = sizeof(SubMesh::VertexSimple);
-		SPEC_UV.pointer = BUFFER_OFFSET(vertex_offset+sizeof(float)*3);
+		SPEC_UV.index			= 2;
+		SPEC_UV.size			= 2;
+		SPEC_UV.type			= GL_FLOAT;
+		SPEC_UV.normalized		= GL_FALSE;
+		SPEC_UV.stride			= sizeof(SubMesh::VertexSimple);
+		SPEC_UV.pointer			= BUFFER_OFFSET(vertex_offset+sizeof(float)*3);
 
 		SubMesh::VertexSpec SPEC_NORMAL;
-		SPEC_NORMAL.index = 1;
-		SPEC_NORMAL.size = 3;
-		SPEC_NORMAL.type = GL_FLOAT;
-		SPEC_NORMAL.normalized = GL_FALSE;
-		SPEC_NORMAL.stride = sizeof(SubMesh::VertexSimple);
-		SPEC_NORMAL.pointer = BUFFER_OFFSET(vertex_offset+sizeof(float)*5);
+		SPEC_NORMAL.index		= 1;
+		SPEC_NORMAL.size		= 3;
+		SPEC_NORMAL.type		= GL_FLOAT;
+		SPEC_NORMAL.normalized	= GL_FALSE;
+		SPEC_NORMAL.stride		= sizeof(SubMesh::VertexSimple);
+		SPEC_NORMAL.pointer		= BUFFER_OFFSET(vertex_offset+sizeof(float)*5);
+
+		SubMesh::VertexSpec SPEC_TANGENT;
+		SPEC_TANGENT.index		= 3;
+		SPEC_TANGENT.size		= 3;
+		SPEC_TANGENT.type		= GL_FLOAT;
+		SPEC_TANGENT.normalized	= GL_FALSE;
+		SPEC_TANGENT.stride		= sizeof(SubMesh::VertexSimple);
+		SPEC_TANGENT.pointer		= BUFFER_OFFSET(vertex_offset+sizeof(float)*8);
 
 		specs.push_back(SPEC_POS);
 		specs.push_back(SPEC_UV);
 		specs.push_back(SPEC_NORMAL);
+		specs.push_back(SPEC_TANGENT);
 
 		SubMesh * submesh = SubMesh::Create(vertexBuffer, triangles.size(), GL_TRIANGLES, specs, indexBuffer, index_offset, GL_UNSIGNED_INT);
 		meshes.push_back(submesh);

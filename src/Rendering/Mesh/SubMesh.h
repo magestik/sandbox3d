@@ -21,6 +21,7 @@ public:
 		vec3 position;
 		vec2 uv;
 		vec3 normal;
+		vec3 tangent;
 	};
 
 	typedef struct {
