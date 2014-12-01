@@ -62,18 +62,18 @@ void Rendering::onInitializeComplete()
  */
 void Rendering::compileShaders()
 {
-	m_pDirectionnalLightShader	= new Shader(g_VertexShaders["directionnal_light.vs"], g_FragmentShaders["directionnal_light.fs"]);
+	m_pDirectionnalLightShader	= new Shader(g_VertexShaders["directionnal_light.vert"], g_FragmentShaders["directionnal_light.frag"]);
 
-	m_pComposeShader			= new Shader(g_VertexShaders["full.vs"], g_FragmentShaders["full.fs"]);
+	m_pComposeShader			= new Shader(g_VertexShaders["full.vert"], g_FragmentShaders["full.frag"]);
 
-	m_pGeometryPassShader				= new Shader(g_VertexShaders["geometry_pass.vs"], g_FragmentShaders["geometry_pass.fs"]);
-	m_pGeometryWithNormalMapPassShader	= new Shader(g_VertexShaders["geometry_normalmap_pass.vs"], g_FragmentShaders["geometry_normalmap_pass.fs"]);
+	m_pGeometryPassShader				= new Shader(g_VertexShaders["geometry_pass.vert"], g_FragmentShaders["geometry_pass.frag"]);
+	m_pGeometryWithNormalMapPassShader	= new Shader(g_VertexShaders["geometry_normalmap_pass.vert"], g_FragmentShaders["geometry_normalmap_pass.frag"]);
 
-	m_pDepthOnlyPassShader		= new Shader(g_VertexShaders["depth_only.vs"], g_FragmentShaders["depth_only.fs"]);
+	m_pDepthOnlyPassShader		= new Shader(g_VertexShaders["depth_only.vert"], g_FragmentShaders["depth_only.frag"]);
 
-	m_pFullscreenDepthShader	= new Shader(g_VertexShaders["fullscreen.vs"], g_FragmentShaders["fullscreen_depth.fs"]);
-	m_pFullscreenNormalShader	= new Shader(g_VertexShaders["fullscreen.vs"], g_FragmentShaders["fullscreen_normal.fs"]);
-	m_pFullscreenComposeShader	= new Shader(g_VertexShaders["fullscreen.vs"], g_FragmentShaders["compose.fs"]);
+	m_pFullscreenDepthShader	= new Shader(g_VertexShaders["fullscreen.vert"], g_FragmentShaders["fullscreen_depth.frag"]);
+	m_pFullscreenNormalShader	= new Shader(g_VertexShaders["fullscreen.vert"], g_FragmentShaders["fullscreen_normal.frag"]);
+	m_pFullscreenComposeShader	= new Shader(g_VertexShaders["fullscreen.vert"], g_FragmentShaders["compose.frag"]);
 }
 
 /**
