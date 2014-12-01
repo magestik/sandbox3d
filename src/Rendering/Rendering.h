@@ -82,7 +82,7 @@ private:
 	std::vector<Mesh::Instance> m_aObjects;
 
 	ShadowMap * m_pShadowMap;
-	Light::Spot * m_pLight;
+	Light::Directionnal * m_pLight;
 
 	Shader *	m_pComposeShader;
 

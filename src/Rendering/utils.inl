@@ -55,4 +55,20 @@ inline mat4x4 _frustrum(float left, float right, float bottom, float top, float 
 	return(mat);
 }
 
+inline mat4x4 _ortho(float left, float right, float bottom, float top, float nearVal, float farVal)
+{
+
+	float tx = -(right + left) / (right - left);
+	float ty = -(top + bottom) / (top - bottom);
+	float tz = (farVal + nearVal) / (farVal - nearVal);
+
+	mat4x4 mat;
+	mat[0] = vec4(2.0f / (right - left), 0.0f, 0.0f, tx);
+	mat[1] = vec4(0.0f, 2.0f / (top - bottom), 0.0f, ty);
+	mat[2] = vec4(0.0f, 0.0f, -2.0f / (farVal - nearVal), tz);
+	mat[3] = vec4(0.0f, 0.0f, 0.0f, 1.0f);
+
+	return(mat);
+}
+
 #endif // UTILS_INL

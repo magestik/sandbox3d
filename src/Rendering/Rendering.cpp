@@ -44,11 +44,7 @@ void Rendering::onInitializeComplete()
 	m_LightAccumBuffer.init(m_apTargets[TARGET_LIGHTS]);
 
 	{
-		vec3 light_pos(20.0f, 20.0f, 20.0f);
-		vec3 light_dir = - light_pos;
-		float light_angle = 75.0f;
-
-		m_pLight = new Light::Spot(light_pos, light_dir, light_angle);
+		m_pLight = new Light::Directionnal(vec3(-20.0f, -20.0f, -20.0f));
 		m_pShadowMap = new ShadowMap();
 		m_pShadowMap->init(SHADOW_MAP_SIZE, SHADOW_MAP_SIZE);
 	}
@@ -219,7 +215,7 @@ void Rendering::renderSceneToShadowMap(void)
 	{
 		glClear(GL_DEPTH_BUFFER_BIT);
 
-		mat4x4 mDepthView = _lookAt(m_pLight->GetPosition(), m_pLight->GetDirection(), vec3(0.0f, -1.0f, 0.0f));
+		mat4x4 mDepthView = _lookAt(vec3(0,0,0), m_pLight->GetDirection(), vec3(0.0f, -1.0f, 0.0f));
 		mat4x4 mDepthViewProjection = m_pShadowMap->GetProjection() * mDepthView;
 
 		m_pDepthOnlyPassShader->SetAsCurrent();
@@ -403,7 +399,7 @@ void Rendering::renderFinal(const mat4x4 & mView, const vec4 & clearColor)
 
 		mat4x4 mCameraViewProjection = m_matProjection * mView;
 
-		mat4x4 mDepthView = _lookAt(m_pLight->GetPosition(), m_pLight->GetDirection(), vec3(0.0f, -1.0f, 0.0f));
+		mat4x4 mDepthView = _lookAt(vec3(0,0,0), m_pLight->GetDirection(), vec3(0.0f, -1.0f, 0.0f));
 		mat4x4 mDepthViewProjection = m_pShadowMap->GetProjection() * mDepthView;
 
 		m_pComposeShader->SetAsCurrent();
