@@ -6,6 +6,14 @@
 #define TANGENT		3
 #define BITANGENT	4
 
+struct VS_OUTPUT
+{
+	vec2 texCoord;
+	vec3 normal;
+	vec3 tangent;
+	vec3 bitangent;
+};
+
 uniform sampler2D normalMap;
 
 uniform mat4x4 ModelViewProjection;
@@ -16,19 +24,15 @@ layout (location = NORMAL)		in vec3 inNormal;
 layout (location = TEXCOORD0)	in vec2 inTexCoord;
 layout (location = TANGENT)		in vec3 inTangent;
 
-out vec2 outTexCoord;
-
-out vec3 outNormal;
-out vec3 outTangent;
-out vec3 outBiTangent;
+out VS_OUTPUT vsOut;
 
 void main(void)
 {
-	outTexCoord = inTexCoord;
+	vsOut.texCoord = inTexCoord;
 
-	outNormal = (vec4(inNormal, 0.0) * Model).xyz;
-	outTangent = (vec4(inTangent, 0.0) * Model).xyz;
-	outBiTangent = cross(outTangent, outNormal);
+	vsOut.normal = (vec4(inNormal, 0.0) * Model).xyz;
+	vsOut.tangent = (vec4(inTangent, 0.0) * Model).xyz;
+	vsOut.bitangent = cross(vsOut.tangent, vsOut.normal);
 
 	gl_Position = vec4(inPosition, 1.0) * ModelViewProjection;
 }

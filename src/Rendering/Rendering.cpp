@@ -73,7 +73,6 @@ void Rendering::compileShaders()
 
 	m_pFullscreenDepthShader	= new Shader(g_VertexShaders["fullscreen.vert"], g_FragmentShaders["fullscreen_depth.frag"]);
 	m_pFullscreenNormalShader	= new Shader(g_VertexShaders["fullscreen.vert"], g_FragmentShaders["fullscreen_normal.frag"]);
-	m_pFullscreenComposeShader	= new Shader(g_VertexShaders["fullscreen.vert"], g_FragmentShaders["compose.frag"]);
 }
 
 /**

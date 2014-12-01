@@ -2,19 +2,24 @@
 
 #define USE_PCF 1
 
+struct VS_OUTPUT
+{
+	vec3 position;
+	vec2 texCoord;
+	vec4 lightCoord;
+};
+
 uniform mat4x4 DepthTransformation;
 
 uniform sampler2D lightSampler;
 
 uniform sampler2DShadow shadowMap;
 
-in vec3 outPosition;
-in vec2 outTexCoord;
-in vec4 outLightCoord;
+in VS_OUTPUT vsOut;
 
 out vec3 outColor;
 
-vec3 ambient = vec3(0.3, 0.0, 0.0);
+const vec3 ambient = vec3(0.3, 0.0, 0.0);
 
 float getShadow(vec3 position)
 {
@@ -52,8 +57,8 @@ void main(void)
 {
 	vec3 diffuse = vec3(0.5, 0.5, 0.5);
 
-	float shadow_factor = getShadow(outPosition);
-	vec3 light_factor = getLight(outLightCoord);
+	float shadow_factor = getShadow(vsOut.position);
+	vec3 light_factor = getLight(vsOut.lightCoord);
 
 	outColor = diffuse * shadow_factor * light_factor + ambient;
 }

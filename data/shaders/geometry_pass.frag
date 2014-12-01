@@ -1,11 +1,16 @@
 #version 330
 
-in vec3 outNormal;
+struct VS_OUTPUT
+{
+	vec3 normal;
+};
+
+in VS_OUTPUT vsOut;
 
 out vec3 fbNormal;
 
 void main(void)
 {
-	fbNormal = normalize(outNormal) * 0.5 + 0.5;
+	fbNormal = normalize(vsOut.normal) * 0.5 + 0.5;
 }
 

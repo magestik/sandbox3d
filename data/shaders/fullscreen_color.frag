@@ -1,14 +1,19 @@
 #version 330
 
+struct VS_OUTPUT
+{
+	vec2 texCoord;
+};
+
 uniform sampler2D texSampler;
 
-in vec2 texCoord;
+in VS_OUTPUT vsOut;
 
 out vec3 outColor;
 
 void main(void)
 {
-	outColor = texture(texSampler, texCoord).rgb;
+	outColor = texture(texSampler, vsOut.texCoord).rgb;
 }
 
 
