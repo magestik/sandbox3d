@@ -106,10 +106,10 @@ Mesh loadMesh(const QDir & dir, const QString & filename)
 				vec3 bitangent = vec3(mesh->mBitangents[j].x, mesh->mBitangents[j].y, mesh->mBitangents[j].z);
 				vec3 normal = vec3(mesh->mNormals[j].x, mesh->mNormals[j].y, mesh->mNormals[j].z);
 
-				mat3x3 TBN = transpose(mat3x3(normal, bitangent, tangent));
+                mat3x3 TBN = mat3x3(tangent, bitangent, normal);
 
 				float r = 0.5f * sqrt(1 + TBN[0][0] + TBN[1][1] + TBN[2][2]);
-				vec4 q = normalize(vec4(r, 0.25f * (TBN[2][1] - TBN[1][2]), 0.25f * (TBN[0][2] - TBN[2][0]), 0.25f * (TBN[1][0] - TBN[0][1])));
+                vec4 q = normalize(vec4(0.25f * (TBN[2][1] - TBN[1][2]), 0.25f * (TBN[0][2] - TBN[2][0]), 0.25f * (TBN[1][0] - TBN[0][1]), r));
 
 				if (q.w < 0.0f)
 				{
@@ -122,7 +122,7 @@ Mesh loadMesh(const QDir & dir, const QString & filename)
 					vertex.normal.x = q.x;
 					vertex.normal.y = q.y;
 					vertex.normal.z = q.z;
-				}
+                }
 			}
 			else
 			{
