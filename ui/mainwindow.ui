@@ -128,6 +128,7 @@
      <string>Settings</string>
     </property>
     <addaction name="actionClear_color"/>
+    <addaction name="actionAmbient_color"/>
    </widget>
    <widget class="QMenu" name="menuCamera">
     <property name="title">
@@ -335,6 +336,11 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+F5</string>
+   </property>
+  </action>
+  <action name="actionAmbient_color">
+   <property name="text">
+    <string>Ambient</string>
    </property>
   </action>
  </widget>

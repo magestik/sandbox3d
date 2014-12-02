@@ -37,6 +37,14 @@ MainWindow::MainWindow(QWidget *parent)
 		m_pClearColorChooser->setCurrentColor(QColor::fromRgbF(0.5f, 0.5f, 0.5f));
 	}
 
+	{
+		m_pAmbientColorChooser = new QColorDialog(this);
+		m_pAmbientColorChooser->hide();
+		m_pAmbientColorChooser->setWindowTitle("Ambient Color Chooser");
+		connect(m_pAmbientColorChooser, SIGNAL(currentColorChanged(const QColor &)), m_pDrawable, SLOT(setAmbientColor(const QColor &)));
+		m_pAmbientColorChooser->setCurrentColor(QColor::fromRgbF(0.1f, 0.1f, 0.1f));
+	}
+
 	//restoreGeometry(settings.value("mainWindowGeometry").toByteArray());
 	//restoreState(settings.value("mainWindowState").toByteArray());
 
@@ -133,6 +141,14 @@ void MainWindow::on_actionFaceCulling_changed()
 void MainWindow::on_actionClear_color_triggered()
 {
 	m_pClearColorChooser->show();
+}
+
+/**
+ * @brief MainWindow::on_actionAmbient_color_triggered
+ */
+void MainWindow::on_actionAmbient_color_triggered()
+{
+	m_pAmbientColorChooser->show();
 }
 
 /**

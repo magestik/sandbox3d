@@ -148,7 +148,7 @@ void Rendering::onResize(int width, int height)
  * @param mProjection
  * @param mView
  */
-void Rendering::onUpdate(const mat4x4 & mView, const vec4 & clearColor, bool bWireframe, ERenderType eRenderType)
+void Rendering::onUpdate(const mat4x4 & mView, const vec4 & clearColor, const vec4 & ambientColor, bool bWireframe, ERenderType eRenderType)
 {
 	//
 	// Render Scene to G-Buffer
@@ -183,7 +183,7 @@ void Rendering::onUpdate(const mat4x4 & mView, const vec4 & clearColor, bool bWi
 			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 		}
 
-		renderFinal(mView, clearColor);
+		renderFinal(mView, clearColor, ambientColor);
 
 		if (bWireframe)
 		{
@@ -360,7 +360,7 @@ void Rendering::renderSceneToGBuffer(const mat4x4 & mView)
 /**
  * @brief Rendering::renderLightsToAccumBuffer
  */
-void Rendering::renderLightsToAccumBuffer()
+void Rendering::renderLightsToAccumBuffer(void)
 {
 	glViewport(0, 0, m_uWidth, m_uHeight);
 
@@ -391,7 +391,7 @@ void Rendering::renderLightsToAccumBuffer()
  * @brief Rendering::renderFinal
  * @param mViewProjection
  */
-void Rendering::renderFinal(const mat4x4 & mView, const vec4 & clearColor)
+void Rendering::renderFinal(const mat4x4 & mView, const vec4 & clearColor, const vec4 & ambientColor)
 {
 	glViewport(0, 0, m_uWidth, m_uHeight);
 
@@ -408,6 +408,8 @@ void Rendering::renderFinal(const mat4x4 & mView, const vec4 & clearColor)
 
 		glBindSampler(2, m_uSampler);
 		m_pComposeShader->SetAsCurrent();
+
+		m_pComposeShader->SetUniform("ambientColor", ambientColor.xyz);
 
 		for (Mesh::Instance & object : m_aObjects)
 		{

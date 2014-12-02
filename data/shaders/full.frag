@@ -21,7 +21,7 @@ in VS_OUTPUT vsOut;
 
 out vec3 outColor;
 
-const vec3 ambient = vec3(0.03, 0.0, 0.0);
+uniform vec3 ambientColor;
 
 float getShadow(vec3 position)
 {
@@ -62,6 +62,6 @@ void main(void)
 	float shadow_factor = getShadow(vsOut.position);
 	vec3 light_factor = getLight(vsOut.lightCoord);
 
-	outColor = diffuse * shadow_factor * light_factor + ambient;
+	outColor = diffuse * shadow_factor * light_factor + ambientColor;
 }
 

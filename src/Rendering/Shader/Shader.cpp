@@ -61,11 +61,35 @@ void Shader::SetUniform(const char * name, const mat4x4 & m)
  * @param name
  * @param v
  */
+void Shader::SetUniform(const char * name, const vec4 & v)
+{
+	GLint location = glGetUniformLocation(m_uObject, name);
+//	assert(-1 != location);
+	glUniform4fv(location, 1, (float*)&v);
+}
+
+/**
+ * @brief Shader::SetUniform
+ * @param name
+ * @param v
+ */
 void Shader::SetUniform(const char * name, const vec3 & v)
 {
 	GLint location = glGetUniformLocation(m_uObject, name);
 //	assert(-1 != location);
 	glUniform3fv(location, 1, (float*)&v);
+}
+
+/**
+ * @brief Shader::SetUniform
+ * @param name
+ * @param v
+ */
+void Shader::SetUniform(const char * name, const vec2 & v)
+{
+	GLint location = glGetUniformLocation(m_uObject, name);
+//	assert(-1 != location);
+	glUniform2fv(location, 1, (float*)&v);
 }
 
 /**

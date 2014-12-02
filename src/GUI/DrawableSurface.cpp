@@ -30,6 +30,7 @@ DrawableSurface::DrawableSurface(QWidget *parent)
 , m_eRenderType(Rendering::FINAL)
 , m_bDebugWireframe(false)
 , m_vClearColor(0.0f, 0.0f, 0.0f, 0.0f)
+, m_vAmbientColor(0.0f, 0.0f, 0.0f, 0.0f)
 {
 	setFocusPolicy(Qt::StrongFocus);
 	makeCurrent();
@@ -216,7 +217,7 @@ void DrawableSurface::paintGL(void)
 	t.Start();
 	{
 		const mat4x4 & matView = m_camera.getViewMatrix();
-		m_renderer.onUpdate(matView, m_vClearColor, m_bDebugWireframe, m_eRenderType);
+		m_renderer.onUpdate(matView, m_vClearColor, m_vAmbientColor, m_bDebugWireframe, m_eRenderType);
 	}
 	t.Stop();
 
@@ -536,5 +537,15 @@ void DrawableSurface::reloadShader(const QString & filename)
 void DrawableSurface::setClearColor(const QColor & color)
 {
 	m_vClearColor = vec4(color.redF(), color.greenF(), color.blueF(), color.alphaF());
+	update();
+}
+
+/**
+ * @brief DrawableSurface::setAmbientColor
+ * @param color
+ */
+void DrawableSurface::setAmbientColor(const QColor & color)
+{
+	m_vAmbientColor = vec4(color.redF(), color.greenF(), color.blueF(), color.alphaF());
 	update();
 }

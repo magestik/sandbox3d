@@ -62,6 +62,7 @@ private:
 	GPU::Buffer<GL_PIXEL_UNPACK_BUFFER> * m_pSpecial;
 
 	vec4 m_vClearColor;
+	vec4 m_vAmbientColor;
 
 signals:
 
@@ -70,4 +71,5 @@ public slots:
 	void reloadShader(const QString & filename);
 
 	void setClearColor(const QColor & color);
+	void setAmbientColor(const QColor & color);
 };

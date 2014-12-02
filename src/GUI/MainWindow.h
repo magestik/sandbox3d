@@ -32,12 +32,16 @@ public:
 
 	QGLWidget * m_pDrawable;
 	QDockWidget * m_pMeshListDock;
+
 	QColorDialog * m_pClearColorChooser;
+	QColorDialog * m_pAmbientColorChooser;
 
 private slots:
 
-	void on_actionWireframe_toggled(bool checked);
 	void on_actionClear_color_triggered();
+	void on_actionAmbient_color_triggered();
+
+	void on_actionWireframe_toggled(bool checked);
 	void on_actionFaceCulling_changed();
 	void on_actionResetCamera_triggered();
 	void on_actionMeshList_toggled(bool checked);
