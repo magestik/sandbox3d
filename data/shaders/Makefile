@@ -8,4 +8,3 @@ all:
 	glslangValidator -l depth_only.vert depth_only.frag
 	glslangValidator -l fullscreen.vert fullscreen_depth.frag
 	glslangValidator -l fullscreen.vert fullscreen_normal.frag
-	glslangValidator -l fullscreen.vert compose.frag

@@ -108,4 +108,6 @@ private:
 	};
 
 	GPU::Texture<GL_TEXTURE_2D> * m_apTargets [5];
+
+	GLuint m_uSampler;
 };

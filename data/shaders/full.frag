@@ -15,11 +15,13 @@ uniform sampler2D lightSampler;
 
 uniform sampler2DShadow shadowMap;
 
+uniform sampler2D diffuseSampler;
+
 in VS_OUTPUT vsOut;
 
 out vec3 outColor;
 
-const vec3 ambient = vec3(0.3, 0.0, 0.0);
+const vec3 ambient = vec3(0.03, 0.0, 0.0);
 
 float getShadow(vec3 position)
 {
@@ -55,7 +57,7 @@ vec3 getLight(vec4 position)
 
 void main(void)
 {
-	vec3 diffuse = vec3(0.5, 0.5, 0.5);
+	vec3 diffuse = texture(diffuseSampler, vsOut.texCoord).rgb;
 
 	float shadow_factor = getShadow(vsOut.position);
 	vec3 light_factor = getLight(vsOut.lightCoord);

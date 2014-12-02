@@ -59,7 +59,8 @@ protected:
 	GLsizei m_iCount;
 	GLenum m_eMode;
 
-	Material m_material;
 public:
+	Material m_material;
+
 	const GPU::Texture<GL_TEXTURE_2D> * m_pNormalMap;
 };

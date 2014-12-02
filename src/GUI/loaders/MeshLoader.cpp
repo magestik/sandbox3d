@@ -135,12 +135,6 @@ Mesh loadMesh(const QDir & dir, const QString & filename)
 		vertices.reserve(mesh->mNumVertices);
 		triangles.reserve(mesh->mNumFaces*3);
 
-		aiString str;
-		scene->mMaterials[mesh->mMaterialIndex]->GetTexture(aiTextureType_HEIGHT, 0, &str);
-		std::string texture_name(str.C_Str());
-
-		bool hasNormalMap = (g_Textures.find(texture_name) != g_Textures.end()) && mesh->HasTangentsAndBitangents();
-
 		// Populate the vertex attribute vectors
 		for (int j = 0 ; j < mesh->mNumVertices ; ++j)
 		{
@@ -232,10 +226,30 @@ Mesh loadMesh(const QDir & dir, const QString & filename)
 		SubMesh * submesh = SubMesh::Create(vertexBuffer, triangles.size(), GL_TRIANGLES, specs, indexBuffer, index_offset, GL_UNSIGNED_INT);
 		meshes.push_back(submesh);
 
-		if (hasNormalMap)
+		if (mesh->HasTangentsAndBitangents())
 		{
-			submesh->m_pNormalMap = g_Textures[texture_name];
+			aiString str;
+			scene->mMaterials[mesh->mMaterialIndex]->GetTexture(aiTextureType_HEIGHT, 0, &str);
+			std::string texture_name(str.C_Str());
+
+			if (g_Textures.find(texture_name) != g_Textures.end())
+			{
+				submesh->m_pNormalMap = g_Textures[texture_name];
+			}
 		}
+
+		if (mesh->HasTangentsAndBitangents())
+		{
+			aiString str;
+			scene->mMaterials[mesh->mMaterialIndex]->GetTexture(aiTextureType_DIFFUSE, 0, &str);
+			std::string texture_name(str.C_Str());
+
+			if (g_Textures.find(texture_name) != g_Textures.end())
+			{
+				submesh->m_material.m_diffuse = g_Textures[texture_name];
+			}
+		}
+
 
 		vertex_offset += vertices.size() * sizeof(SubMesh::VertexSimple);
 		index_offset += triangles.size() * sizeof(unsigned int);

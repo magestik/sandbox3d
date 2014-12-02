@@ -56,7 +56,7 @@ void * mmap(const Buffer<T> & buffer, GLuint access)
  * @return
  */
 template<GLenum T>
-void * munmap(const Buffer<T> & buffer)
+void munmap(const Buffer<T> & buffer)
 {
 	glBindBuffer(T, buffer.GetObject());
 	glUnmapBuffer(T);

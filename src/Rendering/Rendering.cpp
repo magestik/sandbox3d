@@ -51,6 +51,10 @@ void Rendering::onInitializeComplete()
 
 	compileShaders();
 	generateMeshes();
+
+	glGenSamplers(1,  &m_uSampler);
+	glSamplerParameteri(m_uSampler, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glSamplerParameteri(m_uSampler, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 }
 
 /**
@@ -402,6 +406,7 @@ void Rendering::renderFinal(const mat4x4 & mView, const vec4 & clearColor)
 		mat4x4 mDepthView = _lookAt(vec3(0,0,0), m_pLight->GetDirection(), vec3(0.0f, -1.0f, 0.0f));
 		mat4x4 mDepthViewProjection = m_pShadowMap->GetProjection() * mDepthView;
 
+		glBindSampler(2, m_uSampler);
 		m_pComposeShader->SetAsCurrent();
 
 		for (Mesh::Instance & object : m_aObjects)
@@ -414,15 +419,27 @@ void Rendering::renderFinal(const mat4x4 & mView, const vec4 & clearColor)
 			m_pComposeShader->SetTexture("lightSampler", 0, *(m_apTargets[TARGET_LIGHTS]));
 
 			m_pComposeShader->SetUniform("DepthTransformation", mDepthViewProjection);
-			m_pComposeShader->SetTexture("shadowMap",	3, m_pShadowMap->GetTexture());
+			m_pComposeShader->SetTexture("shadowMap",	1, m_pShadowMap->GetTexture());
 
 			for (SubMesh * m : object.getDrawCommands())
 			{
+				if (nullptr != m->m_material.m_diffuse)
+				{
+					m_pComposeShader->SetTexture("diffuseSampler", 2, *(m->m_material.m_diffuse));
+				}
+
 				m->draw();
+
+				if (nullptr != m->m_material.m_diffuse)
+				{
+					glActiveTexture(GL_TEXTURE2);
+					glBindTexture(GL_TEXTURE_2D, 0);
+				}
 			}
 		}
 
 		glUseProgram(0);
+		glBindSampler(2, 0);
 	}
 
 	m_Compose.disable();
