@@ -13,7 +13,7 @@ out vec3 outColor;
 
 void main(void)
 {
-	outColor = texture(texSampler, vsOut.texCoord).rgb;
+	outColor = texture(texSampler, vsOut.texCoord).rgb * 0.5 + 0.5;
 }
 
 

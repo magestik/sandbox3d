@@ -270,10 +270,12 @@ void Rendering::renderIntermediateToScreen(ERenderType eRenderType)
 
 		case NORMAL_BUFFER:
 		{
-			glBindFramebuffer(GL_READ_FRAMEBUFFER, m_GBuffer.GetObject());
-			glReadBuffer(GL_COLOR_ATTACHMENT0);
-			glBlitFramebuffer(0, 0, m_uWidth, m_uHeight, 0, 0, m_uWidth, m_uHeight, GL_COLOR_BUFFER_BIT, GL_NEAREST);
-			glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+			m_pFullscreenNormalShader->SetAsCurrent();
+			{
+				m_pFullscreenDepthShader->SetTexture("texSampler", 0, *(m_apTargets[TARGET_NORMALS]));
+				m_pQuadMesh->draw();
+			}
+			glUseProgram(0);
 		}
 		break;
 
