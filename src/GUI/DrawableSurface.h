@@ -4,7 +4,14 @@
 
 #include <QGLWidget>
 
+#include <assimp/Importer.hpp>
+#include <assimp/scene.h>
+#include <assimp/postprocess.h>
+
 #define NB_BUFFER 10
+
+class QDir;
+class QString;
 
 class DrawableSurface : public QGLWidget
 {
@@ -41,8 +48,13 @@ protected:
 private:
 
 	void	loadShaders			(void);
-	void	loadMeshes			(void);
 	void	loadSprites			(void);
+
+	GPU::Texture<GL_TEXTURE_2D> * loadTexture(const QString & filepath);
+
+	void loadAllMaterials(const aiScene * scene);
+
+	void addMeshRecursive(const aiNode * nd, const aiMatrix4x4 & parentTransformation, const std::vector<SubMesh*> & preloaded);
 
 	// Rendering
 	Camera		m_camera;
@@ -64,11 +76,15 @@ private:
 	vec4 m_vClearColor;
 	vec4 m_vAmbientColor;
 
+	std::vector<Mesh*> m_apMeshes;
+
 signals:
 
 public slots:
 
 	void reloadShader(const QString & filename);
+
+	void importScene(const QString & filename);
 
 	void setClearColor(const QColor & color);
 	void setAmbientColor(const QColor & color);

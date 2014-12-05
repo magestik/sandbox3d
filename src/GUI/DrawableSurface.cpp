@@ -68,7 +68,7 @@ void DrawableSurface::ResetCamera(void)
  */
 void DrawableSurface::AddObject(const std::string & name)
 {
-	m_renderer.onCreate(g_Meshes[name]);
+	m_renderer.onCreate(g_Meshes[name].Instantiate());
 	QString str("Mesh '%1' added to scene");
 	static_cast<MainWindow*>(parent())->SetStatus(str.arg(name.c_str()));
 	update();
@@ -161,20 +161,6 @@ void DrawableSurface::initializeGL(void)
 		t.Stop();
 
 		printf("Shaders loading time = %f ms\n", t.getElapsedTimeInMs());
-	}
-
-	{
-		Timer t;
-
-		glFinish();
-		t.Start();
-
-		loadMeshes();
-
-		glFinish(); // remove this ?
-		t.Stop();
-
-		printf("Meshes loading time = %f ms\n", t.getElapsedTimeInMs());
 	}
 
 	{
@@ -339,47 +325,6 @@ void DrawableSurface::loadShaders(void)
 	}
 }
 
-/**
- * @brief DrawableSurface::loadMeshes
- */
-void DrawableSurface::loadMeshes(void)
-{
-	QDir dir("data/meshes");
-
-	const char ext [] =	"*.dae *.blend *.3ds *.ase *.obj *.ifc *.xgl *.zgl *.ply *.dxf *.lwo *.lws *.lxo *.stl *.x *.ac *.ms3d *.cob *.scn" /** Common interchange formats **/
-						"*.bvh *.csm" /** Motion Capture Formats **/
-						"*.xml *.irrmesh *.irr" /** Motion Capture Formats **/
-						"*.mdl *.md2 *.md3 *.pk3 *.mdc *.md5 *.smd *.vta *.m3 *.3d" /** Game file formats **/
-						"*.b3d *.q3d *.q3s *.nff *.nff *.off *.raw *.ter *.mdl *.hmp *.ndo"; /** Other file formats **/
-
-	QString filter(ext);
-	dir.setNameFilters(filter.split(' '));
-
-	QStringList list = dir.entryList(QDir::Files);
-
-	bool successful = true;
-
-	for (QString & filename : list)
-	{
-		g_pSplashScreen->showMessage("Loading mesh '" + filename + "' ...");
-
-		Mesh fullMesh = loadMesh(dir, filename);
-
-		g_Meshes.insert(std::pair<std::string, Mesh>(filename.toStdString(), fullMesh));
-
-		QDockWidget * dock = static_cast<MainWindow*>(parent())->m_pMeshListDock;
-		static_cast<MeshListWidget*>(dock)->addMesh(filename);
-	}
-
-	//
-	// Tests success
-	//
-	if (!successful)
-	{
-		int ret = QMessageBox::warning(this, tr("Sandbox 3D"), tr("All Models were not loaded successfully !"));
-	}
-}
-
 #define USE_PBO 1
 
 /**
@@ -521,6 +466,100 @@ void DrawableSurface::loadSprites()
 }
 
 /**
+ * @brief DrawableSurface::loadAllMaterials
+ * @param scene
+ * @param dir
+ */
+void DrawableSurface::loadAllMaterials(const aiScene * scene)
+{
+	aiTextureType aSupportedTextureTypes [] = { aiTextureType_DIFFUSE, aiTextureType_SPECULAR, aiTextureType_NORMALS };
+
+	for (int i = 0; i < scene->mNumMaterials; ++i)
+	{
+		aiMaterial * material = scene->mMaterials[i];
+
+		for (aiTextureType type : aSupportedTextureTypes)
+		{
+			aiString str;
+
+			material->GetTexture(type, 0, &str);
+
+			if (g_Textures.find(str.C_Str()) == g_Textures.end())
+			{
+				QString texture_filename(str.C_Str());
+				GPU::Texture<GL_TEXTURE_2D> * texture = loadTexture(texture_filename);
+
+				if (texture != nullptr)
+				{
+					g_Textures.insert(std::pair<std::string, GPU::Texture<GL_TEXTURE_2D> *>(texture_filename.toStdString(), texture));
+				}
+			}
+		}
+		}
+}
+
+/**
+ * @brief DrawableSurface::addMeshRecursive
+ * @param nd
+ * @param parentTransformation
+ * @param preloaded
+ */
+void DrawableSurface::addMeshRecursive(const aiNode * nd, const aiMatrix4x4 & parentTransformation, const std::vector<SubMesh *> & preloaded)
+{
+	aiMatrix4x4 transformation = nd->mTransformation * parentTransformation;
+
+	std::vector<SubMesh*> submeshes;
+
+	for (int i = 0; i < nd->mNumMeshes; ++i)
+	{
+		submeshes.push_back(preloaded[nd->mMeshes[i]]);
+	}
+
+	{
+		Mesh * m = new Mesh(submeshes);
+		m_renderer.onCreate(m->Instantiate());
+		m_apMeshes.push_back(m);
+	}
+
+	for (int i = 0; i < nd->mNumChildren; ++i)
+	{
+		addMeshRecursive(nd->mChildren[i], transformation, preloaded);
+	}
+}
+
+/**
+ * @brief DrawableSurface::loadTexture
+ * @param dir
+ * @param filename
+ * @return
+ */
+GPU::Texture<GL_TEXTURE_2D> * DrawableSurface::loadTexture(const QString & filename)
+{
+	QImage img(filename);
+
+	QImage tex = QGLWidget::convertToGLFormat(img);
+
+	size_t size = (tex.width() * tex.height() * 4 * sizeof(char));
+
+	if (size > 0)
+	{
+		GPU::Texture<GL_TEXTURE_2D> * pTexture = new GPU::Texture<GL_TEXTURE_2D>();
+
+		pTexture->init<GL_RGBA8>(tex.width(), tex.height());
+
+		glBindTexture(GL_TEXTURE_2D, pTexture->GetObject());
+
+		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, tex.width(), tex.height(), GL_RGBA, GL_UNSIGNED_BYTE, tex.bits());
+
+		glBindTexture(GL_TEXTURE_2D, 0);
+
+		return(pTexture);
+	}
+
+	return(nullptr);
+}
+
+/**
  * @brief DrawableSurface::reloadShader
  * @param filename
  */
@@ -529,6 +568,190 @@ void DrawableSurface::reloadShader(const QString & filename)
 	std::string str = filename.toStdString();
 	printf("file modified : %s \n", str.c_str());
 	//loadShader(filename);
+}
+
+/**
+ * @brief DrawableSurface::importScene
+ * @param filename
+ */
+void DrawableSurface::importScene(const QString & filename)
+{
+	std::string filepath = filename.toStdString();
+
+	Assimp::Importer importer;
+
+	const aiScene * scene = importer.ReadFile(filepath.data(), aiProcessPreset_TargetRealtime_MaxQuality);
+
+	if (!scene)
+	{
+		return;
+	}
+
+	loadAllMaterials(scene);
+
+	std::vector<SubMesh*> meshes;
+
+	uint NumVertices = 0;
+	uint NumIndices = 0;
+
+	// Count the number of vertices and indices
+	for (int i = 0 ; i < scene->mNumMeshes ; i++)
+	{
+		NumVertices += scene->mMeshes[i]->mNumVertices;
+		NumIndices  += scene->mMeshes[i]->mNumFaces;
+	}
+
+	// Reserve GPU memory for the vertex attributes and indices
+	GPU::Buffer<GL_ARRAY_BUFFER> * vertexBuffer = new GPU::Buffer<GL_ARRAY_BUFFER>();
+	GPU::Buffer<GL_ELEMENT_ARRAY_BUFFER> * indexBuffer = new GPU::Buffer<GL_ELEMENT_ARRAY_BUFFER>();
+
+	GPU::realloc(*vertexBuffer, NumVertices * sizeof(SubMesh::VertexSimple));
+	GPU::realloc(*indexBuffer, NumIndices * 3 * sizeof(unsigned int));
+
+	void * pVertexGPU = GPU::mmap(*vertexBuffer, GL_WRITE_ONLY);
+	void * pIndexGPU = GPU::mmap(*indexBuffer, GL_WRITE_ONLY);
+
+	unsigned int vertex_offset = 0;
+	unsigned int index_offset = 0;
+
+	for (int i = 0; i < scene->mNumMeshes; ++i)
+	{
+		aiMesh * mesh = scene->mMeshes[i];
+
+		std::vector<SubMesh::VertexSimple> vertices;
+		std::vector<unsigned int> triangles;
+
+		vertices.reserve(mesh->mNumVertices);
+		triangles.reserve(mesh->mNumFaces*3);
+
+		// Populate the vertex attribute vectors
+		for (int j = 0 ; j < mesh->mNumVertices ; ++j)
+		{
+			SubMesh::VertexSimple vertex;
+
+			vertex.position.x = mesh->mVertices[j].x;
+			vertex.position.y = mesh->mVertices[j].y;
+			vertex.position.z = mesh->mVertices[j].z;
+
+			vertex.normal.x = mesh->mNormals[j].x;
+			vertex.normal.y = mesh->mNormals[j].y;
+			vertex.normal.z = mesh->mNormals[j].z;
+
+			if (mesh->HasTangentsAndBitangents())
+			{
+				vertex.tangent.x = mesh->mTangents[j].x;
+				vertex.tangent.y = mesh->mTangents[j].y;
+				vertex.tangent.z = mesh->mTangents[j].z;
+			}
+
+			if (mesh->HasTextureCoords(0))
+			{
+				vertex.uv.x = mesh->mTextureCoords[0][j].x;
+				vertex.uv.y = mesh->mTextureCoords[0][j].y;
+			}
+			else
+			{
+				vertex.uv.x = 0.5f;
+				vertex.uv.y = 0.5f;
+			}
+
+			vertices.push_back(vertex);
+		}
+
+		// Populate the index buffer
+		for (int j = 0 ; j < mesh->mNumFaces ; ++j)
+		{
+			const aiFace & Face = mesh->mFaces[j];
+			triangles.push_back(Face.mIndices[0]);
+			triangles.push_back(Face.mIndices[1]);
+			triangles.push_back(Face.mIndices[2]);
+		}
+
+		memcpy(pVertexGPU, (void *)vertices.data(), vertices.size() * sizeof(SubMesh::VertexSimple));
+		memcpy(pIndexGPU, (void *)triangles.data(), triangles.size() * sizeof(unsigned int));
+
+		pVertexGPU = (void*)(((char*)pVertexGPU) + vertices.size() * sizeof(SubMesh::VertexSimple));
+		pIndexGPU = (void*)(((char*)pIndexGPU) + triangles.size() * sizeof(unsigned int));
+
+		std::vector<SubMesh::VertexSpec> specs;
+
+		SubMesh::VertexSpec SPEC_POS;
+		SPEC_POS.index			= 0;
+		SPEC_POS.size			= 3;
+		SPEC_POS.type			= GL_FLOAT;
+		SPEC_POS.normalized		= GL_FALSE;
+		SPEC_POS.stride			= sizeof(SubMesh::VertexSimple);
+		SPEC_POS.pointer		= BUFFER_OFFSET(vertex_offset);
+
+		SubMesh::VertexSpec SPEC_UV;
+		SPEC_UV.index			= 2;
+		SPEC_UV.size			= 2;
+		SPEC_UV.type			= GL_FLOAT;
+		SPEC_UV.normalized		= GL_FALSE;
+		SPEC_UV.stride			= sizeof(SubMesh::VertexSimple);
+		SPEC_UV.pointer			= BUFFER_OFFSET(vertex_offset+sizeof(float)*3);
+
+		SubMesh::VertexSpec SPEC_NORMAL;
+		SPEC_NORMAL.index		= 1;
+		SPEC_NORMAL.size		= 3;
+		SPEC_NORMAL.type		= GL_FLOAT;
+		SPEC_NORMAL.normalized	= GL_FALSE;
+		SPEC_NORMAL.stride		= sizeof(SubMesh::VertexSimple);
+		SPEC_NORMAL.pointer		= BUFFER_OFFSET(vertex_offset+sizeof(float)*5);
+
+		SubMesh::VertexSpec SPEC_TANGENT;
+		SPEC_TANGENT.index		= 3;
+		SPEC_TANGENT.size		= 3;
+		SPEC_TANGENT.type		= GL_FLOAT;
+		SPEC_TANGENT.normalized	= GL_FALSE;
+		SPEC_TANGENT.stride		= sizeof(SubMesh::VertexSimple);
+		SPEC_TANGENT.pointer		= BUFFER_OFFSET(vertex_offset+sizeof(float)*8);
+
+		specs.push_back(SPEC_POS);
+		specs.push_back(SPEC_UV);
+		specs.push_back(SPEC_NORMAL);
+		specs.push_back(SPEC_TANGENT);
+
+		SubMesh * submesh = SubMesh::Create(vertexBuffer, triangles.size(), GL_TRIANGLES, specs, indexBuffer, index_offset, GL_UNSIGNED_INT);
+		meshes.push_back(submesh);
+
+		if (mesh->HasTangentsAndBitangents())
+		{
+			aiString str;
+			scene->mMaterials[mesh->mMaterialIndex]->GetTexture(aiTextureType_NORMALS, 0, &str);
+			std::string texture_name(str.C_Str());
+
+			if (g_Textures.find(texture_name) != g_Textures.end())
+			{
+				submesh->m_pNormalMap = g_Textures[texture_name];
+			}
+		}
+
+		if (mesh->HasTangentsAndBitangents())
+		{
+			aiString str;
+			scene->mMaterials[mesh->mMaterialIndex]->GetTexture(aiTextureType_DIFFUSE, 0, &str);
+			std::string texture_name(str.C_Str());
+
+			if (g_Textures.find(texture_name) != g_Textures.end())
+			{
+				submesh->m_material.m_diffuse = g_Textures[texture_name];
+			}
+		}
+
+		vertex_offset += vertices.size() * sizeof(SubMesh::VertexSimple);
+		index_offset += triangles.size() * sizeof(unsigned int);
+	}
+
+	GPU::munmap(*vertexBuffer);
+	GPU::munmap(*indexBuffer);
+
+	const aiMatrix4x4 identity (1.0f, 0.0f, 0.0f, 0.0f,
+								0.0f, 1.0f, 0.0f, 0.0f,
+								0.0f, 0.0f, 1.0f, 0.0f,
+								0.0f, 0.0f, 0.0f, 1.0f);
+
+	addMeshRecursive(scene->mRootNode, identity, meshes);
 }
 
 /**

@@ -51,7 +51,7 @@ public:
 
 	void	onUpdate				(const mat4x4 & mView, const vec4 & clearColor, const vec4 & ambientColor, bool bWireframe, ERenderType eRenderType = FINAL);
 
-	void	onCreate				(const Mesh & m);
+	void	onCreate				(const Mesh::Instance & instance);
 
 protected:
 

@@ -201,9 +201,9 @@ void Rendering::onUpdate(const mat4x4 & mView, const vec4 & clearColor, const ve
  * @brief Rendering::onCreate
  * @param m
  */
-void Rendering::onCreate(const Mesh & m)
+void Rendering::onCreate(const Mesh::Instance & instance)
 {
-	m_aObjects.push_back(m.Instantiate());
+	m_aObjects.push_back(instance);
 }
 
 /**

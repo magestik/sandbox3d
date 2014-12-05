@@ -5,6 +5,7 @@
 class QGLWidget;
 class QDockWidget;
 class QColorDialog;
+class QFileDialog;
 
 namespace Ui {
 	class MainWindow;
@@ -36,7 +37,11 @@ public:
 	QColorDialog * m_pClearColorChooser;
 	QColorDialog * m_pAmbientColorChooser;
 
+	QFileDialog * m_pFileChooser;
+
 private slots:
+
+	void on_actionImport_triggered();
 
 	void on_actionClear_color_triggered();
 	void on_actionAmbient_color_triggered();

@@ -7,6 +7,7 @@
 #include <QSettings>
 #include <QDockWidget>
 #include <QColorDialog>
+#include <QFileDialog>
 
 /**
  * @brief MainWindow::MainWindow
@@ -43,6 +44,13 @@ MainWindow::MainWindow(QWidget *parent)
 		m_pAmbientColorChooser->setWindowTitle("Ambient Color Chooser");
 		connect(m_pAmbientColorChooser, SIGNAL(currentColorChanged(const QColor &)), m_pDrawable, SLOT(setAmbientColor(const QColor &)));
 		m_pAmbientColorChooser->setCurrentColor(QColor::fromRgbF(0.1f, 0.1f, 0.1f));
+	}
+
+	{
+		m_pFileChooser = new QFileDialog(this);
+		m_pFileChooser->hide();
+		m_pFileChooser->setWindowTitle("Import scene ...");
+		connect(m_pFileChooser, SIGNAL(currentChanged(const QString &)), m_pDrawable, SLOT(importScene(const QString &)));
 	}
 
 	//restoreGeometry(settings.value("mainWindowGeometry").toByteArray());
@@ -110,6 +118,14 @@ void MainWindow::SetRenderTime(double cpu_time, double gpu_time)
 void MainWindow::SetStatus(const QString & str)
 {
 	ui->statusbar->showMessage(str, 2000);
+}
+
+/**
+ * @brief MainWindow::on_actionImport_triggered
+ */
+void MainWindow::on_actionImport_triggered()
+{
+	m_pFileChooser->show();
 }
 
 /**
