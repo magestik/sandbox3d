@@ -12,7 +12,7 @@ public:
 	LightAccumBuffer	(void);
 	~LightAccumBuffer	(void);
 
-	bool	init	(const GPU::Texture<GL_TEXTURE_2D> * pTexture);
+	bool	init	(const GPU::Texture<GL_TEXTURE_2D> * pTextureDiffuse, const GPU::Texture<GL_TEXTURE_2D> * pTextureSpecular);
 	void	free	(void);
 
 	bool	enable	(void);

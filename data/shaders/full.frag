@@ -11,11 +11,13 @@ struct VS_OUTPUT
 
 uniform mat4x4 DepthTransformation;
 
-uniform sampler2D lightSampler;
+uniform sampler2D diffuseLightSampler;
+uniform sampler2D specularLightSampler;
 
 uniform sampler2DShadow shadowMap;
 
 uniform sampler2D diffuseSampler;
+uniform sampler2D specularSampler;
 
 in VS_OUTPUT vsOut;
 
@@ -49,19 +51,25 @@ float getShadow(vec3 position)
 	#endif
 }
 
-vec3 getLight(vec4 position)
+vec3 getSpecularLight(vec4 position)
 {
 	vec2 fragcoord = position.xy/position.w * 0.5 + 0.5;
-	return texture(lightSampler, fragcoord).rgb;
+	return texture(specularLightSampler, fragcoord).rgb;
+}
+
+vec3 getDiffuseLight(vec4 position)
+{
+	vec2 fragcoord = position.xy/position.w * 0.5 + 0.5;
+	return texture(diffuseLightSampler, fragcoord).rgb;
 }
 
 void main(void)
 {
 	vec3 diffuse = texture(diffuseSampler, vsOut.texCoord).rgb;
+	vec3 specular = texture(specularSampler, vsOut.texCoord).rgb;
 
 	float shadow_factor = getShadow(vsOut.position);
-	vec3 light_factor = getLight(vsOut.lightCoord);
 
-	outColor = diffuse * shadow_factor * light_factor + ambientColor;
+	outColor = shadow_factor * (diffuse * getDiffuseLight(vsOut.lightCoord) + specular * getSpecularLight(vsOut.lightCoord)) + ambientColor;
 }
 

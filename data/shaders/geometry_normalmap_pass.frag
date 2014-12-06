@@ -1,7 +1,5 @@
 #version 330
 
-uniform sampler2D normalMap;
-
 struct VS_OUTPUT
 {
 	vec2 texCoord;
@@ -10,9 +8,13 @@ struct VS_OUTPUT
 	vec3 bitangent;
 };
 
+uniform sampler2D normalMap;
+
+uniform float shinines;
+
 in VS_OUTPUT vsOut;
 
-out vec3 fbNormal;
+out vec4 fbNormal;
 
 void main(void)
 {
@@ -22,6 +24,7 @@ void main(void)
 	vec3 tangent    = normalize(vsOut.tangent);
 	vec3 bitangent  = normalize(vsOut.bitangent);
 
-	fbNormal = normalize(normal_tangentspace * mat3x3(tangent, bitangent, normal)) * 0.5 + 0.5;
+	fbNormal.rgb = normalize(normal_tangentspace * inverse(mat3x3(tangent, bitangent, normal)));
+	fbNormal.a = shinines;
 }
 

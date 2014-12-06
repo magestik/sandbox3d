@@ -59,7 +59,7 @@ protected:
 
 	void	renderSceneToGBuffer		(const mat4x4 & mView);
 
-	void	renderLightsToAccumBuffer	(void);
+	void	renderLightsToAccumBuffer	(const mat4x4 & mView);
 
 	void	renderSceneToShadowMap		(void);
 
@@ -101,12 +101,13 @@ private:
 	{
 		TARGET_DEPTH,
 		TARGET_NORMALS,
-		TARGET_LIGHTS,
+		TARGET_DIFFUSE_LIGHTS,
+		TARGET_SPECULAR_LIGHTS,
 		TARGET_POSTFX1,
 		TARGET_POSTFX2
 	};
 
-	GPU::Texture<GL_TEXTURE_2D> * m_apTargets [5];
+	GPU::Texture<GL_TEXTURE_2D> * m_apTargets [6];
 
 	GLuint m_uSampler;
 };

@@ -30,9 +30,9 @@ void main(void)
 {
 	vsOut.texCoord = inTexCoord;
 
-	vsOut.normal = (vec4(inNormal, 0.0) * Model).xyz;
-	vsOut.tangent = (vec4(inTangent, 0.0) * Model).xyz;
-	vsOut.bitangent = cross(vsOut.tangent, vsOut.normal);
+	vsOut.normal = normalize((vec4(inNormal, 0.0) * Model).xyz);
+	vsOut.tangent = normalize((vec4(inTangent, 0.0) * Model).xyz);
+	vsOut.bitangent = cross(vsOut.normal, vsOut.tangent);
 
 	gl_Position = vec4(inPosition, 1.0) * ModelViewProjection;
 }

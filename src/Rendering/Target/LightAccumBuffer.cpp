@@ -24,13 +24,14 @@ LightAccumBuffer::~LightAccumBuffer()
  * @param pTexture
  * @return
  */
-bool LightAccumBuffer::init(const GPU::Texture<GL_TEXTURE_2D> * pTexture)
+bool LightAccumBuffer::init(const GPU::Texture<GL_TEXTURE_2D> * pTextureDiffuse, const GPU::Texture<GL_TEXTURE_2D> * pTextureSpecular)
 {
 	glGenFramebuffers(1, &m_uObject);
 
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_uObject);
 
-	glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, pTexture->GetObject(), 0);
+	glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, pTextureDiffuse->GetObject(), 0);
+	glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, pTextureSpecular->GetObject(), 0);
 
 	GLenum status = glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER);
 
@@ -55,7 +56,9 @@ void LightAccumBuffer::free(void)
 bool LightAccumBuffer::enable(void)
 {
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_uObject);
-	glDrawBuffer(GL_COLOR_ATTACHMENT0);
+
+	GLenum buffers [] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1 };
+	glDrawBuffers(2, buffers);
 
 	glDepthMask(GL_FALSE);
 
