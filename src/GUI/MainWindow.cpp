@@ -2,7 +2,6 @@
 #include "ui_mainwindow.h"
 
 #include "DrawableSurface.h"
-#include "MeshListWidget.h"
 
 #include <QSettings>
 #include <QDockWidget>
@@ -25,12 +24,6 @@ MainWindow::MainWindow(QWidget *parent)
 	setCentralWidget(m_pDrawable);
 
 	{
-		m_pMeshListDock = new MeshListWidget(this);
-		m_pMeshListDock->hide();
-		//connect(m_pMeshListDock, SIGNAL(), this, SLOT());
-	}
-
-	{
 		m_pClearColorChooser = new QColorDialog(this);
 		m_pClearColorChooser->hide();
 		m_pClearColorChooser->setWindowTitle("Clear Color Chooser");
@@ -47,10 +40,22 @@ MainWindow::MainWindow(QWidget *parent)
 	}
 
 	{
-		m_pFileChooser = new QFileDialog(this);
+		m_pFileChooser = new QFileDialog(this );
 		m_pFileChooser->hide();
 		m_pFileChooser->setWindowTitle("Import scene ...");
-		connect(m_pFileChooser, SIGNAL(currentChanged(const QString &)), m_pDrawable, SLOT(importScene(const QString &)));
+		m_pFileChooser->setAcceptMode(QFileDialog::AcceptOpen);
+		m_pFileChooser->setFileMode(QFileDialog::ExistingFile);
+
+		const char ext [] = "*.dae *.blend *.3ds *.ase *.obj *.ifc *.xgl *.zgl *.ply *.dxf *.lwo *.lws *.lxo *.stl *.x *.ac *.ms3d *.cob *.scn " /** Common interchange formats **/
+							"*.bvh *.csm " /** Motion Capture Formats **/
+							"*.xml *.irrmesh *.irr " /** Motion Capture Formats **/
+							"*.mdl *.md2 *.md3 *.pk3 *.mdc *.md5 *.smd *.vta *.m3 *.3d " /** Game file formats **/
+							"*.b3d *.q3d *.q3s *.nff *.nff *.off *.raw *.ter *.mdl *.hmp *.ndo "; /** Other file formats **/
+
+		QString filter(ext);
+		m_pFileChooser->setNameFilters(filter.split(' '));
+
+		connect(m_pFileChooser, SIGNAL(fileSelected(const QString &)), m_pDrawable, SLOT(importScene(const QString &)));
 	}
 
 	//restoreGeometry(settings.value("mainWindowGeometry").toByteArray());
@@ -173,22 +178,6 @@ void MainWindow::on_actionAmbient_color_triggered()
 void MainWindow::on_actionResetCamera_triggered()
 {
 	static_cast<DrawableSurface*>(m_pDrawable)->ResetCamera();
-}
-
-/**
- * @brief MainWindow::on_actionMeshList_toggled
- * @param checked
- */
-void MainWindow::on_actionMeshList_toggled(bool checked)
-{
-	if (checked)
-	{
-		m_pMeshListDock->show();
-	}
-	else
-	{
-		m_pMeshListDock->hide();
-	}
 }
 
 /**

@@ -12,6 +12,8 @@ SubMesh::SubMesh(GLsizei iCount, GLenum eMode)
 : m_iCount(iCount)
 , m_eMode(eMode)
 , m_pNormalMap(nullptr)
+, m_vMin(0.0f, 0.0f, 0.0f)
+, m_vMax(0.0f, 0.0f, 0.0f)
 {
 	m_material.m_diffuse = nullptr;
 	m_material.m_specular = nullptr;

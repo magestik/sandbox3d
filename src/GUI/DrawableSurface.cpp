@@ -1,7 +1,6 @@
 ﻿#include "DrawableSurface.h"
 
 #include "MainWindow.h"
-#include "MeshListWidget.h"
 
 #include <QDir>
 #include <QMessageBox>
@@ -11,11 +10,19 @@
 
 #include <QDebug>
 
+#include <assimp/Importer.hpp>
+#include <assimp/scene.h>
+#include <assimp/postprocess.h>
+
 #include <assert.h>
 
 #include <Misc/Timer.h>
 
-#include "loaders/MeshLoader.h"
+#define ASSIMP_MAT4X4(m) mat4x4(m.a1, m.a2, m.a3, m.a4, m.b1, m.b2, m.b3, m.b4, m.c1, m.c2, m.c3, m.c4, m.d1, m.d2, m.d3, m.d4);
+
+
+#define _min(x, y) ((x < y) ? x : y)
+#define _max(x, y) ((x > y) ? x : y)
 
 extern QSplashScreen * g_pSplashScreen;
 
@@ -35,14 +42,10 @@ DrawableSurface::DrawableSurface(QWidget *parent)
 	setFocusPolicy(Qt::StrongFocus);
 	makeCurrent();
 
+	// TODO : make this work !
 	QFileSystemWatcher watcher;
 	watcher.addPath("data/shaders");
 	connect(&watcher, SIGNAL(directoryChanged(QString)), this, SLOT(reloadShader(QString)));
-
-
-	QStringList directoryList = watcher.directories();
-	Q_FOREACH(QString directory, directoryList)
-			qDebug() << "Directory name" << directory <<"\n";
 }
 
 /**
@@ -59,18 +62,6 @@ DrawableSurface::~DrawableSurface(void)
 void DrawableSurface::ResetCamera(void)
 {
 	m_camera = Camera();
-	update();
-}
-
-/**
- * @brief DrawableSurface::AddObject
- * @param name
- */
-void DrawableSurface::AddObject(const std::string & name)
-{
-	m_renderer.onCreate(g_Meshes[name].Instantiate());
-	QString str("Mesh '%1' added to scene");
-	static_cast<MainWindow*>(parent())->SetStatus(str.arg(name.c_str()));
 	update();
 }
 
@@ -487,15 +478,16 @@ void DrawableSurface::loadAllMaterials(const aiScene * scene)
 			if (g_Textures.find(str.C_Str()) == g_Textures.end())
 			{
 				QString texture_filename(str.C_Str());
-				GPU::Texture<GL_TEXTURE_2D> * texture = loadTexture(texture_filename);
 
-				if (texture != nullptr)
+				GPU::Texture<GL_TEXTURE_2D> * pTexture = loadTexture(texture_filename);
+
+				if (nullptr != pTexture)
 				{
-					g_Textures.insert(std::pair<std::string, GPU::Texture<GL_TEXTURE_2D> *>(texture_filename.toStdString(), texture));
+					g_Textures.insert(std::pair<std::string, GPU::Texture<GL_TEXTURE_2D> *>(texture_filename.toStdString(), pTexture));
 				}
 			}
 		}
-		}
+	}
 }
 
 /**
@@ -504,9 +496,9 @@ void DrawableSurface::loadAllMaterials(const aiScene * scene)
  * @param parentTransformation
  * @param preloaded
  */
-void DrawableSurface::addMeshRecursive(const aiNode * nd, const aiMatrix4x4 & parentTransformation, const std::vector<SubMesh *> & preloaded)
+void DrawableSurface::addMeshRecursive(const aiNode * nd, const mat4x4 & parentTransformation, const std::vector<SubMesh *> & preloaded)
 {
-	aiMatrix4x4 transformation = nd->mTransformation * parentTransformation;
+	mat4x4 transformation = parentTransformation * ASSIMP_MAT4X4(nd->mTransformation);
 
 	std::vector<SubMesh*> submeshes;
 
@@ -517,8 +509,13 @@ void DrawableSurface::addMeshRecursive(const aiNode * nd, const aiMatrix4x4 & pa
 
 	{
 		Mesh * m = new Mesh(submeshes);
-		m_renderer.onCreate(m->Instantiate());
 		m_apMeshes.push_back(m);
+
+		Mesh::Instance instance = m->Instantiate();
+
+		instance.transformation = transformation;
+
+		m_renderer.onCreate(instance);
 	}
 
 	for (int i = 0; i < nd->mNumChildren; ++i)
@@ -535,7 +532,16 @@ void DrawableSurface::addMeshRecursive(const aiNode * nd, const aiMatrix4x4 & pa
  */
 GPU::Texture<GL_TEXTURE_2D> * DrawableSurface::loadTexture(const QString & filename)
 {
-	QImage img(filename);
+	QImage img;
+
+	if (QDir::isAbsolutePath(filename))
+	{
+		img = QImage(filename);
+	}
+	else
+	{
+		img = QImage(QDir("data/meshes").filePath(filename));
+	}
 
 	QImage tex = QGLWidget::convertToGLFormat(img);
 
@@ -624,9 +630,20 @@ void DrawableSurface::importScene(const QString & filename)
 		vertices.reserve(mesh->mNumVertices);
 		triangles.reserve(mesh->mNumFaces*3);
 
+		vec3 min(1e10f, 1e10f, 1e10f);
+		vec3 max(-1e10f, -1e10f, -1e10f);
+
 		// Populate the vertex attribute vectors
 		for (int j = 0 ; j < mesh->mNumVertices ; ++j)
 		{
+			min.x = _min(min.x, mesh->mVertices[j].x);
+			min.y = _min(min.y, mesh->mVertices[j].y);
+			min.z = _min(min.z, mesh->mVertices[j].z);
+
+			max.x = _max(max.x, mesh->mVertices[j].x);
+			max.y = _max(max.y, mesh->mVertices[j].y);
+			max.z = _max(max.z, mesh->mVertices[j].z);
+
 			SubMesh::VertexSimple vertex;
 
 			vertex.position.x = mesh->mVertices[j].x;
@@ -715,6 +732,9 @@ void DrawableSurface::importScene(const QString & filename)
 		SubMesh * submesh = SubMesh::Create(vertexBuffer, triangles.size(), GL_TRIANGLES, specs, indexBuffer, index_offset, GL_UNSIGNED_INT);
 		meshes.push_back(submesh);
 
+		submesh->m_vMin = min;
+		submesh->m_vMax = max;
+
 		if (mesh->HasTangentsAndBitangents())
 		{
 			aiString str;
@@ -727,7 +747,6 @@ void DrawableSurface::importScene(const QString & filename)
 			}
 		}
 
-		if (mesh->HasTangentsAndBitangents())
 		{
 			aiString str;
 			scene->mMaterials[mesh->mMaterialIndex]->GetTexture(aiTextureType_DIFFUSE, 0, &str);
@@ -736,6 +755,61 @@ void DrawableSurface::importScene(const QString & filename)
 			if (g_Textures.find(texture_name) != g_Textures.end())
 			{
 				submesh->m_material.m_diffuse = g_Textures[texture_name];
+			}
+			else
+			{
+				aiColor3D color (0.f, 0.f, 0.f);
+				scene->mMaterials[mesh->mMaterialIndex]->Get(AI_MATKEY_COLOR_DIFFUSE,color);
+
+				submesh->m_material.m_diffuse = new GPU::Texture<GL_TEXTURE_2D>();
+
+				submesh->m_material.m_diffuse->init<GL_RGBA8>(1, 1);
+
+				glBindTexture(GL_TEXTURE_2D, submesh->m_material.m_diffuse->GetObject());
+
+				unsigned char texels [] =
+				{
+					(unsigned char)(color.r * 255),
+					(unsigned char)(color.g * 255),
+					(unsigned char)(color.b * 255)
+				};
+
+				glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, texels);
+
+				glBindTexture(GL_TEXTURE_2D, 0);
+			}
+		}
+
+		{
+			aiString str;
+			scene->mMaterials[mesh->mMaterialIndex]->GetTexture(aiTextureType_SPECULAR, 0, &str);
+			std::string texture_name(str.C_Str());
+
+			if (g_Textures.find(texture_name) != g_Textures.end())
+			{
+				submesh->m_material.m_specular = g_Textures[texture_name];
+			}
+			else
+			{
+				aiColor3D color (0.f, 0.f, 0.f);
+				scene->mMaterials[mesh->mMaterialIndex]->Get(AI_MATKEY_COLOR_DIFFUSE,color);
+
+				submesh->m_material.m_specular = new GPU::Texture<GL_TEXTURE_2D>();
+
+				submesh->m_material.m_specular->init<GL_RGBA8>(1, 1);
+
+				glBindTexture(GL_TEXTURE_2D, submesh->m_material.m_specular->GetObject());
+
+				unsigned char texels [] =
+				{
+					(unsigned char)(color.r * 255),
+					(unsigned char)(color.g * 255),
+					(unsigned char)(color.b * 255)
+				};
+
+				glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, texels);
+
+				glBindTexture(GL_TEXTURE_2D, 0);
 			}
 		}
 
@@ -746,10 +820,7 @@ void DrawableSurface::importScene(const QString & filename)
 	GPU::munmap(*vertexBuffer);
 	GPU::munmap(*indexBuffer);
 
-	const aiMatrix4x4 identity (1.0f, 0.0f, 0.0f, 0.0f,
-								0.0f, 1.0f, 0.0f, 0.0f,
-								0.0f, 0.0f, 1.0f, 0.0f,
-								0.0f, 0.0f, 0.0f, 1.0f);
+	const mat4x4 identity (1.0f);
 
 	addMeshRecursive(scene->mRootNode, identity, meshes);
 }

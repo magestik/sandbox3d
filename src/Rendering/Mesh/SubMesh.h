@@ -63,4 +63,7 @@ public:
 	Material m_material;
 
 	const GPU::Texture<GL_TEXTURE_2D> * m_pNormalMap;
+
+	vec3 m_vMin;
+	vec3 m_vMax;
 };

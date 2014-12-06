@@ -117,14 +117,7 @@
     <property name="title">
      <string>Window</string>
     </property>
-    <widget class="QMenu" name="menuViews">
-     <property name="title">
-      <string>Views</string>
-     </property>
-     <addaction name="actionMeshList"/>
-    </widget>
     <addaction name="actionFullscreen"/>
-    <addaction name="menuViews"/>
    </widget>
    <widget class="QMenu" name="menuSettings">
     <property name="title">

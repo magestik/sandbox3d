@@ -434,11 +434,8 @@ void Rendering::renderFinal(const mat4x4 & mView, const vec4 & clearColor, const
 
 				m->draw();
 
-				if (nullptr != m->m_material.m_diffuse)
-				{
-					glActiveTexture(GL_TEXTURE2);
-					glBindTexture(GL_TEXTURE_2D, 0);
-				}
+				glActiveTexture(GL_TEXTURE2);
+				glBindTexture(GL_TEXTURE_2D, 0);
 			}
 		}
 

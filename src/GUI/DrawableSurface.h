@@ -4,14 +4,15 @@
 
 #include <QGLWidget>
 
-#include <assimp/Importer.hpp>
-#include <assimp/scene.h>
-#include <assimp/postprocess.h>
+#include "Camera/Camera.h"
 
 #define NB_BUFFER 10
 
 class QDir;
 class QString;
+
+class aiScene;
+class aiNode;
 
 class DrawableSurface : public QGLWidget
 {
@@ -23,7 +24,6 @@ public:
 	virtual ~DrawableSurface	(void);
 
 	void	ResetCamera			(void);
-	void	AddObject			(const std::string & name);
 
 	void	DebugFinal			(void);
 	void	DebugNormal			(void);
@@ -54,7 +54,7 @@ private:
 
 	void loadAllMaterials(const aiScene * scene);
 
-	void addMeshRecursive(const aiNode * nd, const aiMatrix4x4 & parentTransformation, const std::vector<SubMesh*> & preloaded);
+	void addMeshRecursive(const aiNode * nd, const mat4x4 & parentTransformation, const std::vector<SubMesh*> & preloaded);
 
 	// Rendering
 	Camera		m_camera;
