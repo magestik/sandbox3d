@@ -813,6 +813,11 @@ void DrawableSurface::importScene(const QString & filename)
 			}
 		}
 
+		{
+			submesh->m_material.shininess = 0.0;
+			scene->mMaterials[mesh->mMaterialIndex]->Get(AI_MATKEY_SHININESS, submesh->m_material.shininess);
+		}
+
 		vertex_offset += vertices.size() * sizeof(SubMesh::VertexSimple);
 		index_offset += triangles.size() * sizeof(unsigned int);
 	}

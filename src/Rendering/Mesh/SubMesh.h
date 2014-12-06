@@ -36,6 +36,7 @@ public:
 	{
 		GPU::Texture<GL_TEXTURE_2D> * m_diffuse;
 		GPU::Texture<GL_TEXTURE_2D> * m_specular;
+		float shininess;
 	};
 
 	virtual ~SubMesh(void);
