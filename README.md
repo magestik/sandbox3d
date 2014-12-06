@@ -13,7 +13,6 @@ A sandbox that I use to test some graphic techniques.
 
 ### TODO
 
-- Light pre-pass
 - Bloom
 - HDR
 - Fog

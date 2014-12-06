@@ -338,6 +338,7 @@ void Rendering::renderSceneToGBuffer(const mat4x4 & mView)
 				{
 					m_pGeometryWithNormalMapPassShader->SetAsCurrent();
 
+					m_pGeometryWithNormalMapPassShader->SetUniform("shininess", m->m_material.shininess);
 					m_pGeometryWithNormalMapPassShader->SetUniform("ModelViewProjection", MVP);
 					m_pGeometryWithNormalMapPassShader->SetUniform("Model", object.transformation);
 
@@ -351,6 +352,7 @@ void Rendering::renderSceneToGBuffer(const mat4x4 & mView)
 				{
 					m_pGeometryPassShader->SetAsCurrent();
 
+					m_pGeometryPassShader->SetUniform("shininess", m->m_material.shininess);
 					m_pGeometryPassShader->SetUniform("ModelViewProjection", MVP);
 					m_pGeometryPassShader->SetUniform("Model", object.transformation);
 

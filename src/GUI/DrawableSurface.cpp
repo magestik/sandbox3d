@@ -814,7 +814,7 @@ void DrawableSurface::importScene(const QString & filename)
 		}
 
 		{
-			submesh->m_material.shininess = 0.0;
+			submesh->m_material.shininess = 1.0;
 			scene->mMaterials[mesh->mMaterialIndex]->Get(AI_MATKEY_SHININESS, submesh->m_material.shininess);
 		}
 

@@ -105,6 +105,18 @@ void Shader::SetUniform(const char * name, int n)
 }
 
 /**
+ * @brief Shader::SetUniform
+ * @param name
+ * @param m
+ */
+void Shader::SetUniform(const char * name, float n)
+{
+	GLint location = glGetUniformLocation(m_uObject, name);
+//	assert(-1 != location);
+	glUniform1f(location, n);
+}
+
+/**
  * @brief Shader::SetTexture
  * @param name
  * @param unit

@@ -29,18 +29,18 @@ vec3 reconstruct_world_pos()
 void main(void)
 {
 	float att = 1.0;
-	vec3 normal = texture(normalSampler, vsOut.texCoord).rgb;
+	vec4 g_buffer = texture(normalSampler, vsOut.texCoord);
 
 	vec3 viewPos = (vec4(0.0, 0.0, 0.0, 1.0) * inverse(View)).rgb;
 	vec3 viewDir = normalize(viewPos - reconstruct_world_pos());
 
 	vec3 halfVector = normalize(lightDir + viewDir);
 
-	float NdotL = clamp(dot(normal, lightDir), 0.0, 1.0);
-	float NdotH = clamp(dot(normal, halfVector), 0.0, 1.0);
+	float NdotL = clamp(dot(g_buffer.rgb, lightDir), 0.0, 1.0);
+	float NdotH = clamp(dot(g_buffer.rgb, halfVector), 0.0, 1.0);
 
 	outDiffuse = lightColor *  NdotL * att;
-	outSpecular = lightColor *  pow(NdotH, 100.0) * att;
+	outSpecular = lightColor *  pow(NdotH, g_buffer.a) * att;
 }
 
 

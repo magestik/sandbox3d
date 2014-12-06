@@ -10,7 +10,7 @@ struct VS_OUTPUT
 
 uniform sampler2D normalMap;
 
-uniform float shinines;
+uniform float shininess;
 
 in VS_OUTPUT vsOut;
 
@@ -25,6 +25,6 @@ void main(void)
 	vec3 bitangent  = normalize(vsOut.bitangent);
 
 	fbNormal.rgb = normalize(normal_tangentspace * inverse(mat3x3(tangent, bitangent, normal)));
-	fbNormal.a = shinines;
+	fbNormal.a = shininess;
 }
 
