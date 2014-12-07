@@ -54,12 +54,15 @@ void GBuffer::free()
  * @brief GBuffer::enable
  * @return
  */
-bool GBuffer::enable(void)
+bool GBuffer::begin(void)
 {
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_uObject);
 	glDrawBuffer(GL_COLOR_ATTACHMENT0);
 
 	glEnable(GL_DEPTH_TEST);
+
+	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	return(true);
 }
@@ -68,7 +71,7 @@ bool GBuffer::enable(void)
  * @brief GBuffer::disable
  * @return
  */
-bool GBuffer::disable(void)
+bool GBuffer::end(void)
 {
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 	glDrawBuffer(GL_BACK);

@@ -15,8 +15,8 @@ public:
 	bool	init	(const GPU::Texture<GL_TEXTURE_2D> * pColorTexture, const GPU::Texture<GL_TEXTURE_2D> * pDepthTexture);
 	void	free	(void);
 
-	bool	enable	(void);
-	bool	disable	(void);
+	bool	begin	(const vec4 & clearColor);
+	bool	end		(void);
 
 	GLuint	GetObject(void) { return(m_uObject); }
 

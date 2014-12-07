@@ -53,7 +53,7 @@ void LightAccumBuffer::free(void)
  * @brief LightAccumBuffer::enable
  * @return
  */
-bool LightAccumBuffer::enable(void)
+bool LightAccumBuffer::begin(void)
 {
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_uObject);
 
@@ -65,6 +65,9 @@ bool LightAccumBuffer::enable(void)
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_ONE, GL_ONE);
 
+	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+	glClear(GL_COLOR_BUFFER_BIT);
+
 	return(true);
 }
 
@@ -72,7 +75,7 @@ bool LightAccumBuffer::enable(void)
  * @brief LightAccumBuffer::disable
  * @return
  */
-bool LightAccumBuffer::disable(void)
+bool LightAccumBuffer::end(void)
 {
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 	glDrawBuffer(GL_BACK);

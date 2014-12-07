@@ -15,8 +15,8 @@ public:
 	bool	init	(unsigned int width, unsigned height);
 	void	free	(void);
 
-	bool	enable	(void);
-	bool	disable	(void);
+	bool	begin	(void);
+	bool	end		(void);
 
 	GLuint	GetObject	(void) { return(m_uObject); }
 

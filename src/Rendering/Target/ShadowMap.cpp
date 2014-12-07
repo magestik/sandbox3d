@@ -73,7 +73,7 @@ void ShadowMap::free(void)
  * @brief ShadowMap::enable
  * @return
  */
-bool ShadowMap::enable(void)
+bool ShadowMap::begin(void)
 {
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_uObject);
 	glDrawBuffer(GL_NONE);
@@ -83,6 +83,8 @@ bool ShadowMap::enable(void)
 	glPolygonOffset(10.0f, 1.0f);
 	glEnable(GL_POLYGON_OFFSET_FILL);
 
+	glClear(GL_DEPTH_BUFFER_BIT);
+
 	return(true);
 }
 
@@ -90,7 +92,7 @@ bool ShadowMap::enable(void)
  * @brief ShadowMap::disable
  * @return
  */
-bool ShadowMap::disable(void)
+bool ShadowMap::end(void)
 {
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 	glDrawBuffer(GL_BACK);

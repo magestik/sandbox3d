@@ -53,7 +53,7 @@ void Final::free(void)
  * @brief Final::enable
  * @return
  */
-bool Final::enable(void)
+bool Final::begin(const vec4 & clearColor)
 {
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_uObject);
 	glDrawBuffer(GL_COLOR_ATTACHMENT0);
@@ -63,6 +63,9 @@ bool Final::enable(void)
 
 	glDepthMask(GL_FALSE);
 
+	glClearColor(clearColor.x, clearColor.y, clearColor.z, clearColor.w);
+	glClear(GL_COLOR_BUFFER_BIT);
+
 	return(true);
 }
 
@@ -70,7 +73,7 @@ bool Final::enable(void)
  * @brief Final::disable
  * @return
  */
-bool Final::disable()
+bool Final::end()
 {
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 	glDrawBuffer(GL_BACK);

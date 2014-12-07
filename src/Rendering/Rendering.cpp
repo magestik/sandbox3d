@@ -220,11 +220,9 @@ void Rendering::renderSceneToShadowMap(void)
 {
 	glViewport(0, 0, SHADOW_MAP_SIZE, SHADOW_MAP_SIZE);
 
-	m_pShadowMap->enable();
+	m_pShadowMap->begin();
 
 	{
-		glClear(GL_DEPTH_BUFFER_BIT);
-
 		mat4x4 mDepthView = _lookAt(vec3(0,0,0), m_pLight->GetDirection(), vec3(0.0f, -1.0f, 0.0f));
 		mat4x4 mDepthViewProjection = m_pShadowMap->GetProjection() * mDepthView;
 
@@ -246,7 +244,7 @@ void Rendering::renderSceneToShadowMap(void)
 		glUseProgram(0);
 	}
 
-	m_pShadowMap->disable();
+	m_pShadowMap->end();
 }
 
 /**
@@ -316,12 +314,9 @@ void Rendering::renderSceneToGBuffer(const mat4x4 & mView)
 {
 	glViewport(0, 0, m_uWidth, m_uHeight);
 
-	m_GBuffer.enable();
+	m_GBuffer.begin();
 
 	{
-		glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
 		mat4x4 mCameraViewProjection = m_matProjection * mView;
 
 		// OPTIMIZE THIS !!!!!
@@ -364,7 +359,7 @@ void Rendering::renderSceneToGBuffer(const mat4x4 & mView)
 		}
 	}
 
-	m_GBuffer.disable();
+	m_GBuffer.end();
 }
 
 /**
@@ -374,12 +369,9 @@ void Rendering::renderLightsToAccumBuffer(const mat4x4 & mView)
 {
 	glViewport(0, 0, m_uWidth, m_uHeight);
 
-	m_LightAccumBuffer.enable();
+	m_LightAccumBuffer.begin();
 
 	{
-		glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-		glClear(GL_COLOR_BUFFER_BIT);
-
 		mat4x4 mCameraViewProjection = m_matProjection * mView;
 
 		m_pDirectionnalLightShader->SetAsCurrent();
@@ -403,7 +395,7 @@ void Rendering::renderLightsToAccumBuffer(const mat4x4 & mView)
 		glUseProgram(0);
 	}
 
-	m_LightAccumBuffer.disable();
+	m_LightAccumBuffer.end();
 }
 
 /**
@@ -414,12 +406,9 @@ void Rendering::renderFinal(const mat4x4 & mView, const vec4 & clearColor, const
 {
 	glViewport(0, 0, m_uWidth, m_uHeight);
 
-	m_Compose.enable();
+	m_Compose.begin(clearColor);
 
 	{
-		glClearColor(clearColor.x, clearColor.y, clearColor.z, clearColor.w);
-		glClear(GL_COLOR_BUFFER_BIT);
-
 		mat4x4 mCameraViewProjection = m_matProjection * mView;
 
 		mat4x4 mDepthView = _lookAt(vec3(0,0,0), m_pLight->GetDirection(), vec3(0.0f, -1.0f, 0.0f));
@@ -430,7 +419,12 @@ void Rendering::renderFinal(const mat4x4 & mView, const vec4 & clearColor, const
 
 		m_pComposeShader->SetAsCurrent();
 
+		m_pComposeShader->SetTexture("diffuseLightSampler", 0, *(m_apTargets[TARGET_DIFFUSE_LIGHTS]));
+		m_pComposeShader->SetTexture("specularLightSampler", 1, *(m_apTargets[TARGET_SPECULAR_LIGHTS]));
+		m_pComposeShader->SetTexture("shadowMap", 2, m_pShadowMap->GetTexture());
+
 		m_pComposeShader->SetUniform("ambientColor", ambientColor.xyz);
+		m_pComposeShader->SetUniform("DepthTransformation", mDepthViewProjection);
 
 		for (Mesh::Instance & object : m_aObjects)
 		{
@@ -439,21 +433,12 @@ void Rendering::renderFinal(const mat4x4 & mView, const vec4 & clearColor, const
 			m_pComposeShader->SetUniform("ModelViewProjection", MVP);
 			m_pComposeShader->SetUniform("Model", object.transformation);
 
-			m_pComposeShader->SetTexture("diffuseLightSampler", 0, *(m_apTargets[TARGET_DIFFUSE_LIGHTS]));
-			m_pComposeShader->SetTexture("specularLightSampler", 1, *(m_apTargets[TARGET_SPECULAR_LIGHTS]));
-
-			m_pComposeShader->SetUniform("DepthTransformation", mDepthViewProjection);
-			m_pComposeShader->SetTexture("shadowMap",	2, m_pShadowMap->GetTexture());
-
 			for (SubMesh * m : object.getDrawCommands())
 			{
 				m_pComposeShader->SetTexture("diffuseSampler", 3, *(m->m_material.m_diffuse));
 				m_pComposeShader->SetTexture("specularSampler", 4, *(m->m_material.m_specular));
 
 				m->draw();
-
-				glActiveTexture(GL_TEXTURE2);
-				glBindTexture(GL_TEXTURE_2D, 0);
 			}
 		}
 
@@ -463,5 +448,5 @@ void Rendering::renderFinal(const mat4x4 & mView, const vec4 & clearColor, const
 		glBindSampler(4, 0);
 	}
 
-	m_Compose.disable();
+	m_Compose.end();
 }
