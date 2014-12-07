@@ -110,7 +110,8 @@
     <addaction name="actionFinal"/>
     <addaction name="actionNormal"/>
     <addaction name="actionDepth"/>
-    <addaction name="actionLights"/>
+    <addaction name="actionLightSpecular"/>
+    <addaction name="actionLightDiffuse"/>
     <addaction name="actionShadows"/>
    </widget>
    <widget class="QMenu" name="menuWindow">
@@ -287,12 +288,12 @@
     <string>Ctrl+F2</string>
    </property>
   </action>
-  <action name="actionLights">
+  <action name="actionLightSpecular">
    <property name="checkable">
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>Lights</string>
+    <string>Light (Specular)</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+F4</string>
@@ -353,6 +354,14 @@
    </property>
    <property name="text">
     <string>Export ...</string>
+   </property>
+  </action>
+  <action name="actionLightDiffuse">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Light (Diffuse)</string>
    </property>
   </action>
  </widget>

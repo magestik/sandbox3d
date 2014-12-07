@@ -36,7 +36,8 @@ public:
 	enum ERenderType
 	{
 		FINAL,
-		LIGHT_BUFFER,
+		SPECULAR_LIGHTS,
+		DIFFUSE_LIGHTS,
 		NORMAL_BUFFER,
 		DEPTH,
 		SHADOWS

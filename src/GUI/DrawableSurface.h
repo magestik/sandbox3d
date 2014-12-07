@@ -27,7 +27,8 @@ public:
 
 	void	DebugFinal			(void);
 	void	DebugNormal			(void);
-	void	DebugLights			(void);
+	void	DebugDiffuseLights	(void);
+	void	DebugSpecularLights	(void);
 	void	DebugDepth			(void);
 	void	DebugShadows		(void);
 

@@ -263,7 +263,16 @@ void Rendering::renderIntermediateToScreen(ERenderType eRenderType)
 		}
 		break;
 
-		case LIGHT_BUFFER:
+		case DIFFUSE_LIGHTS:
+		{
+			glBindFramebuffer(GL_READ_FRAMEBUFFER, m_LightAccumBuffer.GetObject());
+			glReadBuffer(GL_COLOR_ATTACHMENT0);
+			glBlitFramebuffer(0, 0, m_uWidth, m_uHeight, 0, 0, m_uWidth, m_uHeight, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+			glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+		}
+		break;
+
+		case SPECULAR_LIGHTS:
 		{
 			glBindFramebuffer(GL_READ_FRAMEBUFFER, m_LightAccumBuffer.GetObject());
 			glReadBuffer(GL_COLOR_ATTACHMENT1);

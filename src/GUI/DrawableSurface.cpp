@@ -75,11 +75,20 @@ void DrawableSurface::DebugNormal()
 }
 
 /**
+ * @brief DrawableSurface::DebugDiffuseLights
+ */
+void DrawableSurface::DebugDiffuseLights()
+{
+	m_eRenderType = Rendering::DIFFUSE_LIGHTS;
+	update();
+}
+
+/**
  * @brief DrawableSurface::DebugPosition
  */
-void DrawableSurface::DebugLights()
+void DrawableSurface::DebugSpecularLights()
 {
-	m_eRenderType = Rendering::LIGHT_BUFFER;
+	m_eRenderType = Rendering::SPECULAR_LIGHTS;
 	update();
 }
 

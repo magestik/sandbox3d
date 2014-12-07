@@ -189,9 +189,13 @@ void MainWindow::on_actionFinal_toggled(bool checked)
 	if (checked)
 	{
 		ui->actionDiffuse->setChecked(false);
-		ui->actionNormal->setChecked(false);
-		ui->actionLights->setChecked(false);
+
 		ui->actionDepth->setChecked(false);
+		ui->actionNormal->setChecked(false);
+
+		ui->actionLightDiffuse->setChecked(false);
+		ui->actionLightSpecular->setChecked(false);
+
 		ui->actionShadows->setChecked(false);
 
 		static_cast<DrawableSurface*>(m_pDrawable)->DebugFinal();
@@ -207,8 +211,12 @@ void MainWindow::on_actionNormal_toggled(bool checked)
 	{
 		ui->actionFinal->setChecked(false);
 		ui->actionDiffuse->setChecked(false);
-		ui->actionLights->setChecked(false);
+
 		ui->actionDepth->setChecked(false);
+
+		ui->actionLightDiffuse->setChecked(false);
+		ui->actionLightSpecular->setChecked(false);
+
 		ui->actionShadows->setChecked(false);
 
 		static_cast<DrawableSurface*>(m_pDrawable)->DebugNormal();
@@ -216,19 +224,45 @@ void MainWindow::on_actionNormal_toggled(bool checked)
 }
 
 /**
- * @brief MainWindow::on_actionPosition_activated
+ * @brief MainWindow::on_actionLightDiffuse_toggled
+ * @param checked
  */
-void MainWindow::on_actionLights_toggled(bool checked)
+void MainWindow::on_actionLightDiffuse_toggled(bool checked)
 {
 	if (checked)
 	{
 		ui->actionFinal->setChecked(false);
 		ui->actionDiffuse->setChecked(false);
-		ui->actionNormal->setChecked(false);
+
 		ui->actionDepth->setChecked(false);
+		ui->actionNormal->setChecked(false);
+
+		ui->actionLightSpecular->setChecked(false);
+
 		ui->actionShadows->setChecked(false);
 
-		static_cast<DrawableSurface*>(m_pDrawable)->DebugLights();
+		static_cast<DrawableSurface*>(m_pDrawable)->DebugDiffuseLights();
+	}
+}
+
+/**
+ * @brief MainWindow::on_actionLightSpecular_toggled
+ */
+void MainWindow::on_actionLightSpecular_toggled(bool checked)
+{
+	if (checked)
+	{
+		ui->actionFinal->setChecked(false);
+		ui->actionDiffuse->setChecked(false);
+
+		ui->actionDepth->setChecked(false);
+		ui->actionNormal->setChecked(false);
+
+		ui->actionLightDiffuse->setChecked(false);
+
+		ui->actionShadows->setChecked(false);
+
+		static_cast<DrawableSurface*>(m_pDrawable)->DebugSpecularLights();
 	}
 }
 
@@ -241,8 +275,12 @@ void MainWindow::on_actionDepth_toggled(bool checked)
 	{
 		ui->actionFinal->setChecked(false);
 		ui->actionDiffuse->setChecked(false);
+
 		ui->actionNormal->setChecked(false);
-		ui->actionLights->setChecked(false);
+
+		ui->actionLightDiffuse->setChecked(false);
+		ui->actionLightSpecular->setChecked(false);
+
 		ui->actionShadows->setChecked(false);
 
 		static_cast<DrawableSurface*>(m_pDrawable)->DebugDepth();
@@ -259,9 +297,12 @@ void MainWindow::on_actionShadows_toggled(bool checked)
 	{
 		ui->actionFinal->setChecked(false);
 		ui->actionDiffuse->setChecked(false);
-		ui->actionNormal->setChecked(false);
-		ui->actionLights->setChecked(false);
+
 		ui->actionDepth->setChecked(false);
+		ui->actionNormal->setChecked(false);
+
+		ui->actionLightDiffuse->setChecked(false);
+		ui->actionLightSpecular->setChecked(false);
 
 		static_cast<DrawableSurface*>(m_pDrawable)->DebugShadows();
 	}
