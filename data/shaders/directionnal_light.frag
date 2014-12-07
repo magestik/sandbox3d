@@ -8,9 +8,9 @@ struct VS_OUTPUT
 uniform sampler2D depthSampler;
 uniform sampler2D normalSampler;
 
-uniform mat4x4 InverseView;
 uniform mat4x4 InverseViewProjection;
 
+uniform vec3 viewPos;
 uniform vec3 lightDir;
 uniform vec3 lightColor;
 
@@ -31,7 +31,6 @@ void main(void)
 	float att = 1.0;
 	vec4 g_buffer = texture(normalSampler, vsOut.texCoord);
 
-	vec3 viewPos = (vec4(0.0, 0.0, 0.0, 1.0) * InverseView).rgb;
 	vec3 viewDir = normalize(viewPos - reconstruct_world_pos());
 
 	vec3 halfVector = normalize(lightDir + viewDir);

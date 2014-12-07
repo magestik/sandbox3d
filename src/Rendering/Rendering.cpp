@@ -387,7 +387,7 @@ void Rendering::renderLightsToAccumBuffer(const mat4x4 & mView)
 		glBindSampler(1, m_uSampler);
 
 		{
-			m_pDirectionnalLightShader->SetUniform("InverseView", inverse(mView));
+			m_pDirectionnalLightShader->SetUniform("viewPos", (inverse(mView) * vec4(0.0, 0.0, 0.0, 1.0)).xyz);
 			m_pDirectionnalLightShader->SetUniform("InverseViewProjection", inverse(mCameraViewProjection));
 			m_pDirectionnalLightShader->SetUniform("lightDir", - normalize(m_pLight->GetDirection()));
 			m_pDirectionnalLightShader->SetUniform("lightColor", m_pLight->GetColor());
