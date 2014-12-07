@@ -384,9 +384,11 @@ void Rendering::renderLightsToAccumBuffer(const mat4x4 & mView)
 
 		m_pDirectionnalLightShader->SetAsCurrent();
 
+		glBindSampler(1, m_uSampler);
+
 		{
-			m_pDirectionnalLightShader->SetUniform("View", mView);
-			m_pDirectionnalLightShader->SetUniform("ViewProjection", mCameraViewProjection);
+			m_pDirectionnalLightShader->SetUniform("InverseView", inverse(mView));
+			m_pDirectionnalLightShader->SetUniform("InverseViewProjection", inverse(mCameraViewProjection));
 			m_pDirectionnalLightShader->SetUniform("lightDir", - normalize(m_pLight->GetDirection()));
 			m_pDirectionnalLightShader->SetUniform("lightColor", m_pLight->GetColor());
 			m_pDirectionnalLightShader->SetTexture("depthSampler", 0, *(m_apTargets[TARGET_DEPTH]));
@@ -395,6 +397,8 @@ void Rendering::renderLightsToAccumBuffer(const mat4x4 & mView)
 		}
 
 		// TODO : render all lights
+
+		glBindSampler(1, 0);
 
 		glUseProgram(0);
 	}

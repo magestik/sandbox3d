@@ -8,8 +8,8 @@ struct VS_OUTPUT
 uniform sampler2D depthSampler;
 uniform sampler2D normalSampler;
 
-uniform mat4x4 View;
-uniform mat4x4 ViewProjection;
+uniform mat4x4 InverseView;
+uniform mat4x4 InverseViewProjection;
 
 uniform vec3 lightDir;
 uniform vec3 lightColor;
@@ -22,7 +22,7 @@ layout (location = 1) out vec3 outSpecular;
 vec3 reconstruct_world_pos()
 {
 	vec4 screenSpacePosition = vec4(vsOut.texCoord * 2.0 - 1.0, texture(depthSampler, vsOut.texCoord).r * 2.0 - 1.0, 1);
-	vec4 worldSpacePosition = screenSpacePosition * inverse(ViewProjection);
+	vec4 worldSpacePosition = screenSpacePosition * InverseViewProjection;
 	return(worldSpacePosition.xyz / worldSpacePosition.w);
 }
 
@@ -31,7 +31,7 @@ void main(void)
 	float att = 1.0;
 	vec4 g_buffer = texture(normalSampler, vsOut.texCoord);
 
-	vec3 viewPos = (vec4(0.0, 0.0, 0.0, 1.0) * inverse(View)).rgb;
+	vec3 viewPos = (vec4(0.0, 0.0, 0.0, 1.0) * InverseView).rgb;
 	vec3 viewDir = normalize(viewPos - reconstruct_world_pos());
 
 	vec3 halfVector = normalize(lightDir + viewDir);
