@@ -38,8 +38,8 @@ void main(void)
 	float NdotL = clamp(dot(g_buffer.rgb, lightDir), 0.0, 1.0);
 	float NdotH = clamp(dot(g_buffer.rgb, halfVector), 0.0, 1.0);
 
-	outDiffuse = lightColor *  NdotL * att;
-	outSpecular = lightColor *  pow(NdotH, g_buffer.a) * att;
+        outDiffuse = lightColor * NdotL * att;
+        outSpecular = lightColor * pow(NdotH, g_buffer.a) * att;
 }
 
 

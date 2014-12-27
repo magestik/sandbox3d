@@ -5,6 +5,8 @@
 #include <Vector.h>
 #include <Matrix.h>
 
+class Shader;
+
 class GBuffer
 {
 public:
@@ -29,8 +31,17 @@ public:
 
 	GLuint	GetObject	(void) { return(m_uObject); }
 
+    Shader * GetShader	(void) { return(m_pCurrentShader); }
+
+    void enable_normalmapping   (void);
+    void disable_normalmapping  (void);
+
 private:
 
 	GLuint m_uObject;
 
+    Shader * m_pShader_simple;
+    Shader * m_pShader_normalmap;
+
+    Shader * m_pCurrentShader;
 };

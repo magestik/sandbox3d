@@ -32,31 +32,28 @@ Rendering::Rendering()
 
 void Rendering::onInitializeComplete()
 {
-	m_apTargets[TARGET_DEPTH]	= new GPU::Texture<GL_TEXTURE_2D>();
-	m_apTargets[TARGET_NORMALS]	= new GPU::Texture<GL_TEXTURE_2D>();
+    compileShaders();
 
-	m_apTargets[TARGET_DIFFUSE_LIGHTS]	= new GPU::Texture<GL_TEXTURE_2D>();
-	m_apTargets[TARGET_SPECULAR_LIGHTS]	= new GPU::Texture<GL_TEXTURE_2D>();
-
-	m_apTargets[TARGET_POSTFX1]	= new GPU::Texture<GL_TEXTURE_2D>();
-	m_apTargets[TARGET_POSTFX2]	= new GPU::Texture<GL_TEXTURE_2D>();
+    for (int i = 0; i < TARGET_MAX; ++i)
+    {
+        m_apTargets[i] = new GPU::Texture<GL_TEXTURE_2D>();
+    }
 
 	onResize(1280, 720);
 
     assert(m_GBuffer.init(m_apTargets[TARGET_NORMALS], m_apTargets[TARGET_DEPTH]));
-    assert(m_Compose.init(m_apTargets[TARGET_POSTFX1], m_apTargets[TARGET_DEPTH]));
+    assert(m_Compose.init(m_apTargets[TARGET_FINAL_HDR], m_apTargets[TARGET_DEPTH]));
     assert(m_LightAccumBuffer.init(m_apTargets[TARGET_DIFFUSE_LIGHTS], m_apTargets[TARGET_SPECULAR_LIGHTS]));
 
 	{
 		m_pLight = new Light::Directionnal(vec3(-20.0f, -20.0f, -20.0f));
 		m_pShadowMap = new ShadowMap();
 		m_pShadowMap->init(SHADOW_MAP_SIZE, SHADOW_MAP_SIZE);
-	}
+    }
 
-	compileShaders();
     generateMeshes();
 
-	glGenSamplers(1,  &m_uSampler);
+    glGenSamplers(1, &m_uSampler);
 	glSamplerParameteri(m_uSampler, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glSamplerParameteri(m_uSampler, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 }
@@ -66,12 +63,7 @@ void Rendering::onInitializeComplete()
  */
 void Rendering::compileShaders()
 {
-	m_pDirectionnalLightShader	= new Shader(g_VertexShaders["directionnal_light.vert"], g_FragmentShaders["directionnal_light.frag"]);
-
-	m_pComposeShader			= new Shader(g_VertexShaders["full.vert"], g_FragmentShaders["full.frag"]);
-
-	m_pGeometryPassShader				= new Shader(g_VertexShaders["geometry_pass.vert"], g_FragmentShaders["geometry_pass.frag"]);
-	m_pGeometryWithNormalMapPassShader	= new Shader(g_VertexShaders["geometry_normalmap_pass.vert"], g_FragmentShaders["geometry_normalmap_pass.frag"]);
+    m_pDirectionnalLightShader	= new Shader(g_VertexShaders["directionnal_light.vert"], g_FragmentShaders["directionnal_light.frag"]);
 
 	m_pDepthOnlyPassShader		= new Shader(g_VertexShaders["depth_only.vert"], g_FragmentShaders["depth_only.frag"]);
 
@@ -125,7 +117,7 @@ void Rendering::generateMeshes()
 		m_pQuadMesh = SubMesh::Create(vertexBuffer, 4, GL_TRIANGLE_STRIP, specs);
 	}
 
-	// TODO : Sphere / Cone / Cube
+    // TODO : Sphere / Cone / Cube
 }
 
 /**
@@ -143,8 +135,13 @@ void Rendering::onResize(int width, int height)
     m_apTargets[TARGET_DIFFUSE_LIGHTS ]->init<GL_R11F_G11F_B10F>(width, height);
     m_apTargets[TARGET_SPECULAR_LIGHTS]->init<GL_R11F_G11F_B10F>(width, height);
 
-    m_apTargets[TARGET_POSTFX1]->init<GL_R11F_G11F_B10F>(width, height);
-    m_apTargets[TARGET_POSTFX2]->init<GL_R11F_G11F_B10F>(width, height);
+    m_apTargets[TARGET_FINAL_HDR]->init<GL_R11F_G11F_B10F>(width, height);
+
+    //m_apTargets[TARGET_LUMINANCE1]->init<GL_RGBA16F>(width, height);
+    //m_apTargets[TARGET_LUMINANCE2]->init<GL_RGBA16F>(width/2, height/2);
+
+    //m_apTargets[TARGET_POSTFX1]->init<GL_R11F_G11F_B10F>(width, height);
+    //m_apTargets[TARGET_POSTFX2]->init<GL_R11F_G11F_B10F>(width, height);
 
 	m_uWidth = width;
 	m_uHeight = height;
@@ -203,7 +200,7 @@ void Rendering::onUpdate(const mat4x4 & mView, const vec4 & clearColor, const ve
 #if DISABLE_BLIT
         m_pFullscreenColorShader->SetAsCurrent();
         {
-            m_pFullscreenColorShader->SetTexture("texSampler", 0, *(m_apTargets[TARGET_POSTFX1]));
+            m_pFullscreenColorShader->SetTexture("texSampler", 0, *(m_apTargets[TARGET_FINAL_HDR]));
             m_pQuadMesh->draw();
         }
         glUseProgram(0);
@@ -223,6 +220,23 @@ void Rendering::onUpdate(const mat4x4 & mView, const vec4 & clearColor, const ve
 void Rendering::onCreate(const Mesh::Instance & instance)
 {
 	m_aObjects.push_back(instance);
+}
+
+/**
+ * @brief Rendering::computeAverageLum
+ */
+void Rendering::computeAverageLum(void)
+{
+    glViewport(0, 0, m_uWidth, m_uHeight);
+/*
+    unsigned int width = m_uWidth;
+    unsigned int height = m_uHeight;
+
+    while (width > 1 && height > 1)
+    {
+        glViewport(0, 0, m_uWidth, m_uHeight);
+    }
+*/
 }
 
 /**
@@ -371,30 +385,20 @@ void Rendering::renderSceneToGBuffer(const mat4x4 & mView)
 
 				if (nullptr != pNormalMap)
 				{
-					m_pGeometryWithNormalMapPassShader->SetAsCurrent();
+                    m_GBuffer.enable_normalmapping();
 
-					m_pGeometryWithNormalMapPassShader->SetUniform("shininess", m->m_material.shininess);
-					m_pGeometryWithNormalMapPassShader->SetUniform("ModelViewProjection", MVP);
-					m_pGeometryWithNormalMapPassShader->SetUniform("Model", object.transformation);
+                    m_GBuffer.GetShader()->SetTexture("normalMap", 0, *pNormalMap);
+                }
+                else
+                {
+                    m_GBuffer.disable_normalmapping();
+                }
 
-					m_pGeometryWithNormalMapPassShader->SetTexture("normalMap", 0, *pNormalMap);
+                m_GBuffer.GetShader()->SetUniform("shininess", m->m_material.shininess);
+                m_GBuffer.GetShader()->SetUniform("ModelViewProjection", MVP);
+                m_GBuffer.GetShader()->SetUniform("Model", object.transformation);
 
-					m->draw();
-
-					glUseProgram(0);
-				}
-				else
-				{
-					m_pGeometryPassShader->SetAsCurrent();
-
-					m_pGeometryPassShader->SetUniform("shininess", m->m_material.shininess);
-					m_pGeometryPassShader->SetUniform("ModelViewProjection", MVP);
-					m_pGeometryPassShader->SetUniform("Model", object.transformation);
-
-					m->draw();
-
-					glUseProgram(0);
-				}
+                m->draw();
 			}
 		}
 	}
@@ -446,6 +450,9 @@ void Rendering::renderFinal(const mat4x4 & mView, const vec4 & clearColor, const
 {
 	glViewport(0, 0, m_uWidth, m_uHeight);
 
+    glBindSampler(3, m_uSampler);
+    glBindSampler(4, m_uSampler);
+
 	m_Compose.begin(clearColor);
 
 	{
@@ -454,39 +461,32 @@ void Rendering::renderFinal(const mat4x4 & mView, const vec4 & clearColor, const
 		mat4x4 mDepthView = _lookAt(vec3(0,0,0), m_pLight->GetDirection(), vec3(0.0f, -1.0f, 0.0f));
 		mat4x4 mDepthViewProjection = m_pShadowMap->GetProjection() * mDepthView;
 
-		glBindSampler(3, m_uSampler);
-		glBindSampler(4, m_uSampler);
+        m_Compose.GetShader()->SetTexture("diffuseLightSampler", 0, *(m_apTargets[TARGET_DIFFUSE_LIGHTS]));
+        m_Compose.GetShader()->SetTexture("specularLightSampler", 1, *(m_apTargets[TARGET_SPECULAR_LIGHTS]));
+        m_Compose.GetShader()->SetTexture("shadowMap", 2, m_pShadowMap->GetTexture());
 
-		m_pComposeShader->SetAsCurrent();
-
-		m_pComposeShader->SetTexture("diffuseLightSampler", 0, *(m_apTargets[TARGET_DIFFUSE_LIGHTS]));
-		m_pComposeShader->SetTexture("specularLightSampler", 1, *(m_apTargets[TARGET_SPECULAR_LIGHTS]));
-		m_pComposeShader->SetTexture("shadowMap", 2, m_pShadowMap->GetTexture());
-
-		m_pComposeShader->SetUniform("ambientColor", ambientColor.xyz);
-		m_pComposeShader->SetUniform("DepthTransformation", mDepthViewProjection);
+        m_Compose.GetShader()->SetUniform("ambientColor", ambientColor.xyz);
+        m_Compose.GetShader()->SetUniform("DepthTransformation", mDepthViewProjection);
 
 		for (Mesh::Instance & object : m_aObjects)
 		{
 			mat4x4 MVP = mCameraViewProjection * object.transformation;
 
-			m_pComposeShader->SetUniform("ModelViewProjection", MVP);
-			m_pComposeShader->SetUniform("Model", object.transformation);
+            m_Compose.GetShader()->SetUniform("ModelViewProjection", MVP);
+            m_Compose.GetShader()->SetUniform("Model", object.transformation);
 
 			for (SubMesh * m : object.getDrawCommands())
 			{
-				m_pComposeShader->SetTexture("diffuseSampler", 3, *(m->m_material.m_diffuse));
-				m_pComposeShader->SetTexture("specularSampler", 4, *(m->m_material.m_specular));
+                m_Compose.GetShader()->SetTexture("diffuseSampler", 3, *(m->m_material.m_diffuse));
+                m_Compose.GetShader()->SetTexture("specularSampler", 4, *(m->m_material.m_specular));
 
 				m->draw();
 			}
-		}
-
-		glUseProgram(0);
-
-		glBindSampler(3, 0);
-		glBindSampler(4, 0);
+        }
 	}
 
-	m_Compose.end();
+    m_Compose.end();
+
+    glBindSampler(3, 0);
+    glBindSampler(4, 0);
 }

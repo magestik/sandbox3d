@@ -58,6 +58,8 @@ protected:
 	void	compileShaders				(void);
 	void	generateMeshes				(void);
 
+    void    computeAverageLum           (void);
+
 	void	renderSceneToGBuffer		(const mat4x4 & mView);
 
 	void	renderLightsToAccumBuffer	(const mat4x4 & mView);
@@ -84,11 +86,6 @@ private:
 	ShadowMap * m_pShadowMap;
 	Light::Directionnal * m_pLight;
 
-	Shader *	m_pComposeShader;
-
-	Shader *	m_pGeometryPassShader;
-	Shader *	m_pGeometryWithNormalMapPassShader;
-
 	Shader *	m_pDepthOnlyPassShader;
 
 	Shader *	m_pFullscreenDepthShader;
@@ -101,15 +98,19 @@ private:
 
 	enum ETarget
 	{
-		TARGET_DEPTH,
-		TARGET_NORMALS,
-		TARGET_DIFFUSE_LIGHTS,
-		TARGET_SPECULAR_LIGHTS,
-		TARGET_POSTFX1,
-		TARGET_POSTFX2
+        TARGET_DEPTH            = 0,
+        TARGET_NORMALS          = 1,
+        TARGET_DIFFUSE_LIGHTS   = 2,
+        TARGET_SPECULAR_LIGHTS  = 3,
+        TARGET_FINAL_HDR        = 4,
+        //TARGET_LUMINANCE1       = 5,
+        //TARGET_LUMINANCE2       = 6,
+        //TARGET_POSTFX1          = 7,
+        //TARGET_POSTFX2          = 8,
+        TARGET_MAX              = 5
 	};
 
-	GPU::Texture<GL_TEXTURE_2D> * m_apTargets [6];
+    GPU::Texture<GL_TEXTURE_2D> * m_apTargets [TARGET_MAX];
 
 	GLuint m_uSampler;
 };

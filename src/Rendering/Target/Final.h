@@ -5,6 +5,8 @@
 #include <Vector.h>
 #include <Matrix.h>
 
+class Shader;
+
 class Final
 {
 public:
@@ -20,8 +22,10 @@ public:
 
 	GLuint	GetObject(void) { return(m_uObject); }
 
+    Shader * GetShader(void) { return(m_pShader); }
 private:
 
 	GLuint m_uObject;
 
+    Shader * m_pShader;
 };
