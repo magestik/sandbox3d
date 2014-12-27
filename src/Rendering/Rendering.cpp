@@ -13,6 +13,7 @@ std::map<std::string, GPU::Texture<GL_TEXTURE_2D> *> g_Textures;
 std::map<std::string, Mesh> g_Meshes;
 
 #define SHADOW_MAP_SIZE 1024
+#define DISABLE_BLIT 1
 
 /**
  * @brief Rendering::onInitialize
@@ -42,9 +43,9 @@ void Rendering::onInitializeComplete()
 
 	onResize(1280, 720);
 
-	m_GBuffer.init(m_apTargets[TARGET_NORMALS], m_apTargets[TARGET_DEPTH]);
-	m_Compose.init(m_apTargets[TARGET_POSTFX1], m_apTargets[TARGET_DEPTH]);
-	m_LightAccumBuffer.init(m_apTargets[TARGET_DIFFUSE_LIGHTS], m_apTargets[TARGET_SPECULAR_LIGHTS]);
+    assert(m_GBuffer.init(m_apTargets[TARGET_NORMALS], m_apTargets[TARGET_DEPTH]));
+    assert(m_Compose.init(m_apTargets[TARGET_POSTFX1], m_apTargets[TARGET_DEPTH]));
+    assert(m_LightAccumBuffer.init(m_apTargets[TARGET_DIFFUSE_LIGHTS], m_apTargets[TARGET_SPECULAR_LIGHTS]));
 
 	{
 		m_pLight = new Light::Directionnal(vec3(-20.0f, -20.0f, -20.0f));
@@ -53,7 +54,7 @@ void Rendering::onInitializeComplete()
 	}
 
 	compileShaders();
-	generateMeshes();
+    generateMeshes();
 
 	glGenSamplers(1,  &m_uSampler);
 	glSamplerParameteri(m_uSampler, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -76,6 +77,7 @@ void Rendering::compileShaders()
 
 	m_pFullscreenDepthShader	= new Shader(g_VertexShaders["fullscreen.vert"], g_FragmentShaders["fullscreen_depth.frag"]);
 	m_pFullscreenNormalShader	= new Shader(g_VertexShaders["fullscreen.vert"], g_FragmentShaders["fullscreen_normal.frag"]);
+    m_pFullscreenColorShader	= new Shader(g_VertexShaders["fullscreen.vert"], g_FragmentShaders["fullscreen_color.frag"]);
 }
 
 /**
@@ -133,14 +135,16 @@ void Rendering::generateMeshes()
  */
 void Rendering::onResize(int width, int height)
 {
+    // see https://www.opengl.org/wiki/Image_Format#Required_formats
+
 	m_apTargets[TARGET_DEPTH  ]->init<GL_DEPTH_COMPONENT32F>(width, height);
 	m_apTargets[TARGET_NORMALS]->init<GL_RGBA16F>(width, height);
 
-	m_apTargets[TARGET_DIFFUSE_LIGHTS ]->init<GL_RGB16F>(width, height);
-	m_apTargets[TARGET_SPECULAR_LIGHTS]->init<GL_RGB16F>(width, height);
+    m_apTargets[TARGET_DIFFUSE_LIGHTS ]->init<GL_R11F_G11F_B10F>(width, height);
+    m_apTargets[TARGET_SPECULAR_LIGHTS]->init<GL_R11F_G11F_B10F>(width, height);
 
-	m_apTargets[TARGET_POSTFX1]->init<GL_RGB16F>(width, height);
-	m_apTargets[TARGET_POSTFX2]->init<GL_RGB16F>(width, height);
+    m_apTargets[TARGET_POSTFX1]->init<GL_R11F_G11F_B10F>(width, height);
+    m_apTargets[TARGET_POSTFX2]->init<GL_R11F_G11F_B10F>(width, height);
 
 	m_uWidth = width;
 	m_uHeight = height;
@@ -194,12 +198,21 @@ void Rendering::onUpdate(const mat4x4 & mView, const vec4 & clearColor, const ve
 		if (bWireframe)
 		{
 			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-		}
+        }
 
-		glBindFramebuffer(GL_READ_FRAMEBUFFER, m_Compose.GetObject());
-		glReadBuffer(GL_COLOR_ATTACHMENT0);
-		glBlitFramebuffer(0, 0, m_uWidth, m_uHeight, 0, 0, m_uWidth, m_uHeight, GL_COLOR_BUFFER_BIT, GL_NEAREST);
-		glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+#if DISABLE_BLIT
+        m_pFullscreenColorShader->SetAsCurrent();
+        {
+            m_pFullscreenColorShader->SetTexture("texSampler", 0, *(m_apTargets[TARGET_POSTFX1]));
+            m_pQuadMesh->draw();
+        }
+        glUseProgram(0);
+#else
+        glBindFramebuffer(GL_READ_FRAMEBUFFER, m_Compose.GetObject());
+        glReadBuffer(GL_COLOR_ATTACHMENT0);
+        glBlitFramebuffer(0, 0, m_uWidth, m_uHeight, 0, 0, m_uWidth, m_uHeight, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+        glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+#endif
 	}
 }
 
@@ -264,20 +277,38 @@ void Rendering::renderIntermediateToScreen(ERenderType eRenderType)
 		break;
 
 		case DIFFUSE_LIGHTS:
-		{
-			glBindFramebuffer(GL_READ_FRAMEBUFFER, m_LightAccumBuffer.GetObject());
-			glReadBuffer(GL_COLOR_ATTACHMENT0);
-			glBlitFramebuffer(0, 0, m_uWidth, m_uHeight, 0, 0, m_uWidth, m_uHeight, GL_COLOR_BUFFER_BIT, GL_NEAREST);
-			glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+        {
+#if DISABLE_BLIT
+            m_pFullscreenColorShader->SetAsCurrent();
+            {
+                m_pFullscreenColorShader->SetTexture("texSampler", 0, *(m_apTargets[TARGET_DIFFUSE_LIGHTS]));
+                m_pQuadMesh->draw();
+            }
+            glUseProgram(0);
+#else
+            glBindFramebuffer(GL_READ_FRAMEBUFFER, m_LightAccumBuffer.GetObject());
+            glReadBuffer(GL_COLOR_ATTACHMENT0);
+            glBlitFramebuffer(0, 0, m_uWidth, m_uHeight, 0, 0, m_uWidth, m_uHeight, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+            glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+#endif
 		}
 		break;
 
 		case SPECULAR_LIGHTS:
-		{
-			glBindFramebuffer(GL_READ_FRAMEBUFFER, m_LightAccumBuffer.GetObject());
-			glReadBuffer(GL_COLOR_ATTACHMENT1);
-			glBlitFramebuffer(0, 0, m_uWidth, m_uHeight, 0, 0, m_uWidth, m_uHeight, GL_COLOR_BUFFER_BIT, GL_NEAREST);
-			glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+        {
+#if DISABLE_BLIT
+            m_pFullscreenColorShader->SetAsCurrent();
+            {
+                m_pFullscreenColorShader->SetTexture("texSampler", 0, *(m_apTargets[TARGET_SPECULAR_LIGHTS]));
+                m_pQuadMesh->draw();
+            }
+            glUseProgram(0);
+#else
+            glBindFramebuffer(GL_READ_FRAMEBUFFER, m_LightAccumBuffer.GetObject());
+            glReadBuffer(GL_COLOR_ATTACHMENT1);
+            glBlitFramebuffer(0, 0, m_uWidth, m_uHeight, 0, 0, m_uWidth, m_uHeight, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+            glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+#endif
 		}
 		break;
 
@@ -285,7 +316,7 @@ void Rendering::renderIntermediateToScreen(ERenderType eRenderType)
 		{
 			m_pFullscreenNormalShader->SetAsCurrent();
 			{
-				m_pFullscreenDepthShader->SetTexture("texSampler", 0, *(m_apTargets[TARGET_NORMALS]));
+                m_pFullscreenNormalShader->SetTexture("texSampler", 0, *(m_apTargets[TARGET_NORMALS]));
 				m_pQuadMesh->draw();
 			}
 			glUseProgram(0);

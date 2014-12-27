@@ -135,10 +135,12 @@ void DrawableSurface::DebugFinal()
 void DrawableSurface::initializeGL(void)
 {
 	GLint v;
-	glGetIntegerv(GL_CONTEXT_FLAGS, &v);
-	assert (v & GL_CONTEXT_FLAG_DEBUG_BIT);
+    glGetIntegerv(GL_CONTEXT_FLAGS, &v);
+    //assert (v & GL_CONTEXT_FLAG_DEBUG_BIT);
 
-	glEnable(GL_CULL_FACE);
+    glDisable(GL_DEPTH_TEST);
+    glDisable(GL_CULL_FACE);
+    glDisable(GL_BLEND);
 
 	glGenQueries(1, &m_query);
 

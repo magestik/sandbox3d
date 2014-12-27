@@ -93,6 +93,7 @@ private:
 
 	Shader *	m_pFullscreenDepthShader;
 	Shader *	m_pFullscreenNormalShader;
+    Shader *	m_pFullscreenColorShader;
 
 	Shader *	m_pDirectionnalLightShader;
 
