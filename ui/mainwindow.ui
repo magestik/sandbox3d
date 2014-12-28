@@ -115,6 +115,7 @@
     <addaction name="actionShadows"/>
     <addaction name="actionLuminance1"/>
     <addaction name="actionLuminance2"/>
+    <addaction name="actionBloom"/>
    </widget>
    <widget class="QMenu" name="menuWindow">
     <property name="title">
@@ -380,6 +381,14 @@
    </property>
    <property name="text">
     <string>Luminance 2</string>
+   </property>
+  </action>
+  <action name="actionBloom">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Bloom</string>
    </property>
   </action>
  </widget>

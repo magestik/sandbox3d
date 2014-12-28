@@ -57,4 +57,5 @@ private slots:
 	void on_actionShadows_toggled(bool checked);
     void on_actionLuminance1_toggled(bool checked);
     void on_actionLuminance2_toggled(bool checked);
+    void on_actionBloom_toggled(bool checked);
 };

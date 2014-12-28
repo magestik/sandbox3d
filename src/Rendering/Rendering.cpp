@@ -434,6 +434,17 @@ void Rendering::renderIntermediateToScreen(ERenderType eRenderType)
             glUseProgram(0);
         }
         break;
+
+        case BLOOM:
+        {
+            m_pFullscreenColorShader->SetAsCurrent();
+            {
+                m_pFullscreenColorShader->SetTexture("texSampler", 0, *(m_apTargets[TARGET_BLOOM1]));
+                m_pQuadMesh->draw();
+            }
+            glUseProgram(0);
+        }
+        break;
     }
 }
 

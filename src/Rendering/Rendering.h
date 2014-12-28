@@ -44,7 +44,8 @@ public:
 		DEPTH,
         SHADOWS,
         LUMINANCE1,
-        LUMINANCE2
+        LUMINANCE2,
+        BLOOM
 	};
 
 	explicit Rendering		(void);

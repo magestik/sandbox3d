@@ -201,6 +201,8 @@ void MainWindow::on_actionFinal_toggled(bool checked)
         ui->actionLuminance1->setChecked(false);
         ui->actionLuminance2->setChecked(false);
 
+        ui->actionBloom->setChecked(false);
+
 		static_cast<DrawableSurface*>(m_pDrawable)->DebugFinal();
 	}
 }
@@ -224,6 +226,8 @@ void MainWindow::on_actionNormal_toggled(bool checked)
 
         ui->actionLuminance1->setChecked(false);
         ui->actionLuminance2->setChecked(false);
+
+        ui->actionBloom->setChecked(false);
 
 		static_cast<DrawableSurface*>(m_pDrawable)->DebugNormal();
 	}
@@ -250,6 +254,8 @@ void MainWindow::on_actionLightDiffuse_toggled(bool checked)
         ui->actionLuminance1->setChecked(false);
         ui->actionLuminance2->setChecked(false);
 
+        ui->actionBloom->setChecked(false);
+
 		static_cast<DrawableSurface*>(m_pDrawable)->DebugDiffuseLights();
 	}
 }
@@ -273,6 +279,8 @@ void MainWindow::on_actionLightSpecular_toggled(bool checked)
 
         ui->actionLuminance1->setChecked(false);
         ui->actionLuminance2->setChecked(false);
+
+        ui->actionBloom->setChecked(false);
 
 		static_cast<DrawableSurface*>(m_pDrawable)->DebugSpecularLights();
 	}
@@ -298,6 +306,8 @@ void MainWindow::on_actionDepth_toggled(bool checked)
         ui->actionLuminance1->setChecked(false);
         ui->actionLuminance2->setChecked(false);
 
+        ui->actionBloom->setChecked(false);
+
 		static_cast<DrawableSurface*>(m_pDrawable)->DebugDepth();
 	}
 }
@@ -321,6 +331,8 @@ void MainWindow::on_actionShadows_toggled(bool checked)
 
         ui->actionLuminance1->setChecked(false);
         ui->actionLuminance2->setChecked(false);
+
+        ui->actionBloom->setChecked(false);
 
 		static_cast<DrawableSurface*>(m_pDrawable)->DebugShadows();
     }
@@ -347,6 +359,8 @@ void MainWindow::on_actionLuminance1_toggled(bool checked)
 
         ui->actionLuminance2->setChecked(false);
 
+        ui->actionBloom->setChecked(false);
+
         static_cast<DrawableSurface*>(m_pDrawable)->DebugLuminance(1);
     }
 }
@@ -372,6 +386,34 @@ void MainWindow::on_actionLuminance2_toggled(bool checked)
 
         ui->actionLuminance1->setChecked(false);
 
+        ui->actionBloom->setChecked(false);
+
         static_cast<DrawableSurface*>(m_pDrawable)->DebugLuminance(2);
+    }
+}
+
+/**
+ * @brief MainWindow::on_actionBloom_toggled
+ * @param checked
+ */
+void MainWindow::on_actionBloom_toggled(bool checked)
+{
+    if (checked)
+    {
+        ui->actionFinal->setChecked(false);
+        ui->actionDiffuse->setChecked(false);
+
+        ui->actionDepth->setChecked(false);
+        ui->actionNormal->setChecked(false);
+
+        ui->actionLightDiffuse->setChecked(false);
+        ui->actionLightSpecular->setChecked(false);
+
+        ui->actionShadows->setChecked(false);
+
+        ui->actionLuminance1->setChecked(false);
+        ui->actionLuminance2->setChecked(false);
+
+        static_cast<DrawableSurface*>(m_pDrawable)->DebugBloom();
     }
 }

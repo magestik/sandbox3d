@@ -121,6 +121,15 @@ void DrawableSurface::DebugLuminance(int num)
 }
 
 /**
+ * @brief DrawableSurface::DebugBloom
+ */
+void DrawableSurface::DebugBloom()
+{
+    m_eRenderType = Rendering::BLOOM;
+    update();
+}
+
+/**
  * @brief DrawableSurface::DebugWireframe
  * @param d
  */

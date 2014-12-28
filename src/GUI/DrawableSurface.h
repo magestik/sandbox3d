@@ -32,6 +32,7 @@ public:
 	void	DebugDepth			(void);
 	void	DebugShadows		(void);
     void	DebugLuminance		(int num);
+    void	DebugBloom          (void);
 
 	void	DebugWireframe		(bool d);
 
