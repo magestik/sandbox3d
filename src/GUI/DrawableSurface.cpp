@@ -307,14 +307,14 @@ void DrawableSurface::loadShaders(void)
 		{
 			GPU::Shader<GL_VERTEX_SHADER> * vs = new GPU::Shader<GL_VERTEX_SHADER>();
 			successful &= vs->compileFromSource(source.data());
-			//assert(successful);
+            //assert(successful);
 			g_VertexShaders.insert(std::pair<std::string, GPU::Shader<GL_VERTEX_SHADER> *>(filename.toStdString(), vs));
 		}
 		else if (filename.endsWith("frag"))
 		{
 			GPU::Shader<GL_FRAGMENT_SHADER> * fs = new GPU::Shader<GL_FRAGMENT_SHADER>();
 			successful &= fs->compileFromSource(source.data());
-			//assert(successful);
+            //assert(successful);
 			g_FragmentShaders.insert(std::pair<std::string, GPU::Shader<GL_FRAGMENT_SHADER> *>(filename.toStdString(), fs));
 		}
 
