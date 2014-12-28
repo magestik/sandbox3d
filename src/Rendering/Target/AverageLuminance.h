@@ -22,10 +22,11 @@ public:
 
     unsigned int    next    (void);
 
-    float getValue(int N);
+    float getValue(void);
+
     GLuint	GetObject(void) { return(m_uCurrentObject); }
 
-    Shader * GetShader(void) { return(m_pShader_convert); }
+    Shader * GetShader(void) { return(m_pCurrentShader); }
 
 private:
 

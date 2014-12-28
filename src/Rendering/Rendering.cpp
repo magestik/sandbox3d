@@ -85,6 +85,7 @@ void Rendering::compileShaders()
 	m_pFullscreenDepthShader	= new Shader(g_VertexShaders["fullscreen.vert"], g_FragmentShaders["fullscreen_depth.frag"]);
 	m_pFullscreenNormalShader	= new Shader(g_VertexShaders["fullscreen.vert"], g_FragmentShaders["fullscreen_normal.frag"]);
     m_pFullscreenColorShader	= new Shader(g_VertexShaders["fullscreen.vert"], g_FragmentShaders["fullscreen_color.frag"]);
+    m_pFullscreenExpShader      = new Shader(g_VertexShaders["fullscreen.vert"], g_FragmentShaders["fullscreen_exp.frag"]);
 
     m_pToneMappingShader        = new Shader(g_VertexShaders["fullscreen.vert"], g_FragmentShaders["tonemapping.frag"]);
 }
@@ -147,8 +148,7 @@ void Rendering::onResize(int width, int height)
     m_uWidth        = width;
     m_uHeight       = height;
 
-    m_uWidthPOT     = toPOT(width);
-    m_uHeightPOT    = toPOT(height);
+    m_uLuminanceSizePOT     = toPOT((width > height) ? width : height);
 
     float ratio = m_uWidth/(float)m_uHeight;
     m_matProjection = _perspective(75.0f, ratio, 1.0f, 1000.0f);
@@ -156,15 +156,15 @@ void Rendering::onResize(int width, int height)
     // see https://www.opengl.org/wiki/Image_Format#Required_formats
 
     m_apTargets[TARGET_DEPTH  ]->init<GL_DEPTH_COMPONENT32F>(m_uWidth, m_uHeight);
-    m_apTargets[TARGET_NORMALS]->init<GL_RGBA16F>(m_uWidth, height);
+    m_apTargets[TARGET_NORMALS]->init<GL_RGBA16F>(m_uWidth, m_uHeight);
 
     m_apTargets[TARGET_DIFFUSE_LIGHTS ]->init<GL_R11F_G11F_B10F>(m_uWidth, m_uHeight);
     m_apTargets[TARGET_SPECULAR_LIGHTS]->init<GL_R11F_G11F_B10F>(m_uWidth, m_uHeight);
 
     m_apTargets[TARGET_FINAL_HDR]->init<GL_R11F_G11F_B10F>(m_uWidth, m_uHeight);
 
-    m_apTargets[TARGET_LUMINANCE1]->init<GL_R16F>(m_uWidthPOT, m_uHeightPOT);
-    m_apTargets[TARGET_LUMINANCE2]->init<GL_R16F>(m_uWidthPOT/2, m_uHeightPOT/2);
+    m_apTargets[TARGET_LUMINANCE1]->init<GL_R16F>(m_uLuminanceSizePOT, m_uLuminanceSizePOT);
+    m_apTargets[TARGET_LUMINANCE2]->init<GL_R16F>(m_uLuminanceSizePOT, m_uLuminanceSizePOT);
 
     m_apTargets[TARGET_POSTFX1]->init<GL_R11F_G11F_B10F>(m_uWidth, m_uHeight);
     m_apTargets[TARGET_POSTFX2]->init<GL_R11F_G11F_B10F>(m_uWidth, m_uHeight);
@@ -195,16 +195,6 @@ void Rendering::onUpdate(const mat4x4 & mView, const vec4 & clearColor, const ve
 
 	renderLightsToAccumBuffer(mView);
 
-	//
-    // Draw debug
-	//
-
-	if (FINAL != eRenderType)
-	{
-		renderIntermediateToScreen(eRenderType);
-        return;
-	}
-
     //
     // Render Scene using light buffer
     //
@@ -227,16 +217,11 @@ void Rendering::onUpdate(const mat4x4 & mView, const vec4 & clearColor, const ve
 
     computeAverageLum();
 
-    glViewport(0, 0, m_uWidth, m_uHeight);
+    //
+    // Draw to screen
+    //
 
-    m_pToneMappingShader->SetAsCurrent();
-    {
-        float avLum = m_AvLum.getValue(m_uWidthPOT*m_uHeightPOT);
-        m_pToneMappingShader->SetTexture("texSampler", 0, *(m_apTargets[TARGET_FINAL_HDR]));
-        m_pToneMappingShader->SetUniform("avLum", avLum);
-        m_pQuadMesh->draw();
-    }
-    glUseProgram(0);
+    renderIntermediateToScreen(eRenderType);
 }
 
 /**
@@ -253,41 +238,34 @@ void Rendering::onCreate(const Mesh::Instance & instance)
  */
 void Rendering::computeAverageLum(void)
 {
-    glViewport(0, 0, m_uWidthPOT, m_uHeightPOT);
-
     m_AvLum.begin();
 
     {
         glBindSampler(0, m_uSampler);
 
+        glViewport(0, 0, m_uLuminanceSizePOT, m_uLuminanceSizePOT);
+
         m_AvLum.GetShader()->SetTexture("texSampler", 0, *(m_apTargets[TARGET_FINAL_HDR]));
         m_pQuadMesh->draw();
 
-        glBindSampler(0, 0);
+        vec2 texture_scale (1.0f, 1.0f);
 
-        unsigned int width = m_uWidthPOT/2;
-        unsigned int height = m_uHeightPOT/2;
-
-        while (width > 1 || height > 1)
+        for (int size = m_uLuminanceSizePOT >> 1; size > 1; size >>= 1)
         {
-            glViewport(0, 0, width, height);
+            glViewport(0, 0, size, size);
 
             unsigned int tex = m_AvLum.next();
 
             m_AvLum.GetShader()->SetTexture("texSampler", 0, *(m_apTargets[TARGET_LUMINANCE1 + tex]));
+            m_AvLum.GetShader()->SetUniform("textureScale", texture_scale);
+            //m_AvLum.GetShader()->SetUniform("viewportSize", vec2(size, size));
 
             m_pQuadMesh->draw();
 
-            if (width > 1)
-            {
-                width /= 2;
-            }
-
-            if (height > 1)
-            {
-                height /= 2;
-            }
+            texture_scale = texture_scale * 0.5f;
         }
+
+        glBindSampler(0, 0);
     }
 
     m_AvLum.end();
@@ -339,8 +317,15 @@ void Rendering::renderIntermediateToScreen(ERenderType eRenderType)
 	switch (eRenderType)
 	{
 		case FINAL:
-		{
-			assert(0);
+        {
+            m_pToneMappingShader->SetAsCurrent();
+            {
+                float avLum = m_AvLum.getValue();
+                m_pToneMappingShader->SetTexture("texSampler", 0, *(m_apTargets[TARGET_FINAL_HDR]));
+                m_pToneMappingShader->SetUniform("avLum", avLum);
+                m_pQuadMesh->draw();
+            }
+            glUseProgram(0);
 		}
 		break;
 
@@ -395,7 +380,7 @@ void Rendering::renderIntermediateToScreen(ERenderType eRenderType)
 		{
 			m_pFullscreenDepthShader->SetAsCurrent();
 			{
-                m_pFullscreenDepthShader->SetTexture("texSampler", 0, *(m_apTargets[TARGET_LUMINANCE1]));
+                m_pFullscreenDepthShader->SetTexture("texSampler", 0, *(m_apTargets[TARGET_DEPTH]));
 				m_pQuadMesh->draw();
 			}
 			glUseProgram(0);
@@ -412,6 +397,28 @@ void Rendering::renderIntermediateToScreen(ERenderType eRenderType)
 			glUseProgram(0);
 		}
 		break;
+
+        case LUMINANCE1:
+        {
+            m_pFullscreenExpShader->SetAsCurrent();
+            {
+                m_pFullscreenExpShader->SetTexture("texSampler", 0, *(m_apTargets[TARGET_LUMINANCE1]));
+                m_pQuadMesh->draw();
+            }
+            glUseProgram(0);
+        }
+        break;
+
+        case LUMINANCE2:
+        {
+            m_pFullscreenExpShader->SetAsCurrent();
+            {
+                m_pFullscreenExpShader->SetTexture("texSampler", 0, *(m_apTargets[TARGET_LUMINANCE2]));
+                m_pQuadMesh->draw();
+            }
+            glUseProgram(0);
+        }
+        break;
 	}
 }
 

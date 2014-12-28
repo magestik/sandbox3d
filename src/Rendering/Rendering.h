@@ -41,7 +41,9 @@ public:
 		DIFFUSE_LIGHTS,
 		NORMAL_BUFFER,
 		DEPTH,
-		SHADOWS
+        SHADOWS,
+        LUMINANCE1,
+        LUMINANCE2
 	};
 
 	explicit Rendering		(void);
@@ -76,8 +78,7 @@ private:
 	unsigned int m_uWidth;
 	unsigned int m_uHeight;
 
-    unsigned int m_uWidthPOT;
-    unsigned int m_uHeightPOT;
+    unsigned int m_uLuminanceSizePOT;
 
 	mat4x4 m_matProjection;
 
@@ -96,6 +97,7 @@ private:
 	Shader *	m_pFullscreenDepthShader;
 	Shader *	m_pFullscreenNormalShader;
     Shader *	m_pFullscreenColorShader;
+    Shader *	m_pFullscreenExpShader;
 
     Shader *	m_pToneMappingShader;
 

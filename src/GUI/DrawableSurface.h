@@ -31,6 +31,7 @@ public:
 	void	DebugSpecularLights	(void);
 	void	DebugDepth			(void);
 	void	DebugShadows		(void);
+    void	DebugLuminance		(int num);
 
 	void	DebugWireframe		(bool d);
 

@@ -55,4 +55,6 @@ private slots:
 	void on_actionLightDiffuse_toggled(bool checked);
 	void on_actionDepth_toggled(bool checked);
 	void on_actionShadows_toggled(bool checked);
+    void on_actionLuminance1_toggled(bool checked);
+    void on_actionLuminance2_toggled(bool checked);
 };

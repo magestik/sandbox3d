@@ -34,7 +34,7 @@ AverageLuminance::~AverageLuminance(void)
 bool AverageLuminance::init(const GPU::Texture<GL_TEXTURE_2D> * pTexture1, const GPU::Texture<GL_TEXTURE_2D> * pTexture2)
 {
     m_pShader_convert = new Shader(g_VertexShaders["fullscreen.vert"], g_FragmentShaders["fullscreen_luminance.frag"]);
-    m_pShader_mean = new Shader(g_VertexShaders["fullscreen.vert"], g_FragmentShaders["fullscreen_luminance_mean.frag"]);
+    m_pShader_mean = new Shader(g_VertexShaders["fullscreen_scaled.vert"], g_FragmentShaders["fullscreen_luminance_mean.frag"]);
 
     glGenFramebuffers(2, m_uObject);
 
@@ -82,9 +82,6 @@ bool AverageLuminance::begin(void)
 
     glDepthMask(GL_FALSE);
 
-    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-    glClear(GL_COLOR_BUFFER_BIT);
-
     m_pCurrentShader = m_pShader_convert;
     m_pCurrentShader->SetAsCurrent();
 
@@ -106,6 +103,7 @@ bool AverageLuminance::end(void)
 
     m_fSumLog = 0.0f;
 
+    glClampColor(GL_CLAMP_READ_COLOR, GL_FALSE);
     glBindFramebuffer(GL_READ_FRAMEBUFFER, m_uObject[m_uCurrentObject]); // read last written FBO
     glReadBuffer(GL_COLOR_ATTACHMENT0);
     glReadPixels(0, 0, 1, 1, GL_RED, GL_FLOAT, (void*)&m_fSumLog);
@@ -148,7 +146,7 @@ unsigned int AverageLuminance::next(void)
  * @param N
  * @return
  */
-float AverageLuminance::getValue(int N)
+float AverageLuminance::getValue(void)
 {
-    return(exp((1.0f/N)*m_fSumLog));
+    return(exp(m_fSumLog));
 }

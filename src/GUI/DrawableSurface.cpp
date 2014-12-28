@@ -107,7 +107,17 @@ void DrawableSurface::DebugDepth()
 void DrawableSurface::DebugShadows()
 {
 	m_eRenderType = Rendering::SHADOWS;
-	update();
+    update();
+}
+
+/**
+ * @brief DrawableSurface::DebugLuminance
+ * @param num
+ */
+void DrawableSurface::DebugLuminance(int num)
+{
+    m_eRenderType = (Rendering::ERenderType)(Rendering::LUMINANCE1 + (num - 1));
+    update();
 }
 
 /**

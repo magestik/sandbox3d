@@ -6,6 +6,7 @@ struct VS_OUTPUT
 };
 
 uniform sampler2D texSampler;
+uniform vec2 texelSize;
 
 in VS_OUTPUT vsOut;
 
@@ -13,8 +14,6 @@ out float outLuminance;
 
 void main(void)
 {
-    outLuminance = texture(texSampler, vsOut.texCoord).r
-		 + textureOffset(texSampler, vsOut.texCoord, ivec2(0, 1)).r
-		 + textureOffset(texSampler, vsOut.texCoord, ivec2(1, 0)).r
-		 + textureOffset(texSampler, vsOut.texCoord, ivec2(1, 1)).r; // maybe I can use linear filtering instead
+    vec2 texelSize = 1.0 / textureSize(texSampler, 0);
+    outLuminance = texture(texSampler, vsOut.texCoord + vec2(0.5, 0.5)*texelSize).r;
 }

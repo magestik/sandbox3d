@@ -52,7 +52,7 @@ void Shader::SetAsCurrent(void)
 void Shader::SetUniform(const char * name, const mat4x4 & m)
 {
 	GLint location = glGetUniformLocation(m_uObject, name);
-//	assert(-1 != location);
+    assert(-1 != location);
 	glUniformMatrix4fv(location, 1, false, (float*)&m);
 }
 
@@ -64,7 +64,7 @@ void Shader::SetUniform(const char * name, const mat4x4 & m)
 void Shader::SetUniform(const char * name, const vec4 & v)
 {
 	GLint location = glGetUniformLocation(m_uObject, name);
-//	assert(-1 != location);
+    assert(-1 != location);
 	glUniform4fv(location, 1, (float*)&v);
 }
 
@@ -76,7 +76,7 @@ void Shader::SetUniform(const char * name, const vec4 & v)
 void Shader::SetUniform(const char * name, const vec3 & v)
 {
 	GLint location = glGetUniformLocation(m_uObject, name);
-//	assert(-1 != location);
+    assert(-1 != location);
 	glUniform3fv(location, 1, (float*)&v);
 }
 
@@ -88,7 +88,7 @@ void Shader::SetUniform(const char * name, const vec3 & v)
 void Shader::SetUniform(const char * name, const vec2 & v)
 {
 	GLint location = glGetUniformLocation(m_uObject, name);
-//	assert(-1 != location);
+    assert(-1 != location);
 	glUniform2fv(location, 1, (float*)&v);
 }
 
@@ -100,7 +100,7 @@ void Shader::SetUniform(const char * name, const vec2 & v)
 void Shader::SetUniform(const char * name, int n)
 {
 	GLint location = glGetUniformLocation(m_uObject, name);
-//	assert(-1 != location);
+    assert(-1 != location);
 	glUniform1i(location, n);
 }
 
@@ -112,7 +112,7 @@ void Shader::SetUniform(const char * name, int n)
 void Shader::SetUniform(const char * name, float n)
 {
 	GLint location = glGetUniformLocation(m_uObject, name);
-//	assert(-1 != location);
+    assert(-1 != location);
 	glUniform1f(location, n);
 }
 
