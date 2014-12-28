@@ -22,8 +22,8 @@ void main(void)
     vec3 color_RGB = texture(texSampler, vsOut.texCoord).rgb;
     vec3 color_XYZ = sRGB_to_XYZ * color_RGB;
 
-    float L = (keyValue / avLum) * color_XYZ.y;
-    color_XYZ.y = L / (1 + L);
+    //float L = (keyValue / avLum) * color_XYZ.y;
+    //color_XYZ.y = L / (1 + L);
 
     outColor = XYZ_to_sRGB * color_XYZ;
 }

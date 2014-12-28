@@ -20,6 +20,7 @@
 #include "Target/LightAccumBuffer.h"
 #include "Target/Final.h"
 #include "Target/AverageLuminance.h"
+#include "Target/Bloom.h"
 
 // theses maps contains all shaders, compiled at launch time
 extern std::map<std::string, GPU::Shader<GL_FRAGMENT_SHADER> *>	g_FragmentShaders;
@@ -69,9 +70,13 @@ protected:
 
 	void	renderSceneToShadowMap		(void);
 
-	void	renderIntermediateToScreen	(ERenderType eRenderType);
+    void    renderBloom                 (void);
 
 	void	renderFinal					(const mat4x4 & mView, const vec4 & clearColor, const vec4 & ambientColor);
+
+    void	renderIntermediateToScreen	(ERenderType eRenderType);
+
+    void    renderPostProcessEffects    (void);
 
 private:
 
@@ -86,6 +91,7 @@ private:
 	Final				m_Compose;
 	LightAccumBuffer	m_LightAccumBuffer;
     AverageLuminance    m_AvLum;
+    Bloom               m_BloomPass;
 
 	std::vector<Mesh::Instance> m_aObjects;
 
@@ -114,8 +120,8 @@ private:
         TARGET_FINAL_HDR        = 4,
         TARGET_LUMINANCE1       = 5,
         TARGET_LUMINANCE2       = 6,
-        TARGET_POSTFX1          = 7,
-        TARGET_POSTFX2          = 8,
+        TARGET_BLOOM1           = 7,
+        TARGET_BLOOM2           = 8,
         TARGET_MAX              = 9
 	};
 

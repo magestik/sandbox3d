@@ -58,6 +58,7 @@ void Rendering::onInitializeComplete()
     assert(m_Compose.init(m_apTargets[TARGET_FINAL_HDR], m_apTargets[TARGET_DEPTH]));
     assert(m_LightAccumBuffer.init(m_apTargets[TARGET_DIFFUSE_LIGHTS], m_apTargets[TARGET_SPECULAR_LIGHTS]));
     assert(m_AvLum.init(m_apTargets[TARGET_LUMINANCE1], m_apTargets[TARGET_LUMINANCE2]));
+    assert(m_BloomPass.init(m_apTargets[TARGET_BLOOM1], m_apTargets[TARGET_BLOOM2]));
 
 	{
 		m_pLight = new Light::Directionnal(vec3(-20.0f, -20.0f, -20.0f));
@@ -166,8 +167,8 @@ void Rendering::onResize(int width, int height)
     m_apTargets[TARGET_LUMINANCE1]->init<GL_R16F>(m_uLuminanceSizePOT, m_uLuminanceSizePOT);
     m_apTargets[TARGET_LUMINANCE2]->init<GL_R16F>(m_uLuminanceSizePOT, m_uLuminanceSizePOT);
 
-    m_apTargets[TARGET_POSTFX1]->init<GL_R11F_G11F_B10F>(m_uWidth, m_uHeight);
-    m_apTargets[TARGET_POSTFX2]->init<GL_R11F_G11F_B10F>(m_uWidth, m_uHeight);
+    m_apTargets[TARGET_BLOOM1]->init<GL_R11F_G11F_B10F>(m_uWidth/4, m_uHeight/4);
+    m_apTargets[TARGET_BLOOM2]->init<GL_R11F_G11F_B10F>(m_uWidth/4, m_uHeight/4);
 }
 
 /**
@@ -212,6 +213,12 @@ void Rendering::onUpdate(const mat4x4 & mView, const vec4 & clearColor, const ve
     }
 
     //
+    // Bloom
+    //
+
+    renderBloom();
+
+    //
     // Tone Mapping
     //
 
@@ -222,6 +229,15 @@ void Rendering::onUpdate(const mat4x4 & mView, const vec4 & clearColor, const ve
     //
 
     renderIntermediateToScreen(eRenderType);
+
+    //
+    // Post process
+    //
+
+    if (eRenderType == FINAL)
+    {
+        renderPostProcessEffects();
+    }
 }
 
 /**
@@ -258,7 +274,6 @@ void Rendering::computeAverageLum(void)
 
             m_AvLum.GetShader()->SetTexture("texSampler", 0, *(m_apTargets[TARGET_LUMINANCE1 + tex]));
             m_AvLum.GetShader()->SetUniform("textureScale", texture_scale);
-            //m_AvLum.GetShader()->SetUniform("viewportSize", vec2(size, size));
 
             m_pQuadMesh->draw();
 
@@ -419,7 +434,7 @@ void Rendering::renderIntermediateToScreen(ERenderType eRenderType)
             glUseProgram(0);
         }
         break;
-	}
+    }
 }
 
 /**
@@ -550,4 +565,69 @@ void Rendering::renderFinal(const mat4x4 & mView, const vec4 & clearColor, const
 
     glBindSampler(3, 0);
     glBindSampler(4, 0);
+}
+
+/**
+ * @brief Rendering::renderBloom
+ */
+void Rendering::renderBloom(void)
+{
+    glViewport(0, 0, m_uWidth/4, m_uHeight/4);
+
+    m_BloomPass.begin();
+
+    {
+        //
+        // bright pass
+        m_BloomPass.GetShader()->SetTexture("texSampler", 0, *(m_apTargets[TARGET_FINAL_HDR]));
+
+        m_pQuadMesh->draw();
+
+        //
+        // blur horizontal
+        m_BloomPass.prepare_blur_h();
+
+        m_BloomPass.GetShader()->SetTexture("texSampler", 0, *(m_apTargets[TARGET_BLOOM1]));
+
+        m_pQuadMesh->draw();
+
+        //
+        // blur vertical
+        m_BloomPass.prepare_blur_v();
+
+        m_BloomPass.GetShader()->SetTexture("texSampler", 0, *(m_apTargets[TARGET_BLOOM2]));
+
+        m_pQuadMesh->draw();
+    }
+
+    m_BloomPass.end();
+}
+
+/**
+ * @brief Rendering::renderPostProcessEffects
+ */
+void Rendering::renderPostProcessEffects()
+{
+    glViewport(0, 0, m_uWidth, m_uHeight);
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_ONE, GL_ONE);
+
+    glDepthMask(GL_FALSE);
+
+    glBindSampler(0, m_uSampler);
+
+    m_pFullscreenColorShader->SetAsCurrent();
+    {
+        m_pFullscreenColorShader->SetTexture("texSampler", 0, *(m_apTargets[TARGET_BLOOM1]));
+        m_pQuadMesh->draw();
+    }
+    glUseProgram(0);
+
+    glBindSampler(0, 0);
+
+    glDepthMask(GL_TRUE);
+
+    glDisable(GL_BLEND);
+    glBlendFunc(GL_ONE, GL_ZERO);
 }
