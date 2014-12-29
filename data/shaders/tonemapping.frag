@@ -20,10 +20,28 @@ const mat3x3 XYZ_to_sRGB = mat3x3(3.2404542, -1.5371385, -0.4985314, -0.9692660,
 void main(void)
 {
     vec3 color_RGB = texture(texSampler, vsOut.texCoord).rgb;
+
+    // RGB -> XYZ
     vec3 color_XYZ = sRGB_to_XYZ * color_RGB;
 
-    //float L = (keyValue / avLum) * color_XYZ.y;
-    //color_XYZ.y = L / (1 + L);
+    // XYZ -> Yxy
+    vec3 color_Yxy = vec3(color_XYZ.y, color_XYZ.xy / dot(vec3(1.0,1.0,1.0), color_XYZ.xyz));
+
+    // Tone Mapping
+    float L = (keyValue / avLum) * color_XYZ.y;
+    color_XYZ.y = L / (1 + L);
+
+
+
+    // Yxy -> XYZ conversion
+    color_XYZ.r = color_Yxy.r * color_Yxy.g / color_Yxy.b;
+
+    // X = Y * x / y
+    color_XYZ.g = color_Yxy.r;
+
+    // copy luminance Y
+    color_XYZ.b = color_Yxy.r * (1 - color_Yxy.g - color_Yxy.b) / color_Yxy.b;
+
 
     outColor = XYZ_to_sRGB * color_XYZ;
 }

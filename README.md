@@ -13,9 +13,8 @@ A sandbox that I use to test some graphic techniques.
 
 ### TODO
 
-- Bloom
-- HDR
 - Fog
 - Ambient Occlusion
+- Depth of Field
 
 Implement a way to select objects (pick buffer ?).
