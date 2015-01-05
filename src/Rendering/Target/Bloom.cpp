@@ -10,11 +10,13 @@
 Bloom::Bloom(void)
 : m_uCurrentObject(0)
 , m_pShader_bright(nullptr)
-, m_pShader_blur(nullptr)
 , m_pCurrentShader(nullptr)
 {
-    m_uObject[0] = 0;
-    m_uObject[1] = 0;
+	m_uObject[0] = 0;
+	m_uObject[1] = 0;
+
+	m_apShader_blur[0] = nullptr;
+	m_apShader_blur[1] = nullptr;
 }
 
 /**
@@ -22,7 +24,7 @@ Bloom::Bloom(void)
  */
 Bloom::~Bloom()
 {
-    // ...
+	// ...
 }
 
 /**
@@ -33,26 +35,27 @@ Bloom::~Bloom()
  */
 bool Bloom::init(const GPU::Texture<GL_TEXTURE_2D> * pTexture1, const GPU::Texture<GL_TEXTURE_2D> * pTexture2)
 {
-    m_pShader_bright = new Shader(g_VertexShaders["fullscreen.vert"], g_FragmentShaders["fullscreen_bright.frag"]);
-    m_pShader_blur = new Shader(g_VertexShaders["fullscreen.vert"], g_FragmentShaders["blur.frag"]);
+	m_pShader_bright = new Shader(g_VertexShaders["fullscreen.vert"], g_FragmentShaders["fullscreen_bright.frag"]);
+	m_apShader_blur[0] = new Shader(g_VertexShaders["fullscreen.vert"], g_FragmentShaders["gaussian_blur_h.frag"]);
+	m_apShader_blur[1] = new Shader(g_VertexShaders["fullscreen.vert"], g_FragmentShaders["gaussian_blur_v.frag"]);
 
-    glGenFramebuffers(2, m_uObject);
+	glGenFramebuffers(2, m_uObject);
 
-    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_uObject[0]);
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_uObject[0]);
 
-    glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, pTexture1->GetObject(), 0);
+	glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, pTexture1->GetObject(), 0);
 
-    GLenum status1 = glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER);
+	GLenum status1 = glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER);
 
-    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_uObject[1]);
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_uObject[1]);
 
-    glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, pTexture2->GetObject(), 0);
+	glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, pTexture2->GetObject(), 0);
 
-    GLenum status2 = glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER);
+	GLenum status2 = glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER);
 
-    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 
-    return(status1 == GL_FRAMEBUFFER_COMPLETE && status2 == GL_FRAMEBUFFER_COMPLETE);
+	return(status1 == GL_FRAMEBUFFER_COMPLETE && status2 == GL_FRAMEBUFFER_COMPLETE);
 }
 
 /**
@@ -60,15 +63,18 @@ bool Bloom::init(const GPU::Texture<GL_TEXTURE_2D> * pTexture1, const GPU::Textu
  */
 void Bloom::free(void)
 {
-    delete m_pShader_bright;
-    m_pShader_bright = nullptr;
+	delete m_pShader_bright;
+	m_pShader_bright = nullptr;
 
-    delete m_pShader_blur;
-    m_pShader_blur = nullptr;
+	delete m_apShader_blur[0];
+	m_apShader_blur[0] = nullptr;
 
-    glDeleteBuffers(2, m_uObject);
-    m_uObject[0] = 0;
-    m_uObject[1] = 0;
+	delete m_apShader_blur[1];
+	m_apShader_blur[1] = nullptr;
+
+	glDeleteBuffers(2, m_uObject);
+	m_uObject[0] = 0;
+	m_uObject[1] = 0;
 }
 
 /**
@@ -77,17 +83,17 @@ void Bloom::free(void)
  */
 bool Bloom::begin(void)
 {
-    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_uObject[0]);
-    glDrawBuffer(GL_COLOR_ATTACHMENT0);
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_uObject[0]);
+	glDrawBuffer(GL_COLOR_ATTACHMENT0);
 
-    glDepthMask(GL_FALSE);
+	glDepthMask(GL_FALSE);
 
-    m_pCurrentShader = m_pShader_bright;
-    m_pCurrentShader->SetAsCurrent();
+	m_pCurrentShader = m_pShader_bright;
+	m_pCurrentShader->SetAsCurrent();
 
-    m_uCurrentObject = 0;
+	m_uCurrentObject = 0;
 
-    return(true);
+	return(true);
 }
 
 /**
@@ -96,17 +102,17 @@ bool Bloom::begin(void)
  */
 bool Bloom::end(void)
 {
-    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-    glDrawBuffer(GL_BACK);
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+	glDrawBuffer(GL_BACK);
 
-    glDepthMask(GL_TRUE);
+	glDepthMask(GL_TRUE);
 
-    m_uCurrentObject = 0;
+	m_uCurrentObject = 0;
 
-    glUseProgram(0);
-    m_pCurrentShader = nullptr;
+	glUseProgram(0);
+	m_pCurrentShader = nullptr;
 
-    return(true);
+	return(true);
 }
 
 /**
@@ -114,15 +120,15 @@ bool Bloom::end(void)
  */
 void Bloom::prepare_blur_h(void)
 {
-    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_uObject[1]);
-    glDrawBuffer(GL_COLOR_ATTACHMENT0);
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_uObject[1]);
+	glDrawBuffer(GL_COLOR_ATTACHMENT0);
 
-    glDepthMask(GL_FALSE);
+	glDepthMask(GL_FALSE);
 
-    m_pCurrentShader = m_pShader_blur;
-    m_pCurrentShader->SetAsCurrent();
+	m_pCurrentShader = m_apShader_blur[0];
+	m_pCurrentShader->SetAsCurrent();
 
-    m_uCurrentObject = 1;
+	m_uCurrentObject = 1;
 }
 
 /**
@@ -130,13 +136,13 @@ void Bloom::prepare_blur_h(void)
  */
 void Bloom::prepare_blur_v(void)
 {
-    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_uObject[0]);
-    glDrawBuffer(GL_COLOR_ATTACHMENT0);
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_uObject[0]);
+	glDrawBuffer(GL_COLOR_ATTACHMENT0);
 
-    glDepthMask(GL_FALSE);
+	glDepthMask(GL_FALSE);
 
-    m_pCurrentShader = m_pShader_blur;
-    m_pCurrentShader->SetAsCurrent();
+	m_pCurrentShader = m_apShader_blur[1];
+	m_pCurrentShader->SetAsCurrent();
 
-    m_uCurrentObject = 0;
+	m_uCurrentObject = 0;
 }

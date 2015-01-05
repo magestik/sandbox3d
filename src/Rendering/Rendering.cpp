@@ -17,14 +17,14 @@ std::map<std::string, Mesh> g_Meshes;
 
 static inline unsigned int toPOT(unsigned int v)
 {
-    unsigned r = 1;
+	unsigned r = 1;
 
-    while (r < v)
-    {
-        r <<= 1;
-    }
+	while (r < v)
+	{
+		r <<= 1;
+	}
 
-    return(r);
+	return(r);
 }
 
 /**
@@ -47,33 +47,33 @@ Rendering::Rendering()
  */
 void Rendering::onInitializeComplete()
 {
-    for (int i = 0; i < TARGET_MAX; ++i)
-    {
-        m_apTargets[i] = new GPU::Texture<GL_TEXTURE_2D>();
-    }
+	for (int i = 0; i < TARGET_MAX; ++i)
+	{
+		m_apTargets[i] = new GPU::Texture<GL_TEXTURE_2D>();
+	}
 
 	onResize(1280, 720);
 
-    assert(m_GBuffer.init(m_apTargets[TARGET_NORMALS], m_apTargets[TARGET_DEPTH]));
-    assert(m_Compose.init(m_apTargets[TARGET_FINAL_HDR], m_apTargets[TARGET_DEPTH]));
-    assert(m_LightAccumBuffer.init(m_apTargets[TARGET_DIFFUSE_LIGHTS], m_apTargets[TARGET_SPECULAR_LIGHTS]));
-    assert(m_AvLum.init(m_apTargets[TARGET_LUMINANCE1], m_apTargets[TARGET_LUMINANCE2]));
-    assert(m_BloomPass.init(m_apTargets[TARGET_BLOOM1], m_apTargets[TARGET_BLOOM2]));
+	assert(m_GBuffer.init(m_apTargets[TARGET_NORMALS], m_apTargets[TARGET_DEPTH]));
+	assert(m_Compose.init(m_apTargets[TARGET_FINAL_HDR], m_apTargets[TARGET_DEPTH]));
+	assert(m_LightAccumBuffer.init(m_apTargets[TARGET_DIFFUSE_LIGHTS], m_apTargets[TARGET_SPECULAR_LIGHTS]));
+	assert(m_AvLum.init(m_apTargets[TARGET_LUMINANCE1], m_apTargets[TARGET_LUMINANCE2]));
+	assert(m_BloomPass.init(m_apTargets[TARGET_BLOOM1], m_apTargets[TARGET_BLOOM2]));
 
 	{
 		m_pLight = new Light::Directionnal(vec3(-20.0f, -20.0f, -20.0f));
 		m_pShadowMap = new ShadowMap();
 		m_pShadowMap->init(SHADOW_MAP_SIZE, SHADOW_MAP_SIZE);
-    }
+	}
 
-    compileShaders();
-    generateMeshes();
+	compileShaders();
+	generateMeshes();
 
-    glGenSamplers(1, &m_uSampler);
+	glGenSamplers(1, &m_uSampler);
 	glSamplerParameteri(m_uSampler, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glSamplerParameteri(m_uSampler, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glSamplerParameteri(m_uSampler, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glSamplerParameteri(m_uSampler, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glSamplerParameteri(m_uSampler, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glSamplerParameteri(m_uSampler, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 }
 
 /**
@@ -81,16 +81,16 @@ void Rendering::onInitializeComplete()
  */
 void Rendering::compileShaders()
 {
-    m_pDirectionnalLightShader	= new Shader(g_VertexShaders["directionnal_light.vert"], g_FragmentShaders["directionnal_light.frag"]);
+	m_pDirectionnalLightShader	= new Shader(g_VertexShaders["directionnal_light.vert"], g_FragmentShaders["directionnal_light.frag"]);
 
 	m_pDepthOnlyPassShader		= new Shader(g_VertexShaders["depth_only.vert"], g_FragmentShaders["depth_only.frag"]);
 
 	m_pFullscreenDepthShader	= new Shader(g_VertexShaders["fullscreen.vert"], g_FragmentShaders["fullscreen_depth.frag"]);
 	m_pFullscreenNormalShader	= new Shader(g_VertexShaders["fullscreen.vert"], g_FragmentShaders["fullscreen_normal.frag"]);
-    m_pFullscreenColorShader	= new Shader(g_VertexShaders["fullscreen.vert"], g_FragmentShaders["fullscreen_color.frag"]);
-    m_pFullscreenExpShader      = new Shader(g_VertexShaders["fullscreen.vert"], g_FragmentShaders["fullscreen_exp.frag"]);
+	m_pFullscreenColorShader	= new Shader(g_VertexShaders["fullscreen.vert"], g_FragmentShaders["fullscreen_color.frag"]);
+	m_pFullscreenExpShader      = new Shader(g_VertexShaders["fullscreen.vert"], g_FragmentShaders["fullscreen_exp.frag"]);
 
-    m_pToneMappingShader        = new Shader(g_VertexShaders["fullscreen.vert"], g_FragmentShaders["tonemapping.frag"]);
+	m_pToneMappingShader        = new Shader(g_VertexShaders["fullscreen.vert"], g_FragmentShaders["tonemapping.frag"]);
 }
 
 /**
@@ -138,7 +138,7 @@ void Rendering::generateMeshes()
 		m_pQuadMesh = SubMesh::Create(vertexBuffer, 4, GL_TRIANGLE_STRIP, specs);
 	}
 
-    // TODO : Sphere / Cone / Cube
+	// TODO : Sphere / Cone / Cube
 }
 
 /**
@@ -148,29 +148,29 @@ void Rendering::generateMeshes()
  */
 void Rendering::onResize(int width, int height)
 {
-    m_uWidth        = width;
-    m_uHeight       = height;
+	m_uWidth        = width;
+	m_uHeight       = height;
 
-    m_uLuminanceSizePOT     = toPOT((width > height) ? width : height);
+	m_uLuminanceSizePOT     = toPOT((width > height) ? width : height);
 
-    float ratio = m_uWidth/(float)m_uHeight;
-    m_matProjection = _perspective(75.0f, ratio, 1.0f, 1000.0f);
+	float ratio = m_uWidth/(float)m_uHeight;
+	m_matProjection = _perspective(75.0f, ratio, 1.0f, 1000.0f);
 
-    // see https://www.opengl.org/wiki/Image_Format#Required_formats
+	// see https://www.opengl.org/wiki/Image_Format#Required_formats
 
-    m_apTargets[TARGET_DEPTH  ]->init<GL_DEPTH_COMPONENT32F>(m_uWidth, m_uHeight);
-    m_apTargets[TARGET_NORMALS]->init<GL_RGBA16F>(m_uWidth, m_uHeight);
+	m_apTargets[TARGET_DEPTH  ]->init<GL_DEPTH_COMPONENT32F>(m_uWidth, m_uHeight);
+	m_apTargets[TARGET_NORMALS]->init<GL_RGBA16F>(m_uWidth, m_uHeight);
 
-    m_apTargets[TARGET_DIFFUSE_LIGHTS ]->init<GL_R11F_G11F_B10F>(m_uWidth, m_uHeight);
-    m_apTargets[TARGET_SPECULAR_LIGHTS]->init<GL_R11F_G11F_B10F>(m_uWidth, m_uHeight);
+	m_apTargets[TARGET_DIFFUSE_LIGHTS ]->init<GL_R11F_G11F_B10F>(m_uWidth, m_uHeight);
+	m_apTargets[TARGET_SPECULAR_LIGHTS]->init<GL_R11F_G11F_B10F>(m_uWidth, m_uHeight);
 
-    m_apTargets[TARGET_FINAL_HDR]->init<GL_R11F_G11F_B10F>(m_uWidth, m_uHeight);
+	m_apTargets[TARGET_FINAL_HDR]->init<GL_R11F_G11F_B10F>(m_uWidth, m_uHeight);
 
-    m_apTargets[TARGET_LUMINANCE1]->init<GL_R16F>(m_uLuminanceSizePOT, m_uLuminanceSizePOT);
-    m_apTargets[TARGET_LUMINANCE2]->init<GL_R16F>(m_uLuminanceSizePOT, m_uLuminanceSizePOT);
+	m_apTargets[TARGET_LUMINANCE1]->init<GL_R16F>(m_uLuminanceSizePOT, m_uLuminanceSizePOT);
+	m_apTargets[TARGET_LUMINANCE2]->init<GL_R16F>(m_uLuminanceSizePOT, m_uLuminanceSizePOT);
 
-    m_apTargets[TARGET_BLOOM1]->init<GL_R11F_G11F_B10F>(m_uWidth/4, m_uHeight/4);
-    m_apTargets[TARGET_BLOOM2]->init<GL_R11F_G11F_B10F>(m_uWidth/4, m_uHeight/4);
+	m_apTargets[TARGET_BLOOM1]->init<GL_R11F_G11F_B10F>(m_uWidth/4, m_uHeight/4);
+	m_apTargets[TARGET_BLOOM2]->init<GL_R11F_G11F_B10F>(m_uWidth/4, m_uHeight/4);
 }
 
 /**
@@ -198,48 +198,48 @@ void Rendering::onUpdate(const mat4x4 & mView, const vec4 & clearColor, const ve
 
 	renderLightsToAccumBuffer(mView);
 
-    //
-    // Render Scene using light buffer
-    //
+	//
+	// Render Scene using light buffer
+	//
 
-    if (bWireframe)
-    {
-        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    }
+	if (bWireframe)
+	{
+		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	}
 
-    renderFinal(mView, clearColor, ambientColor);
+	renderFinal(mView, clearColor, ambientColor);
 
-    if (bWireframe)
-    {
-        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-    }
+	if (bWireframe)
+	{
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+	}
 
-    //
-    // Bloom
-    //
+	//
+	// Bloom
+	//
 
-    renderBloom();
+	renderBloom();
 
-    //
-    // Tone Mapping
-    //
+	//
+	// Tone Mapping
+	//
 
-    computeAverageLum();
+	computeAverageLum();
 
-    //
-    // Draw to screen
-    //
+	//
+	// Draw to screen
+	//
 
-    renderIntermediateToScreen(eRenderType);
+	renderIntermediateToScreen(eRenderType);
 
-    //
-    // Post process
-    //
+	//
+	// Post process
+	//
 
-    if (eRenderType == FINAL)
-    {
-        renderPostProcessEffects();
-    }
+	if (eRenderType == FINAL)
+	{
+		renderPostProcessEffects();
+	}
 }
 
 /**
@@ -256,36 +256,36 @@ void Rendering::onCreate(const Mesh::Instance & instance)
  */
 void Rendering::computeAverageLum(void)
 {
-    m_AvLum.begin();
+	m_AvLum.begin();
 
-    {
-        glBindSampler(0, m_uSampler);
+	{
+		glBindSampler(0, m_uSampler);
 
-        glViewport(0, 0, m_uLuminanceSizePOT, m_uLuminanceSizePOT);
+		glViewport(0, 0, m_uLuminanceSizePOT, m_uLuminanceSizePOT);
 
-        m_AvLum.GetShader()->SetTexture("texSampler", 0, *(m_apTargets[TARGET_FINAL_HDR]));
-        m_pQuadMesh->draw();
+		m_AvLum.GetShader()->SetTexture("texSampler", 0, *(m_apTargets[TARGET_FINAL_HDR]));
+		m_pQuadMesh->draw();
 
-        vec2 texture_scale (1.0f, 1.0f);
+		vec2 texture_scale (1.0f, 1.0f);
 
-        for (int size = m_uLuminanceSizePOT >> 1; size > 1; size >>= 1)
-        {
-            glViewport(0, 0, size, size);
+		for (int size = m_uLuminanceSizePOT >> 1; size > 1; size >>= 1)
+		{
+			glViewport(0, 0, size, size);
 
-            unsigned int tex = m_AvLum.next();
+			unsigned int tex = m_AvLum.next();
 
-            m_AvLum.GetShader()->SetTexture("texSampler", 0, *(m_apTargets[TARGET_LUMINANCE1 + tex]));
-            m_AvLum.GetShader()->SetUniform("textureScale", texture_scale);
+			m_AvLum.GetShader()->SetTexture("texSampler", 0, *(m_apTargets[TARGET_LUMINANCE1 + tex]));
+			m_AvLum.GetShader()->SetUniform("textureScale", texture_scale);
 
-            m_pQuadMesh->draw();
+			m_pQuadMesh->draw();
 
-            texture_scale = texture_scale * 0.5f;
-        }
+			texture_scale = texture_scale * 0.5f;
+		}
 
-        glBindSampler(0, 0);
-    }
+		glBindSampler(0, 0);
+	}
 
-    m_AvLum.end();
+	m_AvLum.end();
 }
 
 /**
@@ -334,50 +334,50 @@ void Rendering::renderIntermediateToScreen(ERenderType eRenderType)
 	switch (eRenderType)
 	{
 		case FINAL:
-        {
-            m_pToneMappingShader->SetAsCurrent();
-            {
-                float avLum = m_AvLum.getValue();
-                m_pToneMappingShader->SetTexture("texSampler", 0, *(m_apTargets[TARGET_FINAL_HDR]));
-                m_pToneMappingShader->SetUniform("avLum", avLum);
-                m_pQuadMesh->draw();
-            }
-            glUseProgram(0);
+		{
+			m_pToneMappingShader->SetAsCurrent();
+			{
+				float avLum = m_AvLum.getValue();
+				m_pToneMappingShader->SetTexture("texSampler", 0, *(m_apTargets[TARGET_FINAL_HDR]));
+				m_pToneMappingShader->SetUniform("avLum", avLum);
+				m_pQuadMesh->draw();
+			}
+			glUseProgram(0);
 		}
 		break;
 
 		case DIFFUSE_LIGHTS:
-        {
+		{
 #if DISABLE_BLIT
-            m_pFullscreenColorShader->SetAsCurrent();
-            {
-                m_pFullscreenColorShader->SetTexture("texSampler", 0, *(m_apTargets[TARGET_DIFFUSE_LIGHTS]));
-                m_pQuadMesh->draw();
-            }
-            glUseProgram(0);
+			m_pFullscreenColorShader->SetAsCurrent();
+			{
+				m_pFullscreenColorShader->SetTexture("texSampler", 0, *(m_apTargets[TARGET_DIFFUSE_LIGHTS]));
+				m_pQuadMesh->draw();
+			}
+			glUseProgram(0);
 #else
-            glBindFramebuffer(GL_READ_FRAMEBUFFER, m_LightAccumBuffer.GetObject());
-            glReadBuffer(GL_COLOR_ATTACHMENT0);
-            glBlitFramebuffer(0, 0, m_uWidth, m_uHeight, 0, 0, m_uWidth, m_uHeight, GL_COLOR_BUFFER_BIT, GL_NEAREST);
-            glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+			glBindFramebuffer(GL_READ_FRAMEBUFFER, m_LightAccumBuffer.GetObject());
+			glReadBuffer(GL_COLOR_ATTACHMENT0);
+			glBlitFramebuffer(0, 0, m_uWidth, m_uHeight, 0, 0, m_uWidth, m_uHeight, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+			glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
 #endif
 		}
 		break;
 
 		case SPECULAR_LIGHTS:
-        {
+		{
 #if DISABLE_BLIT
-            m_pFullscreenColorShader->SetAsCurrent();
-            {
-                m_pFullscreenColorShader->SetTexture("texSampler", 0, *(m_apTargets[TARGET_SPECULAR_LIGHTS]));
-                m_pQuadMesh->draw();
-            }
-            glUseProgram(0);
+			m_pFullscreenColorShader->SetAsCurrent();
+			{
+				m_pFullscreenColorShader->SetTexture("texSampler", 0, *(m_apTargets[TARGET_SPECULAR_LIGHTS]));
+				m_pQuadMesh->draw();
+			}
+			glUseProgram(0);
 #else
-            glBindFramebuffer(GL_READ_FRAMEBUFFER, m_LightAccumBuffer.GetObject());
-            glReadBuffer(GL_COLOR_ATTACHMENT1);
-            glBlitFramebuffer(0, 0, m_uWidth, m_uHeight, 0, 0, m_uWidth, m_uHeight, GL_COLOR_BUFFER_BIT, GL_NEAREST);
-            glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+			glBindFramebuffer(GL_READ_FRAMEBUFFER, m_LightAccumBuffer.GetObject());
+			glReadBuffer(GL_COLOR_ATTACHMENT1);
+			glBlitFramebuffer(0, 0, m_uWidth, m_uHeight, 0, 0, m_uWidth, m_uHeight, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+			glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
 #endif
 		}
 		break;
@@ -386,7 +386,7 @@ void Rendering::renderIntermediateToScreen(ERenderType eRenderType)
 		{
 			m_pFullscreenNormalShader->SetAsCurrent();
 			{
-                m_pFullscreenNormalShader->SetTexture("texSampler", 0, *(m_apTargets[TARGET_NORMALS]));
+				m_pFullscreenNormalShader->SetTexture("texSampler", 0, *(m_apTargets[TARGET_NORMALS]));
 				m_pQuadMesh->draw();
 			}
 			glUseProgram(0);
@@ -397,7 +397,7 @@ void Rendering::renderIntermediateToScreen(ERenderType eRenderType)
 		{
 			m_pFullscreenDepthShader->SetAsCurrent();
 			{
-                m_pFullscreenDepthShader->SetTexture("texSampler", 0, *(m_apTargets[TARGET_DEPTH]));
+				m_pFullscreenDepthShader->SetTexture("texSampler", 0, *(m_apTargets[TARGET_DEPTH]));
 				m_pQuadMesh->draw();
 			}
 			glUseProgram(0);
@@ -415,39 +415,39 @@ void Rendering::renderIntermediateToScreen(ERenderType eRenderType)
 		}
 		break;
 
-        case LUMINANCE1:
-        {
-            m_pFullscreenExpShader->SetAsCurrent();
-            {
-                m_pFullscreenExpShader->SetTexture("texSampler", 0, *(m_apTargets[TARGET_LUMINANCE1]));
-                m_pQuadMesh->draw();
-            }
-            glUseProgram(0);
-        }
-        break;
+		case LUMINANCE1:
+		{
+			m_pFullscreenExpShader->SetAsCurrent();
+			{
+				m_pFullscreenExpShader->SetTexture("texSampler", 0, *(m_apTargets[TARGET_LUMINANCE1]));
+				m_pQuadMesh->draw();
+			}
+			glUseProgram(0);
+		}
+		break;
 
-        case LUMINANCE2:
-        {
-            m_pFullscreenExpShader->SetAsCurrent();
-            {
-                m_pFullscreenExpShader->SetTexture("texSampler", 0, *(m_apTargets[TARGET_LUMINANCE2]));
-                m_pQuadMesh->draw();
-            }
-            glUseProgram(0);
-        }
-        break;
+		case LUMINANCE2:
+		{
+			m_pFullscreenExpShader->SetAsCurrent();
+			{
+				m_pFullscreenExpShader->SetTexture("texSampler", 0, *(m_apTargets[TARGET_LUMINANCE2]));
+				m_pQuadMesh->draw();
+			}
+			glUseProgram(0);
+		}
+		break;
 
-        case BLOOM:
-        {
-            m_pFullscreenColorShader->SetAsCurrent();
-            {
-                m_pFullscreenColorShader->SetTexture("texSampler", 0, *(m_apTargets[TARGET_BLOOM1]));
-                m_pQuadMesh->draw();
-            }
-            glUseProgram(0);
-        }
-        break;
-    }
+		case BLOOM:
+		{
+			m_pFullscreenColorShader->SetAsCurrent();
+			{
+				m_pFullscreenColorShader->SetTexture("texSampler", 0, *(m_apTargets[TARGET_BLOOM1]));
+				m_pQuadMesh->draw();
+			}
+			glUseProgram(0);
+		}
+		break;
+	}
 }
 
 /**
@@ -474,20 +474,20 @@ void Rendering::renderSceneToGBuffer(const mat4x4 & mView)
 
 				if (nullptr != pNormalMap)
 				{
-                    m_GBuffer.enable_normalmapping();
+					m_GBuffer.enable_normalmapping();
 
-                    m_GBuffer.GetShader()->SetTexture("normalMap", 0, *pNormalMap);
-                }
-                else
-                {
-                    m_GBuffer.disable_normalmapping();
-                }
+					m_GBuffer.GetShader()->SetTexture("normalMap", 0, *pNormalMap);
+				}
+				else
+				{
+					m_GBuffer.disable_normalmapping();
+				}
 
-                m_GBuffer.GetShader()->SetUniform("shininess", m->m_material.shininess);
-                m_GBuffer.GetShader()->SetUniform("ModelViewProjection", MVP);
-                m_GBuffer.GetShader()->SetUniform("Model", object.transformation);
+				m_GBuffer.GetShader()->SetUniform("shininess", m->m_material.shininess);
+				m_GBuffer.GetShader()->SetUniform("ModelViewProjection", MVP);
+				m_GBuffer.GetShader()->SetUniform("Model", object.transformation);
 
-                m->draw();
+				m->draw();
 			}
 		}
 	}
@@ -539,8 +539,8 @@ void Rendering::renderFinal(const mat4x4 & mView, const vec4 & clearColor, const
 {
 	glViewport(0, 0, m_uWidth, m_uHeight);
 
-    glBindSampler(3, m_uSampler);
-    glBindSampler(4, m_uSampler);
+	glBindSampler(3, m_uSampler);
+	glBindSampler(4, m_uSampler);
 
 	m_Compose.begin(clearColor);
 
@@ -550,34 +550,34 @@ void Rendering::renderFinal(const mat4x4 & mView, const vec4 & clearColor, const
 		mat4x4 mDepthView = _lookAt(vec3(0,0,0), m_pLight->GetDirection(), vec3(0.0f, -1.0f, 0.0f));
 		mat4x4 mDepthViewProjection = m_pShadowMap->GetProjection() * mDepthView;
 
-        m_Compose.GetShader()->SetTexture("diffuseLightSampler", 0, *(m_apTargets[TARGET_DIFFUSE_LIGHTS]));
-        m_Compose.GetShader()->SetTexture("specularLightSampler", 1, *(m_apTargets[TARGET_SPECULAR_LIGHTS]));
-        m_Compose.GetShader()->SetTexture("shadowMap", 2, m_pShadowMap->GetTexture());
+		m_Compose.GetShader()->SetTexture("diffuseLightSampler", 0, *(m_apTargets[TARGET_DIFFUSE_LIGHTS]));
+		m_Compose.GetShader()->SetTexture("specularLightSampler", 1, *(m_apTargets[TARGET_SPECULAR_LIGHTS]));
+		m_Compose.GetShader()->SetTexture("shadowMap", 2, m_pShadowMap->GetTexture());
 
-        m_Compose.GetShader()->SetUniform("ambientColor", ambientColor.xyz);
-        m_Compose.GetShader()->SetUniform("DepthTransformation", mDepthViewProjection);
+		m_Compose.GetShader()->SetUniform("ambientColor", ambientColor.xyz);
+		m_Compose.GetShader()->SetUniform("DepthTransformation", mDepthViewProjection);
 
 		for (Mesh::Instance & object : m_aObjects)
 		{
 			mat4x4 MVP = mCameraViewProjection * object.transformation;
 
-            m_Compose.GetShader()->SetUniform("ModelViewProjection", MVP);
-            m_Compose.GetShader()->SetUniform("Model", object.transformation);
+			m_Compose.GetShader()->SetUniform("ModelViewProjection", MVP);
+			m_Compose.GetShader()->SetUniform("Model", object.transformation);
 
 			for (SubMesh * m : object.getDrawCommands())
 			{
-                m_Compose.GetShader()->SetTexture("diffuseSampler", 3, *(m->m_material.m_diffuse));
-                m_Compose.GetShader()->SetTexture("specularSampler", 4, *(m->m_material.m_specular));
+				m_Compose.GetShader()->SetTexture("diffuseSampler", 3, *(m->m_material.m_diffuse));
+				m_Compose.GetShader()->SetTexture("specularSampler", 4, *(m->m_material.m_specular));
 
 				m->draw();
 			}
-        }
+		}
 	}
 
-    m_Compose.end();
+	m_Compose.end();
 
-    glBindSampler(3, 0);
-    glBindSampler(4, 0);
+	glBindSampler(3, 0);
+	glBindSampler(4, 0);
 }
 
 /**
@@ -585,35 +585,35 @@ void Rendering::renderFinal(const mat4x4 & mView, const vec4 & clearColor, const
  */
 void Rendering::renderBloom(void)
 {
-    glViewport(0, 0, m_uWidth/4, m_uHeight/4);
+	glViewport(0, 0, m_uWidth/4, m_uHeight/4);
 
-    m_BloomPass.begin();
+	m_BloomPass.begin();
 
-    {
-        //
-        // bright pass
-        m_BloomPass.GetShader()->SetTexture("texSampler", 0, *(m_apTargets[TARGET_FINAL_HDR]));
+	{
+		//
+		// bright pass
+		m_BloomPass.GetShader()->SetTexture("texSampler", 0, *(m_apTargets[TARGET_FINAL_HDR]));
 
-        m_pQuadMesh->draw();
+		m_pQuadMesh->draw();
 
-        //
-        // blur horizontal
-        m_BloomPass.prepare_blur_h();
+		//
+		// blur horizontal
+		m_BloomPass.prepare_blur_h();
 
-        m_BloomPass.GetShader()->SetTexture("texSampler", 0, *(m_apTargets[TARGET_BLOOM1]));
+		m_BloomPass.GetShader()->SetTexture("texSampler", 0, *(m_apTargets[TARGET_BLOOM1]));
 
-        m_pQuadMesh->draw();
+		m_pQuadMesh->draw();
 
-        //
-        // blur vertical
-        m_BloomPass.prepare_blur_v();
+		//
+		// blur vertical
+		m_BloomPass.prepare_blur_v();
 
-        m_BloomPass.GetShader()->SetTexture("texSampler", 0, *(m_apTargets[TARGET_BLOOM2]));
+		m_BloomPass.GetShader()->SetTexture("texSampler", 0, *(m_apTargets[TARGET_BLOOM2]));
 
-        m_pQuadMesh->draw();
-    }
+		m_pQuadMesh->draw();
+	}
 
-    m_BloomPass.end();
+	m_BloomPass.end();
 }
 
 /**
@@ -621,26 +621,26 @@ void Rendering::renderBloom(void)
  */
 void Rendering::renderPostProcessEffects()
 {
-    glViewport(0, 0, m_uWidth, m_uHeight);
+	glViewport(0, 0, m_uWidth, m_uHeight);
 
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_ONE, GL_ONE);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_ONE, GL_ONE);
 
-    glDepthMask(GL_FALSE);
+	glDepthMask(GL_FALSE);
 
-    glBindSampler(0, m_uSampler);
+	glBindSampler(0, m_uSampler);
 
-    m_pFullscreenColorShader->SetAsCurrent();
-    {
-        m_pFullscreenColorShader->SetTexture("texSampler", 0, *(m_apTargets[TARGET_BLOOM1]));
-        m_pQuadMesh->draw();
-    }
-    glUseProgram(0);
+	m_pFullscreenColorShader->SetAsCurrent();
+	{
+		m_pFullscreenColorShader->SetTexture("texSampler", 0, *(m_apTargets[TARGET_BLOOM1]));
+		m_pQuadMesh->draw();
+	}
+	glUseProgram(0);
 
-    glBindSampler(0, 0);
+	glBindSampler(0, 0);
 
-    glDepthMask(GL_TRUE);
+	glDepthMask(GL_TRUE);
 
-    glDisable(GL_BLEND);
-    glBlendFunc(GL_ONE, GL_ZERO);
+	glDisable(GL_BLEND);
+	glBlendFunc(GL_ONE, GL_ZERO);
 }

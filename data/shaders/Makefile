@@ -11,3 +11,5 @@ all:
 	glslangValidator -l fullscreen.vert fullscreen_color.frag
 	glslangValidator -l fullscreen.vert fullscreen_luminance.frag
 	glslangValidator -l fullscreen.vert fullscreen_luminance_mean.frag
+	glslangValidator -l fullscreen.vert gaussian_blur_h.frag
+	glslangValidator -l fullscreen.vert gaussian_blur_v.frag
