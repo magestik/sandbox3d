@@ -13,12 +13,15 @@ out vec3 outColor;
 
 void main(void)
 {
-	vec3 sum = vec3(0.0, 0.0, 0.0);
-	sum += textureOffset(texSampler, vsOut.texCoord, ivec2(-1, 0)).rgb;
-	sum += texture(texSampler, vsOut.texCoord).rgb;
-	sum += textureOffset(texSampler, vsOut.texCoord, ivec2(+1, 0)).rgb;
+	outColor = texture(texSampler, vsOut.texCoord).rgb * 0.415; // center pixel
 
-	outColor = sum * (1.0/3.0);
+	outColor += textureOffset(texSampler, vsOut.texCoord, ivec2(-3, 0)).rgb * 0.003;
+	outColor += textureOffset(texSampler, vsOut.texCoord, ivec2(-2, 0)).rgb * 0.048;
+	outColor += textureOffset(texSampler, vsOut.texCoord, ivec2(-1, 0)).rgb * 0.262;
+
+	outColor += textureOffset(texSampler, vsOut.texCoord, ivec2(+1, 0)).rgb * 0.262;
+	outColor += textureOffset(texSampler, vsOut.texCoord, ivec2(+2, 0)).rgb * 0.048;
+	outColor += textureOffset(texSampler, vsOut.texCoord, ivec2(+3, 0)).rgb * 0.003;
 }
 
 
