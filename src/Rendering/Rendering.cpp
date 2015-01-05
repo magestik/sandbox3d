@@ -166,8 +166,8 @@ void Rendering::onResize(int width, int height)
 
 	m_apTargets[TARGET_FINAL_HDR]->init<GL_R11F_G11F_B10F>(m_uWidth, m_uHeight);
 
-	m_apTargets[TARGET_LUMINANCE1]->init<GL_R16F>(m_uLuminanceSizePOT, m_uLuminanceSizePOT);
-	m_apTargets[TARGET_LUMINANCE2]->init<GL_R16F>(m_uLuminanceSizePOT, m_uLuminanceSizePOT);
+	m_apTargets[TARGET_LUMINANCE1]->init<GL_RG16F>(m_uLuminanceSizePOT, m_uLuminanceSizePOT);
+	m_apTargets[TARGET_LUMINANCE2]->init<GL_RG16F>(m_uLuminanceSizePOT, m_uLuminanceSizePOT);
 
 	m_apTargets[TARGET_BLOOM1]->init<GL_R11F_G11F_B10F>(m_uWidth/4, m_uHeight/4);
 	m_apTargets[TARGET_BLOOM2]->init<GL_R11F_G11F_B10F>(m_uWidth/4, m_uHeight/4);
@@ -337,9 +337,11 @@ void Rendering::renderIntermediateToScreen(ERenderType eRenderType)
 		{
 			m_pToneMappingShader->SetAsCurrent();
 			{
-				float avLum = m_AvLum.getValue();
+				float avLum = m_AvLum.getAverage();
+				float white2 = m_AvLum.getMax2();
 				m_pToneMappingShader->SetTexture("texSampler", 0, *(m_apTargets[TARGET_FINAL_HDR]));
 				m_pToneMappingShader->SetUniform("avLum", avLum);
+				m_pToneMappingShader->SetUniform("white2", white2);
 				m_pQuadMesh->draw();
 			}
 			glUseProgram(0);

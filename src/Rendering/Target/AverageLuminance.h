@@ -11,33 +11,35 @@ class AverageLuminance
 {
 public:
 
-    AverageLuminance(void);
-    ~AverageLuminance(void);
+	AverageLuminance(void);
+	~AverageLuminance(void);
 
-    bool	init	(const GPU::Texture<GL_TEXTURE_2D> * pTexture1, const GPU::Texture<GL_TEXTURE_2D> * pTexture2);
-    void	free	(void);
+	bool	init	(const GPU::Texture<GL_TEXTURE_2D> * pTexture1, const GPU::Texture<GL_TEXTURE_2D> * pTexture2);
+	void	free	(void);
 
-    bool	begin	(void);
-    bool	end		(void);
+	bool	begin	(void);
+	bool	end		(void);
 
-    unsigned int    next    (void);
+	unsigned int    next    (void);
 
-    float getValue(void);
+	float getAverage(void);
+	float getMax2(void);
 
-    GLuint	GetObject(void) { return(m_uCurrentObject); }
+	GLuint	GetObject(void) { return(m_uCurrentObject); }
 
-    Shader * GetShader(void) { return(m_pCurrentShader); }
+	Shader * GetShader(void) { return(m_pCurrentShader); }
 
 private:
 
-    GLuint m_uObject [2];
+	GLuint m_uObject [2];
 
-    unsigned int m_uCurrentObject;
+	unsigned int m_uCurrentObject;
 
-    Shader * m_pShader_convert;
-    Shader * m_pShader_mean;
+	Shader * m_pShader_convert;
+	Shader * m_pShader_mean;
 
-    Shader * m_pCurrentShader;
+	Shader * m_pCurrentShader;
 
-    float m_fSumLog;
+	float m_fSumLog;
+	float m_fMax;
 };
