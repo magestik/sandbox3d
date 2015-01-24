@@ -10,6 +10,7 @@ A sandbox that I use to test some graphic techniques.
 - Qt 5
 - OpenGL 3.3
 - CMake
+- Assimp
 
 ### TODO
 
@@ -18,3 +19,16 @@ A sandbox that I use to test some graphic techniques.
 - Depth of Field
 
 Implement a way to select objects (pick buffer ?).
+
+### Build
+
+Compilation:
+
+$ mkdir build
+$ cd build
+$ cmake ..
+$ make
+
+Copy and check shaders :
+
+$ make
