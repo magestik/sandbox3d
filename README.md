@@ -23,12 +23,12 @@ Implement a way to select objects (pick buffer ?).
 ### Build
 
 Compilation:
-
+```
 $ mkdir build
 $ cd build
 $ cmake ..
 $ make
-
+```
 Copy and check shaders :
 
 $ make
