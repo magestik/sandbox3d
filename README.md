@@ -30,5 +30,6 @@ $ cmake ..
 $ make
 ```
 Copy and check shaders :
-
+```
 $ make
+```
