@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 2.6)
 
 project(Sandbox3D)
 
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
+
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 # My Sources
@@ -45,6 +47,9 @@ ADD_DEFINITIONS(${QT_DEFINITIONS})
 # OpenGL
 find_package(OpenGL REQUIRED)
 
+# Assimp
+find_package(assimp REQUIRED)
+
 # Compile application
 add_executable(${PROJECT_NAME} ${SRC_FILES} ${UI_FILES} ${SHADERS_FILES})
 
@@ -54,8 +59,6 @@ IF(CMAKE_BUILD_TYPE MATCHES Debug)
 	target_link_libraries(${PROJECT_NAME} glBreak)
 ENDIF()
 
-target_link_libraries(${PROJECT_NAME} assimp)
-
 target_link_libraries(${PROJECT_NAME} "rt")
 
-target_link_libraries(${PROJECT_NAME} ${OPENGL_LIBRARIES} ${ASSIMP_LIB} Qt5::Core Qt5::Widgets Qt5::Gui Qt5::OpenGL)
+target_link_libraries(${PROJECT_NAME} ${OPENGL_LIBRARIES} ${ASSIMP_LIBRARIES} Qt5::Core Qt5::Widgets Qt5::Gui Qt5::OpenGL)
