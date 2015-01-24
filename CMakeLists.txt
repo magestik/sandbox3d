@@ -11,7 +11,7 @@ include_directories(external/linear-algebra/include external/curves/src external
 
 add_subdirectory(external)
 
-file(GLOB_RECURSE SHADERS_FILES data/shaders/*)
+file(GLOB_RECURSE SHADERS_FILES src/*.frag src/*.vert)
 file(GLOB_RECURSE UI_FILES ui/*.ui)
 file(GLOB_RECURSE SRC_FILES src/*.cpp src/*.h src/*.inl include/*.h include/*.inl)
 
