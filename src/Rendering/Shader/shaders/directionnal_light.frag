@@ -1,3 +1,4 @@
+#include "../Interface.h"
 
 struct VS_OUTPUT
 {

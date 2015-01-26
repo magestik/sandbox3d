@@ -1,3 +1,4 @@
+#include "../Interface.h"
 
 layout (location = 0) out float depth;
 
