@@ -7,9 +7,9 @@ A sandbox that I use to test some graphic techniques.
 
 ### Dependencies
 
+Libraries needed :
 - Qt 5
 - OpenGL 3.3
-- CMake
 - Assimp
 
 ### TODO
@@ -22,14 +22,11 @@ Implement a way to select objects (pick buffer ?).
 
 ### Build
 
-Compilation:
+Compile C++ code, and preprocess shaders:
 ```
 $ mkdir build
 $ cd build
 $ cmake ..
 $ make
-```
-Copy and check shaders :
-```
-$ make
+$ ./scripts/deploy_shaders
 ```
