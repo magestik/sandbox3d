@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 2.6)
 
 project(Sandbox3D)
 
+enable_testing()
+
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
@@ -61,4 +63,6 @@ ENDIF()
 
 target_link_libraries(${PROJECT_NAME} "rt")
 
-target_link_libraries(${PROJECT_NAME} ${OPENGL_LIBRARIES} ${ASSIMP_LIBRARIES} Qt5::Core Qt5::Widgets Qt5::Gui Qt5::OpenGL)
+target_link_libraries(${PROJECT_NAME} ${OPENGL_LIBRARIES} ${assimp_LIBRARIES} Qt5::Core Qt5::Widgets Qt5::Gui Qt5::OpenGL)
+
+add_test(NAME check_shaders COMMAND ${PROJECT_SOURCE_DIR}/scripts/check_shaders.sh WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/data/shaders)

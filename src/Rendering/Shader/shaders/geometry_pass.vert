@@ -1,4 +1,3 @@
-#version 330
 
 #define POSITION 	0
 #define NORMAL 		1

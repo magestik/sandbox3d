@@ -1,4 +1,3 @@
-#version 330
 
 struct VS_OUTPUT
 {

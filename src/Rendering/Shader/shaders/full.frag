@@ -1,4 +1,3 @@
-#version 330
 
 #define USE_PCF 1
 
