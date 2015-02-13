@@ -11,6 +11,7 @@ Libraries needed :
 - Qt 5
 - OpenGL 3.3
 - Assimp
+- TinyXML2
 
 ### TODO
 
