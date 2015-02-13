@@ -26,6 +26,15 @@
 				<output texture="normals" attachment="GL_COLOR_ATTACHMENT0" />
 			</pass>
 		</technique>
+		<technique name="lights">
+			<enable cap="GL_BLEND" />
+			<pass name="directional">
+				<shader name="directionnal_light.vert" type="GL_VERTEX_SHADER" />
+				<shader name="directionnal_light.frag" type="GL_FRAGMENT_SHADER" />
+				<output texture="lights_diffuse" attachment="GL_COLOR_ATTACHMENT0" />
+				<output texture="lights_specular" attachment="GL_COLOR_ATTACHMENT1" />
+			</pass>
+		</technique>
 		<technique name="compose">
 			<enable cap="GL_DEPTH_TEST" />
 			<pass name="default">

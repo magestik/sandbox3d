@@ -107,6 +107,10 @@ static inline GLenum strToCap(const char * strCap)
 	{
 		return(GL_DEPTH_TEST);
 	}
+	else if (!strcmp(strCap, "GL_BLEND"))
+	{
+		return(GL_BLEND);
+	}
 	else
 	{
 		assert(false);

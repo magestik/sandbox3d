@@ -16,7 +16,6 @@
 #include "Mesh/SubMesh.h"
 
 #include "Target/ShadowMap.h"
-#include "Target/LightAccumBuffer.h"
 #include "Target/AverageLuminance.h"
 #include "Target/Bloom.h"
 
@@ -112,7 +111,6 @@ private:
 
 	mat4x4 m_matProjection;
 
-	LightAccumBuffer	m_LightAccumBuffer;
 	AverageLuminance    m_AvLum;
 	Bloom               m_BloomPass;
 
@@ -129,8 +127,6 @@ private:
 	Shader *	m_pFullscreenExpShader;
 
 	Shader *	m_pToneMappingShader;
-
-	Shader *	m_pDirectionnalLightShader;
 
 	SubMesh *	m_pQuadMesh;
 

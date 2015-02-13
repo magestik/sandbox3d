@@ -92,7 +92,6 @@ Rendering::Rendering()
 : m_uWidth(1280)
 , m_uHeight(720)
 , m_pShadowMap(nullptr)
-, m_LightAccumBuffer()
 , m_pQuadMesh(nullptr)
 , m_mapTargets()
 , m_mapTechnique()
@@ -149,7 +148,6 @@ void Rendering::initializePipelineFromXML(const char * filename)
 	const XMLElement * pipeline = root->FirstChildElement("pipeline");
 	initializePipeline(pipeline);
 
-	assert(m_LightAccumBuffer.init(m_mapTargets["lights_diffuse"].getTexture(), m_mapTargets["lights_specular"].getTexture()));
 	assert(m_BloomPass.init(m_mapTargets["bloom1"].getTexture(), m_mapTargets["bloom2"].getTexture()));
 }
 
@@ -205,8 +203,6 @@ void Rendering::initializePipeline(const XMLElement * pipeline)
  */
 void Rendering::compileShaders()
 {
-	m_pDirectionnalLightShader	= new Shader(g_VertexShaders["directionnal_light.vert"], g_FragmentShaders["directionnal_light.frag"]);
-
 	m_pDepthOnlyPassShader		= new Shader(g_VertexShaders["depth_only.vert"], g_FragmentShaders["depth_only.frag"]);
 
 	m_pFullscreenDepthShader	= new Shader(g_VertexShaders["fullscreen.vert"], g_FragmentShaders["fullscreen_depth.frag"]);
@@ -647,33 +643,46 @@ void Rendering::renderLightsToAccumBuffer(const mat4x4 & mView)
 {
 	glViewport(0, 0, m_uWidth, m_uHeight);
 
-	m_LightAccumBuffer.begin();
+	Technique & LightsTechnique = m_mapTechnique["lights"];
+
+	LightsTechnique.Begin();
+
+	glBindSampler(1, m_uSampler);
+
+	glBlendFunc(GL_ONE, GL_ONE);
+
+	glDepthMask(GL_FALSE);
 
 	{
+		LightsTechnique.BeginPass("directional");
+
+		glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+		glClear(GL_COLOR_BUFFER_BIT);
+
 		mat4x4 mCameraViewProjection = m_matProjection * mView;
 
-		m_pDirectionnalLightShader->SetAsCurrent();
-
-		glBindSampler(1, m_uSampler);
-
 		{
-			m_pDirectionnalLightShader->SetUniform("viewPos", (inverse(mView) * vec4(0.0, 0.0, 0.0, 1.0)).xyz);
-			m_pDirectionnalLightShader->SetUniform("InverseViewProjection", inverse(mCameraViewProjection));
-			m_pDirectionnalLightShader->SetUniform("lightDir", - normalize(m_pLight->GetDirection()));
-			m_pDirectionnalLightShader->SetUniform("lightColor", m_pLight->GetColor());
-			m_pDirectionnalLightShader->SetTexture("depthSampler", 0, *(m_mapTargets["depth"].getTexture()));
-			m_pDirectionnalLightShader->SetTexture("normalSampler", 1, *(m_mapTargets["normals"].getTexture()));
+			LightsTechnique.SetUniform("viewPos", (inverse(mView) * vec4(0.0, 0.0, 0.0, 1.0)).xyz);
+			LightsTechnique.SetUniform("InverseViewProjection", inverse(mCameraViewProjection));
+			LightsTechnique.SetUniform("lightDir", - normalize(m_pLight->GetDirection()));
+			LightsTechnique.SetUniform("lightColor", m_pLight->GetColor());
+			LightsTechnique.SetTexture("depthSampler", 0, *(m_mapTargets["depth"].getTexture()));
+			LightsTechnique.SetTexture("normalSampler", 1, *(m_mapTargets["normals"].getTexture()));
 			m_pQuadMesh->draw();
 		}
 
 		// TODO : render all lights
 
-		glBindSampler(1, 0);
-
-		glUseProgram(0);
+		LightsTechnique.EndPass();
 	}
 
-	m_LightAccumBuffer.end();
+	glDepthMask(GL_TRUE);
+
+	glBlendFunc(GL_ONE, GL_ZERO);
+
+	glBindSampler(1, 0);
+
+	LightsTechnique.End();
 }
 
 /**
