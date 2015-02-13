@@ -12,6 +12,7 @@
 
 	<pipeline>
 		<technique name="geometry">
+			<enable cap="GL_DEPTH_TEST" />
 			<pass name="simple">
 				<shader name="geometry_pass.vert" type="GL_VERTEX_SHADER" />
 				<shader name="geometry_pass.frag" type="GL_FRAGMENT_SHADER" />
@@ -23,6 +24,15 @@
 				<shader name="geometry_normalmap_pass.frag" type="GL_FRAGMENT_SHADER" />
 				<output texture="depth" attachment="GL_DEPTH_ATTACHMENT" />
 				<output texture="normals" attachment="GL_COLOR_ATTACHMENT0" />
+			</pass>
+		</technique>
+		<technique name="compose">
+			<enable cap="GL_DEPTH_TEST" />
+			<pass name="default">
+				<shader name="full.vert" type="GL_VERTEX_SHADER" />
+				<shader name="full.frag" type="GL_FRAGMENT_SHADER" />
+				<output texture="depth" attachment="GL_DEPTH_ATTACHMENT" /> <!-- early z-cull -->
+				<output texture="HDR" attachment="GL_COLOR_ATTACHMENT0" />
 			</pass>
 		</technique>
 	</pipeline>

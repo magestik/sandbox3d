@@ -93,7 +93,6 @@ Rendering::Rendering()
 , m_uHeight(720)
 , m_pShadowMap(nullptr)
 , m_LightAccumBuffer()
-, m_Compose()
 , m_pQuadMesh(nullptr)
 , m_mapTargets()
 , m_mapTechnique()
@@ -150,7 +149,6 @@ void Rendering::initializePipelineFromXML(const char * filename)
 	const XMLElement * pipeline = root->FirstChildElement("pipeline");
 	initializePipeline(pipeline);
 
-	assert(m_Compose.init(m_mapTargets["HDR"].getTexture(), m_mapTargets["depth"].getTexture()));
 	assert(m_LightAccumBuffer.init(m_mapTargets["lights_diffuse"].getTexture(), m_mapTargets["lights_specular"].getTexture()));
 	assert(m_BloomPass.init(m_mapTargets["bloom1"].getTexture(), m_mapTargets["bloom2"].getTexture()));
 }
@@ -198,7 +196,7 @@ void Rendering::initializePipeline(const XMLElement * pipeline)
 
 		m_mapTechnique[name] = Technique(pass, *this);
 
-		pass = pass->NextSiblingElement("pass");
+		pass = pass->NextSiblingElement("technique");
 	}
 }
 
@@ -583,16 +581,12 @@ void Rendering::renderSceneToGBuffer(const mat4x4 & mView)
 
 	GeometryTechnique.Begin();
 
-	glEnable(GL_DEPTH_TEST);
-
 	{
 		mat4x4 mCameraViewProjection = m_matProjection * mView;
 
 		// OPTIMIZE THIS !!!!!
 
 		GeometryTechnique.BeginPass("simple");
-
-
 
 		glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -642,7 +636,7 @@ void Rendering::renderSceneToGBuffer(const mat4x4 & mView)
 
 		GeometryTechnique.EndPass();
 	}
-glDisable(GL_DEPTH_TEST);
+
 	GeometryTechnique.End();
 }
 
@@ -693,39 +687,54 @@ void Rendering::renderFinal(const mat4x4 & mView, const vec4 & clearColor, const
 	glBindSampler(3, m_uSampler);
 	glBindSampler(4, m_uSampler);
 
-	m_Compose.begin(clearColor);
+	Technique & ComposeTechnique = m_mapTechnique["compose"];
+
+	ComposeTechnique.Begin();
+
+	glDepthFunc(GL_EQUAL);
+	glDepthMask(GL_FALSE);
 
 	{
+		ComposeTechnique.BeginPass("default");
+
+		glClearColor(clearColor.x, clearColor.y, clearColor.z, clearColor.w);
+		glClear(GL_COLOR_BUFFER_BIT);
+
 		mat4x4 mCameraViewProjection = m_matProjection * mView;
 
 		mat4x4 mDepthView = _lookAt(vec3(0,0,0), m_pLight->GetDirection(), vec3(0.0f, -1.0f, 0.0f));
 		mat4x4 mDepthViewProjection = m_pShadowMap->GetProjection() * mDepthView;
 
-		m_Compose.GetShader()->SetTexture("diffuseLightSampler", 0, *(m_mapTargets["lights_diffuse"].getTexture()));
-		m_Compose.GetShader()->SetTexture("specularLightSampler", 1, *(m_mapTargets["lights_specular"].getTexture()));
-		m_Compose.GetShader()->SetTexture("shadowMap", 2, m_pShadowMap->GetTexture());
+		ComposeTechnique.SetTexture("diffuseLightSampler", 0, *(m_mapTargets["lights_diffuse"].getTexture()));
+		ComposeTechnique.SetTexture("specularLightSampler", 1, *(m_mapTargets["lights_specular"].getTexture()));
+		ComposeTechnique.SetTexture("shadowMap", 2, m_pShadowMap->GetTexture());
 
-		m_Compose.GetShader()->SetUniform("ambientColor", ambientColor.xyz);
-		m_Compose.GetShader()->SetUniform("DepthTransformation", mDepthViewProjection);
+		ComposeTechnique.SetUniform("ambientColor", ambientColor.xyz);
+		ComposeTechnique.SetUniform("DepthTransformation", mDepthViewProjection);
 
 		for (Mesh::Instance & object : m_aObjects)
 		{
 			mat4x4 MVP = mCameraViewProjection * object.transformation;
 
-			m_Compose.GetShader()->SetUniform("ModelViewProjection", MVP);
-			m_Compose.GetShader()->SetUniform("Model", object.transformation);
+			ComposeTechnique.SetUniform("ModelViewProjection", MVP);
+			ComposeTechnique.SetUniform("Model", object.transformation);
 
 			for (SubMesh * m : object.getDrawCommands())
 			{
-				m_Compose.GetShader()->SetTexture("diffuseSampler", 3, *(m->m_material.m_diffuse));
-				m_Compose.GetShader()->SetTexture("specularSampler", 4, *(m->m_material.m_specular));
+				ComposeTechnique.SetTexture("diffuseSampler", 3, *(m->m_material.m_diffuse));
+				ComposeTechnique.SetTexture("specularSampler", 4, *(m->m_material.m_specular));
 
 				m->draw();
 			}
 		}
+
+		ComposeTechnique.EndPass();
 	}
 
-	m_Compose.end();
+	glDepthFunc(GL_LESS);
+	glDepthMask(GL_TRUE);
+
+	ComposeTechnique.End();
 
 	glBindSampler(3, 0);
 	glBindSampler(4, 0);

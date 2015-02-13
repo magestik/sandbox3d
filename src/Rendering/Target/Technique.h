@@ -3,6 +3,7 @@
 #include "Pass.h"
 
 #include <map>
+#include <vector>
 #include <string>
 
 namespace tinyxml2
@@ -40,6 +41,10 @@ public:
 protected:
 
 	std::map<std::string, Pass> m_mapPass;
+
+	std::vector<GLenum> m_aEnable;
+
+	GLenum m_eDepthFunc;
 
 	Pass * m_pCurrentPass;
 

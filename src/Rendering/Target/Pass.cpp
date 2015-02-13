@@ -12,7 +12,9 @@ static inline GLenum strToShaderType(const char * strShaderType);
 /**
  * @brief Pass::Pass
  */
-Pass::Pass()
+Pass::Pass(void)
+: m_uFramebufferObject(0)
+, m_uShaderObject(0)
 {
 	// ...
 }
@@ -24,6 +26,8 @@ Pass::Pass()
  * @return
  */
 Pass::Pass(const XMLElement * element, const Rendering & rendering)
+: m_uFramebufferObject(0)
+, m_uShaderObject(0)
 {
 	{
 		glGenFramebuffers(1, &m_uFramebufferObject);
@@ -116,6 +120,7 @@ bool Pass::begin(void)
 void Pass::end(void)
 {
 	glUseProgram(0);
+
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 	glDrawBuffer(GL_BACK);
 }

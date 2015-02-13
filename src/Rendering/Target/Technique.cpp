@@ -6,11 +6,14 @@
 
 using namespace tinyxml2;
 
+static inline GLenum strToCap(const char * strCap);
+
 /**
  * @brief Technique::Technique
  */
 Technique::Technique(void)
 : m_pCurrentPass(nullptr)
+, m_eDepthFunc(GL_LESS)
 {
 	// ...
 }
@@ -18,15 +21,30 @@ Technique::Technique(void)
 Technique::Technique(const XMLElement * element, const Rendering & rendering)
 : m_pCurrentPass(nullptr)
 {
-	const XMLElement * pass = element->FirstChildElement("pass");
-
-	while (NULL != pass)
 	{
-		const char * name = pass->Attribute("name");
+		const XMLElement * pass = element->FirstChildElement("pass");
 
-		m_mapPass[name] = Pass(pass, rendering);
+		while (NULL != pass)
+		{
+			const char * name = pass->Attribute("name");
 
-		pass = pass->NextSiblingElement("pass");
+			m_mapPass[name] = Pass(pass, rendering);
+
+			pass = pass->NextSiblingElement("pass");
+		}
+	}
+
+	{
+		const XMLElement * enable = element->FirstChildElement("enable");
+
+		while (NULL != enable)
+		{
+			const char * cap = enable->Attribute("cap");
+
+			m_aEnable.push_back(strToCap(cap));
+
+			enable = enable->NextSiblingElement("enable");
+		}
 	}
 }
 
@@ -36,6 +54,11 @@ Technique::Technique(const XMLElement * element, const Rendering & rendering)
  */
 bool Technique::Begin(void)
 {
+	for (GLenum cap : m_aEnable)
+	{
+		glEnable(cap);
+	}
+
 	return(true);
 }
 
@@ -44,7 +67,10 @@ bool Technique::Begin(void)
  */
 void Technique::End(void)
 {
-	// ...
+	for (GLenum cap : m_aEnable)
+	{
+		glDisable(cap);
+	}
 }
 
 /**
@@ -68,4 +94,23 @@ void Technique::EndPass(void)
 	m_pCurrentPass->end();
 
 	m_pCurrentPass = nullptr;
+}
+
+/**
+ * @brief strToCap
+ * @param strCap
+ * @return
+ */
+static inline GLenum strToCap(const char * strCap)
+{
+	if (!strcmp(strCap, "GL_DEPTH_TEST"))
+	{
+		return(GL_DEPTH_TEST);
+	}
+	else
+	{
+		assert(false);
+	}
+
+	return(0);
 }
