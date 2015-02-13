@@ -147,8 +147,6 @@ void Rendering::initializePipelineFromXML(const char * filename)
 
 	const XMLElement * pipeline = root->FirstChildElement("pipeline");
 	initializePipeline(pipeline);
-
-	assert(m_BloomPass.init(m_mapTargets["bloom1"].getTexture(), m_mapTargets["bloom2"].getTexture()));
 }
 
 /**
@@ -693,12 +691,12 @@ void Rendering::renderFinal(const mat4x4 & mView, const vec4 & clearColor, const
 {
 	glViewport(0, 0, m_uWidth, m_uHeight);
 
-	glBindSampler(3, m_uSampler);
-	glBindSampler(4, m_uSampler);
-
 	Technique & ComposeTechnique = m_mapTechnique["compose"];
 
 	ComposeTechnique.Begin();
+
+	glBindSampler(3, m_uSampler);
+	glBindSampler(4, m_uSampler);
 
 	glDepthFunc(GL_EQUAL);
 	glDepthMask(GL_FALSE);
@@ -743,10 +741,10 @@ void Rendering::renderFinal(const mat4x4 & mView, const vec4 & clearColor, const
 	glDepthFunc(GL_LESS);
 	glDepthMask(GL_TRUE);
 
-	ComposeTechnique.End();
-
 	glBindSampler(3, 0);
 	glBindSampler(4, 0);
+
+	ComposeTechnique.End();
 }
 
 /**
@@ -756,33 +754,37 @@ void Rendering::renderBloom(void)
 {
 	glViewport(0, 0, m_uWidth/4, m_uHeight/4);
 
-	m_BloomPass.begin();
+	Technique & BloomTechnique = m_mapTechnique["bloom"];
 
+	glDepthMask(GL_FALSE);
+
+	BloomTechnique.BeginPass("bright");
 	{
-		//
-		// bright pass
-		m_BloomPass.GetShader()->SetTexture("texSampler", 0, *(m_mapTargets["HDR"].getTexture()));
-
-		m_pQuadMesh->draw();
-
-		//
-		// blur horizontal
-		m_BloomPass.prepare_blur_h();
-
-		m_BloomPass.GetShader()->SetTexture("texSampler", 0, *(m_mapTargets["bloom1"].getTexture()));
-
-		m_pQuadMesh->draw();
-
-		//
-		// blur vertical
-		m_BloomPass.prepare_blur_v();
-
-		m_BloomPass.GetShader()->SetTexture("texSampler", 0, *(m_mapTargets["bloom2"].getTexture()));
+		BloomTechnique.SetTexture("texSampler", 0, *(m_mapTargets["HDR"].getTexture()));
 
 		m_pQuadMesh->draw();
 	}
+	BloomTechnique.EndPass();
 
-	m_BloomPass.end();
+	BloomTechnique.BeginPass("horizontal_blur");
+	{
+		BloomTechnique.SetTexture("texSampler", 0, *(m_mapTargets["bloom1"].getTexture()));
+
+		m_pQuadMesh->draw();
+	}
+	BloomTechnique.EndPass();
+
+	BloomTechnique.BeginPass("vertical_blur");
+	{
+		BloomTechnique.SetTexture("texSampler", 0, *(m_mapTargets["bloom2"].getTexture()));
+
+		m_pQuadMesh->draw();
+	}
+	BloomTechnique.EndPass();
+
+	glDepthMask(GL_TRUE);
+
+	BloomTechnique.End();
 }
 
 /**

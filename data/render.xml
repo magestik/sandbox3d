@@ -35,6 +35,24 @@
 				<output texture="lights_specular" attachment="GL_COLOR_ATTACHMENT1" />
 			</pass>
 		</technique>
+		<technique name="bloom">
+			<enable cap="GL_BLEND" />
+			<pass name="bright">
+				<shader name="fullscreen.vert" type="GL_VERTEX_SHADER" />
+				<shader name="fullscreen_bright.frag" type="GL_FRAGMENT_SHADER" />
+				<output texture="bloom1" attachment="GL_COLOR_ATTACHMENT0" />
+			</pass>
+			<pass name="horizontal_blur">
+				<shader name="fullscreen.vert" type="GL_VERTEX_SHADER" />
+				<shader name="gaussian_blur_h.frag" type="GL_FRAGMENT_SHADER" />
+				<output texture="bloom2" attachment="GL_COLOR_ATTACHMENT0" />
+			</pass>
+			<pass name="vertical_blur">
+				<shader name="fullscreen.vert" type="GL_VERTEX_SHADER" />
+				<shader name="gaussian_blur_v.frag" type="GL_FRAGMENT_SHADER" />
+				<output texture="bloom1" attachment="GL_COLOR_ATTACHMENT0" />
+			</pass>
+		</technique>
 		<technique name="compose">
 			<enable cap="GL_DEPTH_TEST" />
 			<pass name="default">

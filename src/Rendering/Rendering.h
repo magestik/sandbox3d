@@ -17,7 +17,6 @@
 
 #include "Target/ShadowMap.h"
 #include "Target/AverageLuminance.h"
-#include "Target/Bloom.h"
 
 #include "RenderTexture.h"
 
@@ -112,7 +111,6 @@ private:
 	mat4x4 m_matProjection;
 
 	AverageLuminance    m_AvLum;
-	Bloom               m_BloomPass;
 
 	std::vector<Mesh::Instance> m_aObjects;
 
@@ -139,10 +137,7 @@ private:
 
 	GPU::Texture<GL_TEXTURE_2D> * m_apTargets [TARGET_MAX];
 
-
-
 	GLuint m_uSampler;
-
 
 	std::map<std::string, RenderTexture>	m_mapTargets;
 	std::map<std::string, Technique>		m_mapTechnique;
