@@ -12,8 +12,8 @@ Bloom::Bloom(void)
 , m_pShader_bright(nullptr)
 , m_pCurrentShader(nullptr)
 {
-	m_uObject[0] = 0;
-	m_uObject[1] = 0;
+	m_uObjects[0] = 0;
+	m_uObjects[1] = 0;
 
 	m_apShader_blur[0] = nullptr;
 	m_apShader_blur[1] = nullptr;
@@ -39,15 +39,15 @@ bool Bloom::init(const GPU::Texture<GL_TEXTURE_2D> * pTexture1, const GPU::Textu
 	m_apShader_blur[0] = new Shader(g_VertexShaders["fullscreen.vert"], g_FragmentShaders["gaussian_blur_h.frag"]);
 	m_apShader_blur[1] = new Shader(g_VertexShaders["fullscreen.vert"], g_FragmentShaders["gaussian_blur_v.frag"]);
 
-	glGenFramebuffers(2, m_uObject);
+	glGenFramebuffers(2, m_uObjects);
 
-	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_uObject[0]);
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_uObjects[0]);
 
 	glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, pTexture1->GetObject(), 0);
 
 	GLenum status1 = glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER);
 
-	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_uObject[1]);
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_uObjects[1]);
 
 	glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, pTexture2->GetObject(), 0);
 
@@ -72,9 +72,9 @@ void Bloom::free(void)
 	delete m_apShader_blur[1];
 	m_apShader_blur[1] = nullptr;
 
-	glDeleteBuffers(2, m_uObject);
-	m_uObject[0] = 0;
-	m_uObject[1] = 0;
+	glDeleteBuffers(2, m_uObjects);
+	m_uObjects[0] = 0;
+	m_uObjects[1] = 0;
 }
 
 /**
@@ -83,7 +83,7 @@ void Bloom::free(void)
  */
 bool Bloom::begin(void)
 {
-	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_uObject[0]);
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_uObjects[0]);
 	glDrawBuffer(GL_COLOR_ATTACHMENT0);
 
 	glDepthMask(GL_FALSE);
@@ -120,7 +120,7 @@ bool Bloom::end(void)
  */
 void Bloom::prepare_blur_h(void)
 {
-	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_uObject[1]);
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_uObjects[1]);
 	glDrawBuffer(GL_COLOR_ATTACHMENT0);
 
 	glDepthMask(GL_FALSE);
@@ -136,7 +136,7 @@ void Bloom::prepare_blur_h(void)
  */
 void Bloom::prepare_blur_v(void)
 {
-	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_uObject[0]);
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_uObjects[0]);
 	glDrawBuffer(GL_COLOR_ATTACHMENT0);
 
 	glDepthMask(GL_FALSE);

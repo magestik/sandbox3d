@@ -15,8 +15,8 @@ AverageLuminance::AverageLuminance(void)
 , m_fSumLog(0.0f)
 , m_fMax(0.0f)
 {
-	m_uObject[0] = 0;
-	m_uObject[1] = 0;
+	m_uObjects[0] = 0;
+	m_uObjects[1] = 0;
 }
 
 /**
@@ -38,15 +38,15 @@ bool AverageLuminance::init(const GPU::Texture<GL_TEXTURE_2D> * pTexture1, const
 	m_pShader_convert = new Shader(g_VertexShaders["fullscreen.vert"], g_FragmentShaders["fullscreen_luminance.frag"]);
 	m_pShader_mean = new Shader(g_VertexShaders["fullscreen_scaled.vert"], g_FragmentShaders["fullscreen_luminance_mean.frag"]);
 
-	glGenFramebuffers(2, m_uObject);
+	glGenFramebuffers(2, m_uObjects);
 
-	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_uObject[0]);
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_uObjects[0]);
 
 	glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, pTexture1->GetObject(), 0);
 
 	GLenum status1 = glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER);
 
-	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_uObject[1]);
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_uObjects[1]);
 
 	glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, pTexture2->GetObject(), 0);
 
@@ -68,9 +68,9 @@ void AverageLuminance::free(void)
 	delete m_pShader_mean;
 	m_pShader_mean = nullptr;
 
-	glDeleteFramebuffers(2, m_uObject);
-	m_uObject[0] = 0;
-	m_uObject[1] = 0;
+	glDeleteFramebuffers(2, m_uObjects);
+	m_uObjects[0] = 0;
+	m_uObjects[1] = 0;
 }
 
 /**
@@ -79,7 +79,7 @@ void AverageLuminance::free(void)
  */
 bool AverageLuminance::begin(void)
 {
-	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_uObject[0]);
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_uObjects[0]);
 	glDrawBuffer(GL_COLOR_ATTACHMENT0);
 
 	glDepthMask(GL_FALSE);
@@ -106,7 +106,7 @@ bool AverageLuminance::end(void)
 	float v [2];
 
 	glClampColor(GL_CLAMP_READ_COLOR, GL_FALSE);
-	glBindFramebuffer(GL_READ_FRAMEBUFFER, m_uObject[m_uCurrentObject]); // read last written FBO
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, m_uObjects[m_uCurrentObject]); // read last written FBO
 	glReadBuffer(GL_COLOR_ATTACHMENT0);
 	glReadPixels(0, 0, 1, 1, GL_RG, GL_FLOAT, (void*)v);
 	glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
@@ -133,7 +133,7 @@ unsigned int AverageLuminance::next(void)
 	{
 		m_uCurrentObject = 1 - m_uCurrentObject;
 
-		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_uObject[m_uCurrentObject]);
+		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_uObjects[m_uCurrentObject]);
 		glDrawBuffer(GL_COLOR_ATTACHMENT0);
 
 		if (m_pShader_mean != m_pCurrentShader)

@@ -1,0 +1,30 @@
+<render>
+
+	<targets>
+		<texture name="depth"			format="GL_DEPTH_COMPONENT32F" />
+		<texture name="normals"			format="GL_RGBA16F" />
+		<texture name="lights_diffuse"	format="GL_R11F_G11F_B10F" />
+		<texture name="lights_specular"	format="GL_R11F_G11F_B10F" />
+		<texture name="HDR"				format="GL_R11F_G11F_B10F" />
+		<texture name="bloom1"			format="GL_R11F_G11F_B10F" size_divisor="4" />
+		<texture name="bloom2"			format="GL_R11F_G11F_B10F" size_divisor="4" />
+	</targets>
+
+	<pipeline>
+		<technique name="geometry">
+			<pass name="simple">
+				<shader name="geometry_pass.vert" type="GL_VERTEX_SHADER" />
+				<shader name="geometry_pass.frag" type="GL_FRAGMENT_SHADER" />
+				<output texture="depth" attachment="GL_DEPTH_ATTACHMENT" />
+				<output texture="normals" attachment="GL_COLOR_ATTACHMENT0" />
+			</pass>
+			<pass name="normal_map">
+				<shader name="geometry_normalmap_pass.vert" type="GL_VERTEX_SHADER" />
+				<shader name="geometry_normalmap_pass.frag" type="GL_FRAGMENT_SHADER" />
+				<output texture="depth" attachment="GL_DEPTH_ATTACHMENT" />
+				<output texture="normals" attachment="GL_COLOR_ATTACHMENT0" />
+			</pass>
+		</technique>
+	</pipeline>
+
+</render>

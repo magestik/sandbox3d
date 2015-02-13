@@ -8,7 +8,7 @@
  * @brief Final::Final
  */
 Final::Final(void)
-: m_uObject(0)
+: Pass()
 , m_pShader(nullptr)
 {
 	// ...
@@ -30,11 +30,11 @@ Final::~Final(void)
  */
 bool Final::init(const GPU::Texture<GL_TEXTURE_2D> * pColorTexture, const GPU::Texture<GL_TEXTURE_2D> * pDepthTexture)
 {
-    m_pShader = new Shader(g_VertexShaders["full.vert"], g_FragmentShaders["full.frag"]);
+	m_pShader = new Shader(g_VertexShaders["full.vert"], g_FragmentShaders["full.frag"]);
 
-	glGenFramebuffers(1, &m_uObject);
+	glGenFramebuffers(1, &m_uFramebufferObject);
 
-	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_uObject);
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_uFramebufferObject);
 
 	glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, pColorTexture->GetObject(), 0);
 	glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,  GL_TEXTURE_2D, pDepthTexture->GetObject(), 0);
@@ -51,11 +51,11 @@ bool Final::init(const GPU::Texture<GL_TEXTURE_2D> * pColorTexture, const GPU::T
  */
 void Final::free(void)
 {
-    delete m_pShader;
-    m_pShader = nullptr;
+	delete m_pShader;
+	m_pShader = nullptr;
 
-	glDeleteFramebuffers(1, &m_uObject);
-    m_uObject = 0;
+	glDeleteFramebuffers(1, &m_uFramebufferObject);
+	m_uFramebufferObject = 0;
 }
 
 /**
@@ -64,7 +64,7 @@ void Final::free(void)
  */
 bool Final::begin(const vec4 & clearColor)
 {
-	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_uObject);
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_uFramebufferObject);
 	glDrawBuffer(GL_COLOR_ATTACHMENT0);
 
 	glEnable(GL_DEPTH_TEST);
@@ -75,7 +75,7 @@ bool Final::begin(const vec4 & clearColor)
 	glClearColor(clearColor.x, clearColor.y, clearColor.z, clearColor.w);
 	glClear(GL_COLOR_BUFFER_BIT);
 
-    m_pShader->SetAsCurrent();
+	m_pShader->SetAsCurrent();
 
 	return(true);
 }
@@ -86,7 +86,7 @@ bool Final::begin(const vec4 & clearColor)
  */
 bool Final::end(void)
 {
-    glUseProgram(0);
+	glUseProgram(0);
 
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 	glDrawBuffer(GL_BACK);

@@ -31,7 +31,7 @@ public:
 
 private:
 
-	GLuint m_uObject [2];
+	GLuint m_uObjects [2];
 
 	unsigned int m_uCurrentObject;
 

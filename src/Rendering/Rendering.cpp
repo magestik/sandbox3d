@@ -4,6 +4,10 @@
 
 #include "utils.inl"
 
+#include <tinyxml2.h>
+
+using namespace tinyxml2;
+
 std::map<std::string, GPU::Shader<GL_FRAGMENT_SHADER> *> g_FragmentShaders;
 
 std::map<std::string, GPU::Shader<GL_VERTEX_SHADER> *> g_VertexShaders;
@@ -27,6 +31,60 @@ static inline unsigned int toPOT(unsigned int v)
 	return(r);
 }
 
+static inline GLenum strToFormat(const char * strFormat)
+{
+	if (!strcmp(strFormat, "GL_RGBA16F"))
+	{
+		return(GL_RGBA16F);
+	}
+	else if (!strcmp(strFormat, "GL_RGBA32F"))
+	{
+		return(GL_RGBA32F);
+	}
+	else if (!strcmp(strFormat, "GL_RGB10_A2​"))
+	{
+		return(GL_RGB10_A2);
+	}
+	else if (!strcmp(strFormat, "GL_RGB10_A2UI​"))
+	{
+		return(GL_RGB10_A2UI);
+	}
+	else if (!strcmp(strFormat, "GL_R11F_G11F_B10F"))
+	{
+		return(GL_R11F_G11F_B10F);
+	}
+	else if (!strcmp(strFormat, "GL_DEPTH_COMPONENT16"))
+	{
+		return(GL_DEPTH_COMPONENT16);
+	}
+	else if (!strcmp(strFormat, "GL_DEPTH_COMPONENT24"))
+	{
+		return(GL_DEPTH_COMPONENT24);
+	}
+	else if (!strcmp(strFormat, "GL_DEPTH_COMPONENT32F"))
+	{
+		return(GL_DEPTH_COMPONENT32F);
+	}
+	else if (!strcmp(strFormat, "GL_DEPTH24_STENCIL8"))
+	{
+		return(GL_DEPTH24_STENCIL8);
+	}
+	else if (!strcmp(strFormat, "GL_DEPTH32F_STENCIL8"))
+	{
+		return(GL_DEPTH32F_STENCIL8);
+	}
+	else if (!strcmp(strFormat, "GL_STENCIL_INDEX8"))
+	{
+		return(GL_STENCIL_INDEX8);
+	}
+	else
+	{
+		assert(false);
+	}
+
+	return(0);
+}
+
 /**
  * @brief Rendering::onInitialize
  */
@@ -34,10 +92,11 @@ Rendering::Rendering()
 : m_uWidth(1280)
 , m_uHeight(720)
 , m_pShadowMap(nullptr)
-, m_GBuffer()
 , m_LightAccumBuffer()
 , m_Compose()
 , m_pQuadMesh(nullptr)
+, m_mapTargets()
+, m_mapTechnique()
 {
 	// ...
 }
@@ -47,18 +106,12 @@ Rendering::Rendering()
  */
 void Rendering::onInitializeComplete()
 {
-	for (int i = 0; i < TARGET_MAX; ++i)
-	{
-		m_apTargets[i] = new GPU::Texture<GL_TEXTURE_2D>();
-	}
+	m_apTargets[TARGET_LUMINANCE1] = new GPU::Texture<GL_TEXTURE_2D>();
+	m_apTargets[TARGET_LUMINANCE2] = new GPU::Texture<GL_TEXTURE_2D>();
 
-	onResize(1280, 720);
+	initializePipelineFromXML("data/render.xml");
 
-	assert(m_GBuffer.init(m_apTargets[TARGET_NORMALS], m_apTargets[TARGET_DEPTH]));
-	assert(m_Compose.init(m_apTargets[TARGET_FINAL_HDR], m_apTargets[TARGET_DEPTH]));
-	assert(m_LightAccumBuffer.init(m_apTargets[TARGET_DIFFUSE_LIGHTS], m_apTargets[TARGET_SPECULAR_LIGHTS]));
 	assert(m_AvLum.init(m_apTargets[TARGET_LUMINANCE1], m_apTargets[TARGET_LUMINANCE2]));
-	assert(m_BloomPass.init(m_apTargets[TARGET_BLOOM1], m_apTargets[TARGET_BLOOM2]));
 
 	{
 		m_pLight = new Light::Directionnal(vec3(-20.0f, -20.0f, -20.0f));
@@ -74,6 +127,79 @@ void Rendering::onInitializeComplete()
 	glSamplerParameteri(m_uSampler, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glSamplerParameteri(m_uSampler, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glSamplerParameteri(m_uSampler, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+}
+
+
+/**
+ * @brief Rendering::initializeFromXML
+ * @param filename
+ */
+void Rendering::initializePipelineFromXML(const char * filename)
+{
+	XMLDocument doc;
+
+	doc.LoadFile(filename);
+
+	const XMLElement * root = doc.RootElement();
+
+	const XMLElement * targets = root->FirstChildElement("targets");
+	initializeTargets(targets);
+
+	onResize(m_uWidth, m_uHeight);
+
+	const XMLElement * pipeline = root->FirstChildElement("pipeline");
+	initializePipeline(pipeline);
+
+	assert(m_Compose.init(m_mapTargets["HDR"].getTexture(), m_mapTargets["depth"].getTexture()));
+	assert(m_LightAccumBuffer.init(m_mapTargets["lights_diffuse"].getTexture(), m_mapTargets["lights_specular"].getTexture()));
+	assert(m_BloomPass.init(m_mapTargets["bloom1"].getTexture(), m_mapTargets["bloom2"].getTexture()));
+}
+
+/**
+ * @brief Rendering::initializeTargets
+ * @param targets
+ */
+void Rendering::initializeTargets(const XMLElement * targets)
+{
+	const XMLElement * texture = targets->FirstChildElement("texture");
+
+	while (NULL != texture)
+	{
+		const char * name = texture->Attribute("name");
+
+		const char * format = texture->Attribute("format");
+
+		unsigned int size_divisor = texture->UnsignedAttribute("size_divisor");
+
+		if (0 == size_divisor)
+		{
+			size_divisor = 1;
+		}
+
+		RenderTexture RT(strToFormat(format), size_divisor);
+
+		m_mapTargets.insert(std::pair<std::string, RenderTexture>(name, RT));
+
+		texture = texture->NextSiblingElement("texture");
+	}
+}
+
+/**
+ * @brief Rendering::initializePipeline
+ * @param pipeline
+ */
+void Rendering::initializePipeline(const XMLElement * pipeline)
+{
+	const XMLElement * pass = pipeline->FirstChildElement("technique");
+
+	while (NULL != pass)
+	{
+		const char * name = pass->Attribute("name");
+
+		m_mapTechnique[name] = Technique(pass, *this);
+
+		pass = pass->NextSiblingElement("pass");
+	}
 }
 
 /**
@@ -158,19 +284,13 @@ void Rendering::onResize(int width, int height)
 
 	// see https://www.opengl.org/wiki/Image_Format#Required_formats
 
-	m_apTargets[TARGET_DEPTH  ]->init<GL_DEPTH_COMPONENT32F>(m_uWidth, m_uHeight);
-	m_apTargets[TARGET_NORMALS]->init<GL_RGBA16F>(m_uWidth, m_uHeight);
-
-	m_apTargets[TARGET_DIFFUSE_LIGHTS ]->init<GL_R11F_G11F_B10F>(m_uWidth, m_uHeight);
-	m_apTargets[TARGET_SPECULAR_LIGHTS]->init<GL_R11F_G11F_B10F>(m_uWidth, m_uHeight);
-
-	m_apTargets[TARGET_FINAL_HDR]->init<GL_R11F_G11F_B10F>(m_uWidth, m_uHeight);
-
 	m_apTargets[TARGET_LUMINANCE1]->init<GL_RG16F>(m_uLuminanceSizePOT, m_uLuminanceSizePOT);
 	m_apTargets[TARGET_LUMINANCE2]->init<GL_RG16F>(m_uLuminanceSizePOT, m_uLuminanceSizePOT);
 
-	m_apTargets[TARGET_BLOOM1]->init<GL_R11F_G11F_B10F>(m_uWidth/4, m_uHeight/4);
-	m_apTargets[TARGET_BLOOM2]->init<GL_R11F_G11F_B10F>(m_uWidth/4, m_uHeight/4);
+	for (std::map<std::string, RenderTexture>::iterator it = m_mapTargets.begin(); it != m_mapTargets.end(); ++it)
+	{
+		it->second.resize(m_uWidth, m_uHeight);
+	}
 }
 
 /**
@@ -263,7 +383,7 @@ void Rendering::computeAverageLum(void)
 
 		glViewport(0, 0, m_uLuminanceSizePOT, m_uLuminanceSizePOT);
 
-		m_AvLum.GetShader()->SetTexture("texSampler", 0, *(m_apTargets[TARGET_FINAL_HDR]));
+		m_AvLum.GetShader()->SetTexture("texSampler", 0, *(m_mapTargets["HDR"].getTexture()));
 		m_pQuadMesh->draw();
 
 		vec2 texture_scale (1.0f, 1.0f);
@@ -339,7 +459,7 @@ void Rendering::renderIntermediateToScreen(ERenderType eRenderType)
 			{
 				float avLum = m_AvLum.getAverage();
 				float white2 = m_AvLum.getMax2();
-				m_pToneMappingShader->SetTexture("texSampler", 0, *(m_apTargets[TARGET_FINAL_HDR]));
+				m_pToneMappingShader->SetTexture("texSampler", 0, *(m_mapTargets["HDR"].getTexture()));
 				m_pToneMappingShader->SetUniform("avLum", avLum);
 				m_pToneMappingShader->SetUniform("white2", white2);
 				m_pQuadMesh->draw();
@@ -353,7 +473,7 @@ void Rendering::renderIntermediateToScreen(ERenderType eRenderType)
 #if DISABLE_BLIT
 			m_pFullscreenColorShader->SetAsCurrent();
 			{
-				m_pFullscreenColorShader->SetTexture("texSampler", 0, *(m_apTargets[TARGET_DIFFUSE_LIGHTS]));
+				m_pFullscreenColorShader->SetTexture("texSampler", 0, *(m_mapTargets["lights_diffuse"].getTexture()));
 				m_pQuadMesh->draw();
 			}
 			glUseProgram(0);
@@ -371,7 +491,7 @@ void Rendering::renderIntermediateToScreen(ERenderType eRenderType)
 #if DISABLE_BLIT
 			m_pFullscreenColorShader->SetAsCurrent();
 			{
-				m_pFullscreenColorShader->SetTexture("texSampler", 0, *(m_apTargets[TARGET_SPECULAR_LIGHTS]));
+				m_pFullscreenColorShader->SetTexture("texSampler", 0, *(m_mapTargets["lights_specular"].getTexture()));
 				m_pQuadMesh->draw();
 			}
 			glUseProgram(0);
@@ -388,7 +508,7 @@ void Rendering::renderIntermediateToScreen(ERenderType eRenderType)
 		{
 			m_pFullscreenNormalShader->SetAsCurrent();
 			{
-				m_pFullscreenNormalShader->SetTexture("texSampler", 0, *(m_apTargets[TARGET_NORMALS]));
+				m_pFullscreenNormalShader->SetTexture("texSampler", 0, *(m_mapTargets["normals"].getTexture()));
 				m_pQuadMesh->draw();
 			}
 			glUseProgram(0);
@@ -399,7 +519,7 @@ void Rendering::renderIntermediateToScreen(ERenderType eRenderType)
 		{
 			m_pFullscreenDepthShader->SetAsCurrent();
 			{
-				m_pFullscreenDepthShader->SetTexture("texSampler", 0, *(m_apTargets[TARGET_DEPTH]));
+				m_pFullscreenDepthShader->SetTexture("texSampler", 0, *(m_mapTargets["depth"].getTexture()));
 				m_pQuadMesh->draw();
 			}
 			glUseProgram(0);
@@ -443,7 +563,7 @@ void Rendering::renderIntermediateToScreen(ERenderType eRenderType)
 		{
 			m_pFullscreenColorShader->SetAsCurrent();
 			{
-				m_pFullscreenColorShader->SetTexture("texSampler", 0, *(m_apTargets[TARGET_BLOOM1]));
+				m_pFullscreenColorShader->SetTexture("texSampler", 0, *(m_mapTargets["bloom1"].getTexture()));
 				m_pQuadMesh->draw();
 			}
 			glUseProgram(0);
@@ -459,12 +579,46 @@ void Rendering::renderSceneToGBuffer(const mat4x4 & mView)
 {
 	glViewport(0, 0, m_uWidth, m_uHeight);
 
-	m_GBuffer.begin();
+	Technique & GeometryTechnique = m_mapTechnique["geometry"];
+
+	GeometryTechnique.Begin();
+
+	glEnable(GL_DEPTH_TEST);
 
 	{
 		mat4x4 mCameraViewProjection = m_matProjection * mView;
 
 		// OPTIMIZE THIS !!!!!
+
+		GeometryTechnique.BeginPass("simple");
+
+
+
+		glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		for (Mesh::Instance & object : m_aObjects)
+		{
+			mat4x4 MVP = mCameraViewProjection * object.transformation;
+
+			for (SubMesh * m : object.getDrawCommands())
+			{
+				const GPU::Texture<GL_TEXTURE_2D> * pNormalMap = m->getNormalMap();
+
+				if (nullptr == pNormalMap)
+				{
+					GeometryTechnique.SetUniform("shininess", m->m_material.shininess);
+					GeometryTechnique.SetUniform("ModelViewProjection", MVP);
+					GeometryTechnique.SetUniform("Model", object.transformation);
+
+					m->draw();
+				}
+			}
+		}
+
+		GeometryTechnique.EndPass();
+
+		GeometryTechnique.BeginPass("normal_map");
 
 		for (Mesh::Instance & object : m_aObjects)
 		{
@@ -476,25 +630,20 @@ void Rendering::renderSceneToGBuffer(const mat4x4 & mView)
 
 				if (nullptr != pNormalMap)
 				{
-					m_GBuffer.enable_normalmapping();
+					GeometryTechnique.SetTexture("normalMap", 0, *pNormalMap);
+					GeometryTechnique.SetUniform("shininess", m->m_material.shininess);
+					GeometryTechnique.SetUniform("ModelViewProjection", MVP);
+					GeometryTechnique.SetUniform("Model", object.transformation);
 
-					m_GBuffer.GetShader()->SetTexture("normalMap", 0, *pNormalMap);
+					m->draw();
 				}
-				else
-				{
-					m_GBuffer.disable_normalmapping();
-				}
-
-				m_GBuffer.GetShader()->SetUniform("shininess", m->m_material.shininess);
-				m_GBuffer.GetShader()->SetUniform("ModelViewProjection", MVP);
-				m_GBuffer.GetShader()->SetUniform("Model", object.transformation);
-
-				m->draw();
 			}
 		}
-	}
 
-	m_GBuffer.end();
+		GeometryTechnique.EndPass();
+	}
+glDisable(GL_DEPTH_TEST);
+	GeometryTechnique.End();
 }
 
 /**
@@ -518,8 +667,8 @@ void Rendering::renderLightsToAccumBuffer(const mat4x4 & mView)
 			m_pDirectionnalLightShader->SetUniform("InverseViewProjection", inverse(mCameraViewProjection));
 			m_pDirectionnalLightShader->SetUniform("lightDir", - normalize(m_pLight->GetDirection()));
 			m_pDirectionnalLightShader->SetUniform("lightColor", m_pLight->GetColor());
-			m_pDirectionnalLightShader->SetTexture("depthSampler", 0, *(m_apTargets[TARGET_DEPTH]));
-			m_pDirectionnalLightShader->SetTexture("normalSampler", 1, *(m_apTargets[TARGET_NORMALS]));
+			m_pDirectionnalLightShader->SetTexture("depthSampler", 0, *(m_mapTargets["depth"].getTexture()));
+			m_pDirectionnalLightShader->SetTexture("normalSampler", 1, *(m_mapTargets["normals"].getTexture()));
 			m_pQuadMesh->draw();
 		}
 
@@ -552,8 +701,8 @@ void Rendering::renderFinal(const mat4x4 & mView, const vec4 & clearColor, const
 		mat4x4 mDepthView = _lookAt(vec3(0,0,0), m_pLight->GetDirection(), vec3(0.0f, -1.0f, 0.0f));
 		mat4x4 mDepthViewProjection = m_pShadowMap->GetProjection() * mDepthView;
 
-		m_Compose.GetShader()->SetTexture("diffuseLightSampler", 0, *(m_apTargets[TARGET_DIFFUSE_LIGHTS]));
-		m_Compose.GetShader()->SetTexture("specularLightSampler", 1, *(m_apTargets[TARGET_SPECULAR_LIGHTS]));
+		m_Compose.GetShader()->SetTexture("diffuseLightSampler", 0, *(m_mapTargets["lights_diffuse"].getTexture()));
+		m_Compose.GetShader()->SetTexture("specularLightSampler", 1, *(m_mapTargets["lights_specular"].getTexture()));
 		m_Compose.GetShader()->SetTexture("shadowMap", 2, m_pShadowMap->GetTexture());
 
 		m_Compose.GetShader()->SetUniform("ambientColor", ambientColor.xyz);
@@ -594,7 +743,7 @@ void Rendering::renderBloom(void)
 	{
 		//
 		// bright pass
-		m_BloomPass.GetShader()->SetTexture("texSampler", 0, *(m_apTargets[TARGET_FINAL_HDR]));
+		m_BloomPass.GetShader()->SetTexture("texSampler", 0, *(m_mapTargets["HDR"].getTexture()));
 
 		m_pQuadMesh->draw();
 
@@ -602,7 +751,7 @@ void Rendering::renderBloom(void)
 		// blur horizontal
 		m_BloomPass.prepare_blur_h();
 
-		m_BloomPass.GetShader()->SetTexture("texSampler", 0, *(m_apTargets[TARGET_BLOOM1]));
+		m_BloomPass.GetShader()->SetTexture("texSampler", 0, *(m_mapTargets["bloom1"].getTexture()));
 
 		m_pQuadMesh->draw();
 
@@ -610,7 +759,7 @@ void Rendering::renderBloom(void)
 		// blur vertical
 		m_BloomPass.prepare_blur_v();
 
-		m_BloomPass.GetShader()->SetTexture("texSampler", 0, *(m_apTargets[TARGET_BLOOM2]));
+		m_BloomPass.GetShader()->SetTexture("texSampler", 0, *(m_mapTargets["bloom2"].getTexture()));
 
 		m_pQuadMesh->draw();
 	}
@@ -634,7 +783,7 @@ void Rendering::renderPostProcessEffects()
 
 	m_pFullscreenColorShader->SetAsCurrent();
 	{
-		m_pFullscreenColorShader->SetTexture("texSampler", 0, *(m_apTargets[TARGET_BLOOM1]));
+		m_pFullscreenColorShader->SetTexture("texSampler", 0, *(m_mapTargets["bloom1"].getTexture()));
 		m_pQuadMesh->draw();
 	}
 	glUseProgram(0);

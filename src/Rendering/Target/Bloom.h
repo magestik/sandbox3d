@@ -5,6 +5,8 @@
 #include <Vector.h>
 #include <Matrix.h>
 
+#include "Technique.h"
+
 class Shader;
 
 class Bloom
@@ -29,7 +31,7 @@ public:
 
 private:
 
-	GLuint m_uObject [2];
+	GLuint m_uObjects [2];
 
 	unsigned int m_uCurrentObject;
 

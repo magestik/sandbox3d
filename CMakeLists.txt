@@ -19,7 +19,9 @@ file(GLOB_RECURSE SHADERS_FILES src/*.frag src/*.vert)
 file(GLOB_RECURSE UI_FILES ui/*.ui)
 file(GLOB_RECURSE SRC_FILES src/*.cpp src/*.h src/*.inl include/*.h include/*.inl)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -fno-rtti -fno-exceptions -Wall -Wextra")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wshadow -Werror=return-local-addr -Werror=return-type")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -fno-rtti -fno-exceptions")
+#set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=address -fno-omit-frame-pointer ")
 
 # Qt
 set(CMAKE_AUTOMOC ON)
@@ -52,6 +54,9 @@ find_package(OpenGL REQUIRED)
 # Assimp
 find_package(assimp REQUIRED)
 
+# TinyXML
+find_package(TinyXML2 REQUIRED)
+
 # Compile application
 add_executable(${PROJECT_NAME} ${SRC_FILES} ${UI_FILES} ${SHADERS_FILES})
 
@@ -63,6 +68,8 @@ ENDIF()
 
 target_link_libraries(${PROJECT_NAME} "rt")
 
-target_link_libraries(${PROJECT_NAME} ${OPENGL_LIBRARIES} ${assimp_LIBRARIES} Qt5::Core Qt5::Widgets Qt5::Gui Qt5::OpenGL)
+target_link_libraries(${PROJECT_NAME} ${OPENGL_LIBRARIES} ${assimp_LIBRARIES} ${TINYXML2_LIBRARY} Qt5::Core Qt5::Widgets Qt5::Gui Qt5::OpenGL)
+
+add_custom_target(deploy_shaders ALL COMMAND ${PROJECT_SOURCE_DIR}/scripts/deploy_shaders.sh WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})
 
 add_test(NAME check_shaders COMMAND ${PROJECT_SOURCE_DIR}/scripts/check_shaders.sh WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/data/shaders)

@@ -5,7 +5,9 @@
 #include <Vector.h>
 #include <Matrix.h>
 
-class ShadowMap
+#include "Technique.h"
+
+class ShadowMap : public Pass
 {
 public:
 
@@ -18,7 +20,7 @@ public:
 	bool	begin	(void);
 	bool	end		(void);
 
-	GLuint	GetObject	(void) { return(m_uObject); }
+	GLuint	GetObject	(void) { return(m_uFramebufferObject); }
 
 	const GPU::Texture<GL_TEXTURE_2D> &	GetTexture	(void) { return(m_texture); }
 
@@ -29,8 +31,6 @@ protected:
 	void updateProjection(void);
 
 private:
-
-	GLuint m_uObject;
 
 	mat4x4 m_matProjection;
 

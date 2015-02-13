@@ -8,7 +8,7 @@
  * @brief ShadowMap::ShadowMap
  */
 ShadowMap::ShadowMap(void)
-: m_uObject(0)
+: Pass()
 , m_matProjection(1.0f)
 {
 	// ...
@@ -30,9 +30,9 @@ ShadowMap::~ShadowMap(void)
  */
 bool ShadowMap::init(unsigned int width, unsigned height)
 {
-	glGenFramebuffers(1, &m_uObject);
+	glGenFramebuffers(1, &m_uFramebufferObject);
 
-	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_uObject);
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_uFramebufferObject);
 
 	{
 		m_texture.init<GL_DEPTH_COMPONENT32F>(width, height);
@@ -66,7 +66,7 @@ bool ShadowMap::init(unsigned int width, unsigned height)
  */
 void ShadowMap::free(void)
 {
-	glDeleteFramebuffers(1, &m_uObject);
+	glDeleteFramebuffers(1, &m_uFramebufferObject);
 }
 
 /**
@@ -75,7 +75,7 @@ void ShadowMap::free(void)
  */
 bool ShadowMap::begin(void)
 {
-	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_uObject);
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_uFramebufferObject);
 	glDrawBuffer(GL_NONE);
 
 	glEnable(GL_DEPTH_TEST);

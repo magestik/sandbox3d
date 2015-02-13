@@ -5,9 +5,11 @@
 #include <Vector.h>
 #include <Matrix.h>
 
+#include "Technique.h"
+
 class Shader;
 
-class Final
+class Final : public Pass
 {
 public:
 
@@ -20,12 +22,11 @@ public:
 	bool	begin	(const vec4 & clearColor);
 	bool	end		(void);
 
-	GLuint	GetObject(void) { return(m_uObject); }
+	GLuint	GetObject(void) { return(m_uFramebufferObject); }
 
-    Shader * GetShader(void) { return(m_pShader); }
+	Shader * GetShader(void) { return(m_pShader); }
+
 private:
 
-	GLuint m_uObject;
-
-    Shader * m_pShader;
+	Shader * m_pShader;
 };

@@ -5,7 +5,9 @@
 #include <Vector.h>
 #include <Matrix.h>
 
-class LightAccumBuffer
+#include "Technique.h"
+
+class LightAccumBuffer : public Pass
 {
 public:
 
@@ -18,10 +20,6 @@ public:
 	bool	begin	(void);
 	bool	end		(void);
 
-	GLuint	GetObject(void) { return(m_uObject); }
-
-private:
-
-	GLuint m_uObject;
+	GLuint	GetObject(void) { return(m_uFramebufferObject); }
 
 };

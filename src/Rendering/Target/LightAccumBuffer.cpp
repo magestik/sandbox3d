@@ -6,7 +6,7 @@
  * @brief LightAccumBuffer::LightAccumBuffer
  */
 LightAccumBuffer::LightAccumBuffer()
-: m_uObject(0)
+: Pass()
 {
 	// ...
 }
@@ -26,9 +26,9 @@ LightAccumBuffer::~LightAccumBuffer()
  */
 bool LightAccumBuffer::init(const GPU::Texture<GL_TEXTURE_2D> * pTextureDiffuse, const GPU::Texture<GL_TEXTURE_2D> * pTextureSpecular)
 {
-	glGenFramebuffers(1, &m_uObject);
+	glGenFramebuffers(1, &m_uFramebufferObject);
 
-	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_uObject);
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_uFramebufferObject);
 
 	glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, pTextureDiffuse->GetObject(), 0);
 	glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, pTextureSpecular->GetObject(), 0);
@@ -46,7 +46,7 @@ bool LightAccumBuffer::init(const GPU::Texture<GL_TEXTURE_2D> * pTextureDiffuse,
  */
 void LightAccumBuffer::free(void)
 {
-	glDeleteFramebuffers(1, &m_uObject);
+	glDeleteFramebuffers(1, &m_uFramebufferObject);
 }
 
 /**
@@ -55,7 +55,7 @@ void LightAccumBuffer::free(void)
  */
 bool LightAccumBuffer::begin(void)
 {
-	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_uObject);
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_uFramebufferObject);
 
 	GLenum buffers [] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1 };
 	glDrawBuffers(2, buffers);
