@@ -20,11 +20,12 @@ class Pass
 
 public:
 
-	Pass();
-	Pass(const tinyxml2::XMLElement * element, const Rendering & rendering);
+	explicit	Pass			(void);
+	explicit	Pass			(const tinyxml2::XMLElement * element, const Rendering & rendering);
+	virtual		~Pass			(void);
 
-	bool	begin	(void);
-	void	end		(void);
+	bool		Begin			(void);
+	void		End				(void);
 
 	void		SetUniform		(const char * name, const mat4x4 & m);
 	void		SetUniform		(const char * name, const mat3x3 & m);
@@ -35,6 +36,7 @@ public:
 	void		SetUniform		(const char * name, const vec2 & v);
 
 	void		SetUniform		(const char * name, int n);
+	void		SetUniform		(const char * name, unsigned int n);
 	void		SetUniform		(const char * name, float n);
 
 	template<GLenum D>

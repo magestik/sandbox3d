@@ -18,6 +18,7 @@
 #include "Target/ShadowMap.h"
 #include "Target/AverageLuminance.h"
 
+#include "Technique.h"
 #include "RenderTexture.h"
 
 // theses maps contains all shaders, compiled at launch time
@@ -80,9 +81,8 @@ protected:
 
 	void	initializePipelineFromXML	(const char * filename);
 	void	initializeTargets			(const tinyxml2::XMLElement * targets);
-	void	initializePipeline			(const tinyxml2::XMLElement * pipeline);
+	void	initializeTechniques		(const tinyxml2::XMLElement * techniques);
 
-	void	compileShaders				(void);
 	void	generateMeshes				(void);
 
 	void    computeAverageLum           (void);
@@ -116,15 +116,6 @@ private:
 
 	ShadowMap * m_pShadowMap;
 	Light::Directionnal * m_pLight;
-
-	Shader *	m_pDepthOnlyPassShader;
-
-	Shader *	m_pFullscreenDepthShader;
-	Shader *	m_pFullscreenNormalShader;
-	Shader *	m_pFullscreenColorShader;
-	Shader *	m_pFullscreenExpShader;
-
-	Shader *	m_pToneMappingShader;
 
 	SubMesh *	m_pQuadMesh;
 

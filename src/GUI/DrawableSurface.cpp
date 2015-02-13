@@ -5,7 +5,6 @@
 #include <QDir>
 #include <QMessageBox>
 #include <QMouseEvent>
-#include <QSplashScreen>
 #include <QFileSystemWatcher>
 
 #include <QDebug>
@@ -23,8 +22,6 @@
 
 #define _min(x, y) ((x < y) ? x : y)
 #define _max(x, y) ((x > y) ? x : y)
-
-extern QSplashScreen * g_pSplashScreen;
 
 /**
  * @brief drawable::drawable
@@ -107,7 +104,7 @@ void DrawableSurface::DebugDepth()
 void DrawableSurface::DebugShadows()
 {
 	m_eRenderType = Rendering::SHADOWS;
-    update();
+	update();
 }
 
 /**
@@ -116,8 +113,8 @@ void DrawableSurface::DebugShadows()
  */
 void DrawableSurface::DebugLuminance(int num)
 {
-    m_eRenderType = (Rendering::ERenderType)(Rendering::LUMINANCE1 + (num - 1));
-    update();
+	m_eRenderType = (Rendering::ERenderType)(Rendering::LUMINANCE1 + (num - 1));
+	update();
 }
 
 /**
@@ -125,8 +122,8 @@ void DrawableSurface::DebugLuminance(int num)
  */
 void DrawableSurface::DebugBloom()
 {
-    m_eRenderType = Rendering::BLOOM;
-    update();
+	m_eRenderType = Rendering::BLOOM;
+	update();
 }
 
 /**
@@ -154,12 +151,12 @@ void DrawableSurface::DebugFinal()
 void DrawableSurface::initializeGL(void)
 {
 	GLint v;
-    glGetIntegerv(GL_CONTEXT_FLAGS, &v);
-    //assert (v & GL_CONTEXT_FLAG_DEBUG_BIT);
+	glGetIntegerv(GL_CONTEXT_FLAGS, &v);
+	//assert (v & GL_CONTEXT_FLAG_DEBUG_BIT);
 
-    glDisable(GL_DEPTH_TEST);
-    glDisable(GL_CULL_FACE);
-    glDisable(GL_BLEND);
+	glDisable(GL_DEPTH_TEST);
+	glDisable(GL_CULL_FACE);
+	glDisable(GL_BLEND);
 
 	glGenQueries(1, &m_query);
 
@@ -182,20 +179,6 @@ void DrawableSurface::initializeGL(void)
 		t.Stop();
 
 		printf("Shaders loading time = %f ms\n", t.getElapsedTimeInMs());
-	}
-
-	{
-		Timer t;
-
-		glFinish();
-		t.Start();
-
-		loadSprites();
-
-		//glFinish(); // remove this ?
-		t.Stop();
-
-		printf("Sprites loading time = %f ms\n", t.getElapsedTimeInMs());
 	}
 
 	m_renderer.onInitializeComplete();
@@ -316,8 +299,6 @@ void DrawableSurface::loadShaders(void)
 
 	for (QString & filename : list)
 	{
-		g_pSplashScreen->showMessage("Loading shader '" + filename + "' ...");
-
 		QFile f(dir.filePath(filename));
 		f.open(QFile::ReadOnly);
 		QByteArray source = f.readAll();
@@ -326,14 +307,14 @@ void DrawableSurface::loadShaders(void)
 		{
 			GPU::Shader<GL_VERTEX_SHADER> * vs = new GPU::Shader<GL_VERTEX_SHADER>();
 			successful &= vs->compileFromSource(source.data());
-            //assert(successful);
+			//assert(successful);
 			g_VertexShaders.insert(std::pair<std::string, GPU::Shader<GL_VERTEX_SHADER> *>(filename.toStdString(), vs));
 		}
 		else if (filename.endsWith("frag"))
 		{
 			GPU::Shader<GL_FRAGMENT_SHADER> * fs = new GPU::Shader<GL_FRAGMENT_SHADER>();
 			successful &= fs->compileFromSource(source.data());
-            //assert(successful);
+			//assert(successful);
 			g_FragmentShaders.insert(std::pair<std::string, GPU::Shader<GL_FRAGMENT_SHADER> *>(filename.toStdString(), fs));
 		}
 
@@ -381,7 +362,6 @@ void DrawableSurface::loadSprites()
 
 	for (QString & filename : list)
 	{
-		g_pSplashScreen->showMessage("Loading sprite '" + filename + "' ...");
 #if USE_PBO == 0 || USE_PBO == 1
 		QImage img(dir.filePath(filename));
 		QImage tex = QGLWidget::convertToGLFormat(img);

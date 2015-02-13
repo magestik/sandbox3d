@@ -1,10 +1,10 @@
 #pragma once
 
-#include "Pass.h"
-
 #include <map>
 #include <vector>
 #include <string>
+
+#include <GPU.h>
 
 namespace tinyxml2
 {
@@ -12,6 +12,7 @@ namespace tinyxml2
 }
 
 class Rendering;
+class Pass;
 
 class Technique
 {
@@ -27,16 +28,10 @@ public:
 	void	EndPass		(void);
 
 	template<typename T>
-	void SetUniform (const char * name, const T & value)
-	{
-		m_pCurrentPass->SetUniform(name, value);
-	}
+	void SetUniform (const char * name, const T & value);
 
 	template<GLenum D>
-	void SetTexture (const char * name, unsigned int binding, const GPU::Texture<D> & texture)
-	{
-		m_pCurrentPass->SetTexture(name, binding, texture);
-	}
+	void SetTexture (const char * name, unsigned int binding, const GPU::Texture<D> & texture);
 
 protected:
 

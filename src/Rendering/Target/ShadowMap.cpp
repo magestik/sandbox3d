@@ -2,6 +2,8 @@
 
 #include "../utils.inl"
 
+#include "../Rendering.h"
+
 #include <assert.h>
 
 /**
@@ -10,6 +12,7 @@
 ShadowMap::ShadowMap(void)
 : Pass()
 , m_matProjection(1.0f)
+, m_pShader(nullptr)
 {
 	// ...
 }
@@ -30,6 +33,8 @@ ShadowMap::~ShadowMap(void)
  */
 bool ShadowMap::init(unsigned int width, unsigned height)
 {
+	m_pShader = new Shader(g_VertexShaders["depth_only.vert"], g_FragmentShaders["depth_only.frag"]);
+
 	glGenFramebuffers(1, &m_uFramebufferObject);
 
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_uFramebufferObject);
@@ -73,7 +78,7 @@ void ShadowMap::free(void)
  * @brief ShadowMap::enable
  * @return
  */
-bool ShadowMap::begin(void)
+bool ShadowMap::Begin(void)
 {
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_uFramebufferObject);
 	glDrawBuffer(GL_NONE);
@@ -85,6 +90,8 @@ bool ShadowMap::begin(void)
 
 	glClear(GL_DEPTH_BUFFER_BIT);
 
+	m_pShader->SetAsCurrent();
+
 	return(true);
 }
 
@@ -92,8 +99,10 @@ bool ShadowMap::begin(void)
  * @brief ShadowMap::disable
  * @return
  */
-bool ShadowMap::end(void)
+bool ShadowMap::End(void)
 {
+	glUseProgram(0);
+
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 	glDrawBuffer(GL_BACK);
 

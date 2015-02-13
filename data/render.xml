@@ -11,6 +11,7 @@
 	</targets>
 
 	<pipeline>
+
 		<technique name="geometry">
 			<enable cap="GL_DEPTH_TEST" />
 			<pass name="simple">
@@ -26,6 +27,7 @@
 				<output texture="normals" attachment="GL_COLOR_ATTACHMENT0" />
 			</pass>
 		</technique>
+
 		<technique name="lights">
 			<enable cap="GL_BLEND" />
 			<pass name="directional">
@@ -35,8 +37,8 @@
 				<output texture="lights_specular" attachment="GL_COLOR_ATTACHMENT1" />
 			</pass>
 		</technique>
+
 		<technique name="bloom">
-			<enable cap="GL_BLEND" />
 			<pass name="bright">
 				<shader name="fullscreen.vert" type="GL_VERTEX_SHADER" />
 				<shader name="fullscreen_bright.frag" type="GL_FRAGMENT_SHADER" />
@@ -53,6 +55,7 @@
 				<output texture="bloom1" attachment="GL_COLOR_ATTACHMENT0" />
 			</pass>
 		</technique>
+
 		<technique name="compose">
 			<enable cap="GL_DEPTH_TEST" />
 			<pass name="default">
@@ -62,6 +65,48 @@
 				<output texture="HDR" attachment="GL_COLOR_ATTACHMENT0" />
 			</pass>
 		</technique>
+
+		<technique name="tonemapping">
+			<pass name="with_burnout">
+				<shader name="fullscreen.vert" type="GL_VERTEX_SHADER" />
+				<shader name="tonemapping.frag" type="GL_FRAGMENT_SHADER" />
+			</pass>
+		</technique>
+
+		<technique name="tonemapping">
+			<pass name="with_burnout">
+				<shader name="fullscreen.vert" type="GL_VERTEX_SHADER" />
+				<shader name="tonemapping.frag" type="GL_FRAGMENT_SHADER" />
+			</pass>
+		</technique>
+
+		<technique name="blend">
+			<enable cap="GL_BLEND" />
+			<pass name="bloom">
+				<shader name="fullscreen.vert" type="GL_VERTEX_SHADER" />
+				<shader name="fullscreen_color.frag" type="GL_FRAGMENT_SHADER" />
+			</pass>
+		</technique>
+
+		<technique name="debug">
+			<pass name="depth">
+				<shader name="fullscreen.vert" type="GL_VERTEX_SHADER" />
+				<shader name="fullscreen_depth.frag" type="GL_FRAGMENT_SHADER" />
+			</pass>
+			<pass name="normal">
+				<shader name="fullscreen.vert" type="GL_VERTEX_SHADER" />
+				<shader name="fullscreen_normal.frag" type="GL_FRAGMENT_SHADER" />
+			</pass>
+			<pass name="color">
+				<shader name="fullscreen.vert" type="GL_VERTEX_SHADER" />
+				<shader name="fullscreen_color.frag" type="GL_FRAGMENT_SHADER" />
+			</pass>
+			<pass name="luminance">
+				<shader name="fullscreen.vert" type="GL_VERTEX_SHADER" />
+				<shader name="fullscreen_exp.frag" type="GL_FRAGMENT_SHADER" />
+			</pass>
+		</technique>
+
 	</pipeline>
 
 </render>

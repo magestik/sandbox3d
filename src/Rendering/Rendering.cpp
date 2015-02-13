@@ -5,6 +5,7 @@
 #include "utils.inl"
 
 #include <tinyxml2.h>
+#include "StrToGL.h"
 
 using namespace tinyxml2;
 
@@ -29,60 +30,6 @@ static inline unsigned int toPOT(unsigned int v)
 	}
 
 	return(r);
-}
-
-static inline GLenum strToFormat(const char * strFormat)
-{
-	if (!strcmp(strFormat, "GL_RGBA16F"))
-	{
-		return(GL_RGBA16F);
-	}
-	else if (!strcmp(strFormat, "GL_RGBA32F"))
-	{
-		return(GL_RGBA32F);
-	}
-	else if (!strcmp(strFormat, "GL_RGB10_A2​"))
-	{
-		return(GL_RGB10_A2);
-	}
-	else if (!strcmp(strFormat, "GL_RGB10_A2UI​"))
-	{
-		return(GL_RGB10_A2UI);
-	}
-	else if (!strcmp(strFormat, "GL_R11F_G11F_B10F"))
-	{
-		return(GL_R11F_G11F_B10F);
-	}
-	else if (!strcmp(strFormat, "GL_DEPTH_COMPONENT16"))
-	{
-		return(GL_DEPTH_COMPONENT16);
-	}
-	else if (!strcmp(strFormat, "GL_DEPTH_COMPONENT24"))
-	{
-		return(GL_DEPTH_COMPONENT24);
-	}
-	else if (!strcmp(strFormat, "GL_DEPTH_COMPONENT32F"))
-	{
-		return(GL_DEPTH_COMPONENT32F);
-	}
-	else if (!strcmp(strFormat, "GL_DEPTH24_STENCIL8"))
-	{
-		return(GL_DEPTH24_STENCIL8);
-	}
-	else if (!strcmp(strFormat, "GL_DEPTH32F_STENCIL8"))
-	{
-		return(GL_DEPTH32F_STENCIL8);
-	}
-	else if (!strcmp(strFormat, "GL_STENCIL_INDEX8"))
-	{
-		return(GL_STENCIL_INDEX8);
-	}
-	else
-	{
-		assert(false);
-	}
-
-	return(0);
 }
 
 /**
@@ -117,7 +64,6 @@ void Rendering::onInitializeComplete()
 		m_pShadowMap->init(SHADOW_MAP_SIZE, SHADOW_MAP_SIZE);
 	}
 
-	compileShaders();
 	generateMeshes();
 
 	glGenSamplers(1, &m_uSampler);
@@ -146,7 +92,7 @@ void Rendering::initializePipelineFromXML(const char * filename)
 	onResize(m_uWidth, m_uHeight);
 
 	const XMLElement * pipeline = root->FirstChildElement("pipeline");
-	initializePipeline(pipeline);
+	initializeTechniques(pipeline);
 }
 
 /**
@@ -182,7 +128,7 @@ void Rendering::initializeTargets(const XMLElement * targets)
  * @brief Rendering::initializePipeline
  * @param pipeline
  */
-void Rendering::initializePipeline(const XMLElement * pipeline)
+void Rendering::initializeTechniques(const XMLElement * pipeline)
 {
 	const XMLElement * pass = pipeline->FirstChildElement("technique");
 
@@ -194,21 +140,6 @@ void Rendering::initializePipeline(const XMLElement * pipeline)
 
 		pass = pass->NextSiblingElement("technique");
 	}
-}
-
-/**
- * @brief Compile all needed shaders
- */
-void Rendering::compileShaders()
-{
-	m_pDepthOnlyPassShader		= new Shader(g_VertexShaders["depth_only.vert"], g_FragmentShaders["depth_only.frag"]);
-
-	m_pFullscreenDepthShader	= new Shader(g_VertexShaders["fullscreen.vert"], g_FragmentShaders["fullscreen_depth.frag"]);
-	m_pFullscreenNormalShader	= new Shader(g_VertexShaders["fullscreen.vert"], g_FragmentShaders["fullscreen_normal.frag"]);
-	m_pFullscreenColorShader	= new Shader(g_VertexShaders["fullscreen.vert"], g_FragmentShaders["fullscreen_color.frag"]);
-	m_pFullscreenExpShader      = new Shader(g_VertexShaders["fullscreen.vert"], g_FragmentShaders["fullscreen_exp.frag"]);
-
-	m_pToneMappingShader        = new Shader(g_VertexShaders["fullscreen.vert"], g_FragmentShaders["tonemapping.frag"]);
 }
 
 /**
@@ -339,18 +270,34 @@ void Rendering::onUpdate(const mat4x4 & mView, const vec4 & clearColor, const ve
 	computeAverageLum();
 
 	//
-	// Draw to screen
-	//
-
-	renderIntermediateToScreen(eRenderType);
-
-	//
-	// Post process
+	// Render to Screen
 	//
 
 	if (eRenderType == FINAL)
 	{
+		glViewport(0, 0, m_uWidth, m_uHeight);
+
+		Technique & ToneMappingTechnique = m_mapTechnique["tonemapping"];
+
+		ToneMappingTechnique.BeginPass("with_burnout");
+		{
+			float avLum = m_AvLum.getAverage();
+			float white2 = m_AvLum.getMax2();
+			ToneMappingTechnique.SetTexture("texSampler", 0, *(m_mapTargets["HDR"].getTexture()));
+			ToneMappingTechnique.SetUniform("avLum", avLum);
+			ToneMappingTechnique.SetUniform("white2", white2);
+			m_pQuadMesh->draw();
+		}
+		ToneMappingTechnique.EndPass();
+
+		//
+		// post process
+
 		renderPostProcessEffects();
+	}
+	else
+	{
+		renderIntermediateToScreen(eRenderType);
 	}
 }
 
@@ -408,19 +355,17 @@ void Rendering::renderSceneToShadowMap(void)
 {
 	glViewport(0, 0, SHADOW_MAP_SIZE, SHADOW_MAP_SIZE);
 
-	m_pShadowMap->begin();
+	m_pShadowMap->Begin();
 
 	{
 		mat4x4 mDepthView = _lookAt(vec3(0,0,0), m_pLight->GetDirection(), vec3(0.0f, -1.0f, 0.0f));
 		mat4x4 mDepthViewProjection = m_pShadowMap->GetProjection() * mDepthView;
 
-		m_pDepthOnlyPassShader->SetAsCurrent();
-
 		for (Mesh::Instance & object : m_aObjects)
 		{
 			mat4x4 MVP = mDepthViewProjection * object.transformation;
 
-			m_pDepthOnlyPassShader->SetUniform("ModelViewProjection", MVP);
+			m_pShadowMap->GetShader()->SetUniform("ModelViewProjection", MVP);
 
 			// TODO : remove loop and directly use glDrawElements on the full buffer
 			for (SubMesh * m : object.getDrawCommands())
@@ -432,7 +377,7 @@ void Rendering::renderSceneToShadowMap(void)
 		glUseProgram(0);
 	}
 
-	m_pShadowMap->end();
+	m_pShadowMap->End();
 }
 
 /**
@@ -443,125 +388,102 @@ void Rendering::renderIntermediateToScreen(ERenderType eRenderType)
 {
 	glViewport(0, 0, m_uWidth, m_uHeight);
 
+	Technique & DebugTechnique = m_mapTechnique["debug"];
+
+	DebugTechnique.Begin();
+
 	switch (eRenderType)
 	{
-		case FINAL:
-		{
-			m_pToneMappingShader->SetAsCurrent();
-			{
-				float avLum = m_AvLum.getAverage();
-				float white2 = m_AvLum.getMax2();
-				m_pToneMappingShader->SetTexture("texSampler", 0, *(m_mapTargets["HDR"].getTexture()));
-				m_pToneMappingShader->SetUniform("avLum", avLum);
-				m_pToneMappingShader->SetUniform("white2", white2);
-				m_pQuadMesh->draw();
-			}
-			glUseProgram(0);
-		}
-		break;
-
 		case DIFFUSE_LIGHTS:
 		{
-#if DISABLE_BLIT
-			m_pFullscreenColorShader->SetAsCurrent();
+			DebugTechnique.BeginPass("color");
 			{
-				m_pFullscreenColorShader->SetTexture("texSampler", 0, *(m_mapTargets["lights_diffuse"].getTexture()));
+				DebugTechnique.SetTexture("texSampler", 0, *(m_mapTargets["lights_diffuse"].getTexture()));
 				m_pQuadMesh->draw();
 			}
-			glUseProgram(0);
-#else
-			glBindFramebuffer(GL_READ_FRAMEBUFFER, m_LightAccumBuffer.GetObject());
-			glReadBuffer(GL_COLOR_ATTACHMENT0);
-			glBlitFramebuffer(0, 0, m_uWidth, m_uHeight, 0, 0, m_uWidth, m_uHeight, GL_COLOR_BUFFER_BIT, GL_NEAREST);
-			glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
-#endif
+			DebugTechnique.EndPass();
 		}
 		break;
 
 		case SPECULAR_LIGHTS:
 		{
-#if DISABLE_BLIT
-			m_pFullscreenColorShader->SetAsCurrent();
+			DebugTechnique.BeginPass("color");
 			{
-				m_pFullscreenColorShader->SetTexture("texSampler", 0, *(m_mapTargets["lights_specular"].getTexture()));
+				DebugTechnique.SetTexture("texSampler", 0, *(m_mapTargets["lights_specular"].getTexture()));
 				m_pQuadMesh->draw();
 			}
-			glUseProgram(0);
-#else
-			glBindFramebuffer(GL_READ_FRAMEBUFFER, m_LightAccumBuffer.GetObject());
-			glReadBuffer(GL_COLOR_ATTACHMENT1);
-			glBlitFramebuffer(0, 0, m_uWidth, m_uHeight, 0, 0, m_uWidth, m_uHeight, GL_COLOR_BUFFER_BIT, GL_NEAREST);
-			glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
-#endif
+			DebugTechnique.EndPass();
 		}
 		break;
 
 		case NORMAL_BUFFER:
 		{
-			m_pFullscreenNormalShader->SetAsCurrent();
+			DebugTechnique.BeginPass("normal");
 			{
-				m_pFullscreenNormalShader->SetTexture("texSampler", 0, *(m_mapTargets["normals"].getTexture()));
+				DebugTechnique.SetTexture("texSampler", 0, *(m_mapTargets["normals"].getTexture()));
 				m_pQuadMesh->draw();
 			}
-			glUseProgram(0);
+			DebugTechnique.EndPass();
 		}
 		break;
 
 		case DEPTH:
 		{
-			m_pFullscreenDepthShader->SetAsCurrent();
+			DebugTechnique.BeginPass("depth");
 			{
-				m_pFullscreenDepthShader->SetTexture("texSampler", 0, *(m_mapTargets["depth"].getTexture()));
+				DebugTechnique.SetTexture("texSampler", 0, *(m_mapTargets["depth"].getTexture()));
 				m_pQuadMesh->draw();
 			}
-			glUseProgram(0);
+			DebugTechnique.EndPass();
 		}
 		break;
 
 		case SHADOWS:
 		{
-			m_pFullscreenDepthShader->SetAsCurrent();
+			DebugTechnique.BeginPass("depth");
 			{
-				m_pFullscreenDepthShader->SetTexture("texSampler", 0, m_pShadowMap->GetTexture());
+				DebugTechnique.SetTexture("texSampler", 0, m_pShadowMap->GetTexture());
 				m_pQuadMesh->draw();
 			}
-			glUseProgram(0);
+			DebugTechnique.EndPass();
 		}
 		break;
 
 		case LUMINANCE1:
 		{
-			m_pFullscreenExpShader->SetAsCurrent();
+			DebugTechnique.BeginPass("luminance");
 			{
-				m_pFullscreenExpShader->SetTexture("texSampler", 0, *(m_apTargets[TARGET_LUMINANCE1]));
+				DebugTechnique.SetTexture("texSampler", 0, *(m_apTargets[TARGET_LUMINANCE1]));
 				m_pQuadMesh->draw();
 			}
-			glUseProgram(0);
+			DebugTechnique.EndPass();
 		}
 		break;
 
 		case LUMINANCE2:
 		{
-			m_pFullscreenExpShader->SetAsCurrent();
+			DebugTechnique.BeginPass("luminance");
 			{
-				m_pFullscreenExpShader->SetTexture("texSampler", 0, *(m_apTargets[TARGET_LUMINANCE2]));
+				DebugTechnique.SetTexture("texSampler", 0, *(m_apTargets[TARGET_LUMINANCE2]));
 				m_pQuadMesh->draw();
 			}
-			glUseProgram(0);
+			DebugTechnique.EndPass();
 		}
 		break;
 
 		case BLOOM:
 		{
-			m_pFullscreenColorShader->SetAsCurrent();
+			DebugTechnique.BeginPass("color");
 			{
-				m_pFullscreenColorShader->SetTexture("texSampler", 0, *(m_mapTargets["bloom1"].getTexture()));
+				DebugTechnique.SetTexture("texSampler", 0, *(m_mapTargets["bloom1"].getTexture()));
 				m_pQuadMesh->draw();
 			}
-			glUseProgram(0);
+			DebugTechnique.EndPass();
 		}
 		break;
 	}
+
+	DebugTechnique.End();
 }
 
 /**
@@ -794,24 +716,28 @@ void Rendering::renderPostProcessEffects()
 {
 	glViewport(0, 0, m_uWidth, m_uHeight);
 
-	glEnable(GL_BLEND);
+	Technique & BlendTechnique = m_mapTechnique["blend"];
+
+	BlendTechnique.Begin();
+
 	glBlendFunc(GL_ONE, GL_ONE);
 
 	glDepthMask(GL_FALSE);
 
 	glBindSampler(0, m_uSampler);
 
-	m_pFullscreenColorShader->SetAsCurrent();
+	BlendTechnique.BeginPass("bloom");
 	{
-		m_pFullscreenColorShader->SetTexture("texSampler", 0, *(m_mapTargets["bloom1"].getTexture()));
+		BlendTechnique.SetTexture("texSampler", 0, *(m_mapTargets["bloom1"].getTexture()));
 		m_pQuadMesh->draw();
 	}
-	glUseProgram(0);
+	BlendTechnique.EndPass();
 
 	glBindSampler(0, 0);
 
 	glDepthMask(GL_TRUE);
 
-	glDisable(GL_BLEND);
 	glBlendFunc(GL_ONE, GL_ZERO);
+
+	BlendTechnique.End();
 }

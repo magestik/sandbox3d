@@ -5,7 +5,7 @@
 #include <Vector.h>
 #include <Matrix.h>
 
-#include "Technique.h"
+#include "../Pass.h"
 
 class ShadowMap : public Pass
 {
@@ -17,14 +17,16 @@ public:
 	bool	init	(unsigned int width, unsigned height);
 	void	free	(void);
 
-	bool	begin	(void);
-	bool	end		(void);
+	bool	Begin	(void);
+	bool	End		(void);
 
 	GLuint	GetObject	(void) { return(m_uFramebufferObject); }
 
 	const GPU::Texture<GL_TEXTURE_2D> &	GetTexture	(void) { return(m_texture); }
 
 	const mat4x4 &	GetProjection (void) const { return(m_matProjection); }
+
+	Shader * GetShader(void) { return(m_pShader); }
 
 protected:
 
@@ -33,6 +35,8 @@ protected:
 private:
 
 	mat4x4 m_matProjection;
+
+	Shader * m_pShader;
 
 	GPU::Texture<GL_TEXTURE_2D> m_texture;
 
