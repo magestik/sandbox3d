@@ -40,15 +40,15 @@ Configured with Render.xml
 #### Depth Control
 
 By default, depth write and depth test is disabled.
-
+```
 <depth mask="GL_BOOLEAN" func="GL_ENUM" />
-
+```
 Enable depth test and compare using 'func' (see glDepthFunc). Depth write is enabled if 'mask' is not GL_FALSE (see glDepthMask).
 
 #### Blend Control
 
 By default, blending is disabled.
-
-<blend sfactor="GL_ENUM" dfactor="GL_ENUM" equation="GL_DEPTH_FUNC" />
-
+```
+<blend sfactor="GL_ENUM" dfactor="GL_ENUM" equation="GL_ENUM" />
+```
 Enable blending and specify equation (see glBlendFunc) and factors (see glBlendEquation).
