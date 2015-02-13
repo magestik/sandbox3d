@@ -11,8 +11,7 @@ DEST=data/shaders/
 for f in $FRAG $VERT
 do
 	name=$(basename "$f")
-	echo "#version 330" > $DEST/$name
-	cpp -P -x c++ -nostdinc -nostdinc++ $f >> $DEST/$name
+	cpp -P -x c++ -nostdinc -nostdinc++ $f | sed 's/^#pragma GLSL(\(.*\)) \(.*\)$/#\1 \2/' > $DEST/$name
 done
 
 cd build

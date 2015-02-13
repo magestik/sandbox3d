@@ -52,3 +52,12 @@ By default, blending is disabled.
 <blend sfactor="GL_ENUM" dfactor="GL_ENUM" equation="GL_ENUM" />
 ```
 Enable blending and specify equation (see glBlendFunc) and factors (see glBlendEquation).
+
+#### Enable
+
+By default everything is disabled.
+```
+<enable cap="GL_ENUM />
+```
+This enable a GL feature (see glEnable).
+WARNING: This should not be used directly ! This is just an helper for functionnality not yet supported in this file.

@@ -40,17 +40,29 @@ Pass::Pass(const XMLElement * element, const Rendering & rendering)
 
 			while (NULL != output)
 			{
-				const char * texture = output->Attribute("texture");
+				const char * texture	= output->Attribute("texture");
+				const char * buffer		= output->Attribute("buffer");
 
-				const char * attachment = output->Attribute("attachment");
+				assert(!(nullptr != texture && nullptr != buffer));
 
-				GLenum a = strToAttachment(attachment);
-
-				glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, a, GL_TEXTURE_2D, rendering.GetRenderTexture(texture)->GetObject(), 0);
-
-				if (GL_DEPTH_ATTACHMENT != a && GL_DEPTH_STENCIL_ATTACHMENT != a && GL_STENCIL_ATTACHMENT != a)
+				if (nullptr != texture)
 				{
-					m_aDrawBuffers.push_back(a);
+					const char * attachment = output->Attribute("attachment");
+
+					assert(nullptr != attachment);
+
+					GLenum a = strToAttachment(attachment);
+
+					glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, a, GL_TEXTURE_2D, rendering.GetRenderTexture(texture)->GetObject(), 0);
+
+					if (GL_DEPTH_ATTACHMENT != a && GL_DEPTH_STENCIL_ATTACHMENT != a && GL_STENCIL_ATTACHMENT != a)
+					{
+						m_aDrawBuffers.push_back(a);
+					}
+				}
+				else if (nullptr != buffer)
+				{
+
 				}
 
 				output = output->NextSiblingElement("output");

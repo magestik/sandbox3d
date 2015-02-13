@@ -1,3 +1,5 @@
+#pragma GLSL(version) 330
+
 #include "../Interface.h"
 
 uniform mat4x4 ModelViewProjection;
