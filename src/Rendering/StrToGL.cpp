@@ -155,3 +155,131 @@ GLenum strToFormat(const char * strFormat)
 
 	return(0);
 }
+
+/**
+ * @brief strToDepthMask
+ * @param strDepthMask
+ * @return
+ */
+GLenum strToDepthMask(const char * strDepthMask)
+{
+	if (!strcmp(strDepthMask, "GL_TRUE"))
+	{
+		return(GL_TRUE);
+	}
+	else if (!strcmp(strDepthMask, "GL_FALSE"))
+	{
+		return(GL_FALSE);
+	}
+	else
+	{
+		assert(false);
+	}
+
+	return(0);
+}
+
+/**
+ * @brief strToDepthFunc
+ * @param strBoolean
+ * @return
+ */
+GLenum strToDepthFunc(const char * strDepthFunc)
+{
+	if (!strcmp(strDepthFunc, "GL_EQUAL"))
+	{
+		return(GL_EQUAL);
+	}
+	else if (!strcmp(strDepthFunc, "GL_NOTEQUAL"))
+	{
+		return(GL_NOTEQUAL);
+	}
+	else if (!strcmp(strDepthFunc, "GL_GEQUAL"))
+	{
+		return(GL_GEQUAL);
+	}
+	else if (!strcmp(strDepthFunc, "GL_LEQUAL"))
+	{
+		return(GL_LEQUAL);
+	}
+	else if (!strcmp(strDepthFunc, "GL_GREATER"))
+	{
+		return(GL_GREATER);
+	}
+	else if (!strcmp(strDepthFunc, "GL_LESS"))
+	{
+		return(GL_LESS);
+	}
+	else if (!strcmp(strDepthFunc, "GL_NEVER"))
+	{
+		return(GL_NEVER);
+	}
+	else if (!strcmp(strDepthFunc, "GL_AWAYS"))
+	{
+		return(GL_ALWAYS);
+	}
+	else
+	{
+		assert(false);
+	}
+
+	return(0);
+}
+
+/**
+ * @brief strToBlendEquation
+ * @param strBlendEquation
+ * @return
+ */
+GLenum strToBlendEquation(const char * strBlendEquation)
+{
+	if (!strcmp(strBlendEquation, "GL_FUNC_ADD"))
+	{
+		return(GL_FUNC_ADD);
+	}
+	else if (!strcmp(strBlendEquation, "GL_FUNC_SUBTRACT"))
+	{
+		return(GL_FUNC_SUBTRACT);
+	}
+	else if (!strcmp(strBlendEquation, "GL_FUNC_REVERSE_SUBTRACT"))
+	{
+		return(GL_FUNC_REVERSE_SUBTRACT);
+	}
+	else if (!strcmp(strBlendEquation, "GL_MIN"))
+	{
+		return(GL_MIN);
+	}
+	else if (!strcmp(strBlendEquation, "GL_MAX"))
+	{
+		return(GL_MAX);
+	}
+	else
+	{
+		assert(false);
+	}
+
+	return(0);
+}
+
+/**
+ * @brief strToBlendFunc
+ * @param strBlendFunc
+ * @return
+ */
+GLenum strToBlendFunc(const char * strBlendFunc)
+{
+	if (!strcmp(strBlendFunc, "GL_ONE"))
+	{
+		return(GL_ONE);
+	}
+	else if (!strcmp(strBlendFunc, "GL_ZERO"))
+	{
+		return(GL_ZERO);
+	}
+	else
+	{
+		assert(false);
+	}
+
+	return(0);
+}

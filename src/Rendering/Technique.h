@@ -14,6 +14,38 @@ namespace tinyxml2
 class Rendering;
 class Pass;
 
+struct DepthControl
+{
+	DepthControl(void)
+	{
+		enable	= false;
+		mask	= GL_TRUE;
+		func	= GL_LESS;
+	}
+
+	bool enable;
+
+	GLboolean mask;
+	GLenum func;
+};
+
+struct BlendControl
+{
+	BlendControl(void)
+	{
+		enable		= false;
+		sfactor		= GL_ONE;
+		sfactor		= GL_ZERO;
+		equation	= GL_FUNC_ADD;
+	}
+
+	bool enable;
+
+	GLenum sfactor;
+	GLenum dfactor;
+	GLenum equation;
+};
+
 class Technique
 {
 public:
@@ -43,4 +75,8 @@ protected:
 
 	Pass * m_pCurrentPass;
 
+	DepthControl m_sDepthControl;
+	BlendControl m_sBlendControl;
+
+	bool m_bActive;
 };

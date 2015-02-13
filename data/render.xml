@@ -13,7 +13,7 @@
 	<pipeline>
 
 		<technique name="geometry">
-			<enable cap="GL_DEPTH_TEST" />
+			<depth mask="GL_TRUE" func="GL_LESS" />
 			<pass name="simple">
 				<shader name="geometry_pass.vert" type="GL_VERTEX_SHADER" />
 				<shader name="geometry_pass.frag" type="GL_FRAGMENT_SHADER" />
@@ -29,7 +29,7 @@
 		</technique>
 
 		<technique name="lights">
-			<enable cap="GL_BLEND" />
+			<blend sfactor="GL_ONE" equation="GL_FUNC_ADD" dfactor="GL_ONE" />
 			<pass name="directional">
 				<shader name="directionnal_light.vert" type="GL_VERTEX_SHADER" />
 				<shader name="directionnal_light.frag" type="GL_FRAGMENT_SHADER" />
@@ -57,7 +57,7 @@
 		</technique>
 
 		<technique name="compose">
-			<enable cap="GL_DEPTH_TEST" />
+			<depth mask="GL_FALSE" func="GL_EQUAL" />
 			<pass name="default">
 				<shader name="full.vert" type="GL_VERTEX_SHADER" />
 				<shader name="full.frag" type="GL_FRAGMENT_SHADER" />
@@ -81,7 +81,7 @@
 		</technique>
 
 		<technique name="blend">
-			<enable cap="GL_BLEND" />
+			<blend sfactor="GL_ONE" equation="GL_FUNC_ADD" dfactor="GL_ONE" />
 			<pass name="bloom">
 				<shader name="fullscreen.vert" type="GL_VERTEX_SHADER" />
 				<shader name="fullscreen_color.frag" type="GL_FRAGMENT_SHADER" />

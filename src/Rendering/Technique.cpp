@@ -14,6 +14,7 @@ using namespace tinyxml2;
 Technique::Technique(void)
 : m_pCurrentPass(nullptr)
 , m_eDepthFunc(GL_LESS)
+, m_bActive(false)
 {
 	// ...
 }
@@ -24,9 +25,11 @@ Technique::Technique(const XMLElement * element, const Rendering & rendering)
 	{
 		const XMLElement * pass = element->FirstChildElement("pass");
 
-		while (NULL != pass)
+		while (nullptr != pass)
 		{
 			const char * name = pass->Attribute("name");
+
+			assert(nullptr != name);
 
 			m_mapPass[name] = Pass(pass, rendering);
 
@@ -37,13 +40,68 @@ Technique::Technique(const XMLElement * element, const Rendering & rendering)
 	{
 		const XMLElement * enable = element->FirstChildElement("enable");
 
-		while (NULL != enable)
+		while (nullptr != enable)
 		{
 			const char * cap = enable->Attribute("cap");
+
+			assert(nullptr != cap);
 
 			m_aEnable.push_back(strToCapability(cap));
 
 			enable = enable->NextSiblingElement("enable");
+		}
+	}
+
+	{
+		const XMLElement * depth = element->FirstChildElement("depth");
+
+		if (nullptr != depth)
+		{
+			m_sDepthControl.enable = true;
+
+			const char * func = depth->Attribute("func");
+
+			if (nullptr != func)
+			{
+				m_sDepthControl.func = strToDepthFunc(func);
+			}
+
+			const char * mask = depth->Attribute("mask");
+
+			if (nullptr != mask)
+			{
+				m_sDepthControl.mask = strToDepthMask(mask);
+			}
+		}
+	}
+
+	{
+		const XMLElement * blend = element->FirstChildElement("blend");
+
+		if (nullptr != blend)
+		{
+			m_sBlendControl.enable = true;
+
+			const char * equation = blend->Attribute("equation");
+
+			if (nullptr != equation)
+			{
+				m_sBlendControl.equation = strToBlendEquation(equation);
+			}
+
+			const char * sfactor = blend->Attribute("sfactor");
+
+			if (nullptr != sfactor)
+			{
+				m_sBlendControl.sfactor = strToBlendFunc(sfactor);
+			}
+
+			const char * dfactor = blend->Attribute("dfactor");
+
+			if (nullptr != dfactor)
+			{
+				m_sBlendControl.dfactor = strToBlendFunc(dfactor);
+			}
 		}
 	}
 }
@@ -54,9 +112,25 @@ Technique::Technique(const XMLElement * element, const Rendering & rendering)
  */
 bool Technique::Begin(void)
 {
+	m_bActive = true;
+
 	for (GLenum cap : m_aEnable)
 	{
 		glEnable(cap);
+	}
+
+	if (m_sDepthControl.enable)
+	{
+		glEnable(GL_DEPTH_TEST);
+		glDepthFunc(m_sDepthControl.func);
+		glDepthMask(m_sDepthControl.mask);
+	}
+
+	if (m_sBlendControl.enable)
+	{
+		glEnable(GL_BLEND);
+		glBlendEquation(m_sBlendControl.equation);
+		glBlendFunc(m_sBlendControl.sfactor, m_sBlendControl.dfactor);
 	}
 
 	return(true);
@@ -67,10 +141,28 @@ bool Technique::Begin(void)
  */
 void Technique::End(void)
 {
+	assert(m_bActive);
+
+	if (m_sBlendControl.enable)
+	{
+		glDisable(GL_BLEND);
+		glBlendEquation(GL_FUNC_ADD);
+		glBlendFunc(GL_ONE, GL_ZERO);
+	}
+
+	if (m_sDepthControl.enable)
+	{
+		glDisable(GL_DEPTH_TEST);
+		glDepthFunc(GL_LESS);
+		glDepthMask(GL_TRUE);
+	}
+
 	for (GLenum cap : m_aEnable)
 	{
 		glDisable(cap);
 	}
+
+	m_bActive = false;
 }
 
 /**
@@ -79,6 +171,8 @@ void Technique::End(void)
  */
 bool Technique::BeginPass(const char * pass)
 {
+	assert(m_bActive);
+
 	m_pCurrentPass = &(m_mapPass[pass]);
 
 	m_pCurrentPass->Begin();
@@ -91,6 +185,8 @@ bool Technique::BeginPass(const char * pass)
  */
 void Technique::EndPass(void)
 {
+	assert(m_bActive);
+
 	m_pCurrentPass->End();
 
 	m_pCurrentPass = nullptr;
@@ -104,6 +200,7 @@ void Technique::EndPass(void)
 template<typename T>
 void Technique::SetUniform(const char * name, const T & value)
 {
+	assert(m_bActive);
 	m_pCurrentPass->SetUniform(name, value);
 }
 
@@ -128,6 +225,7 @@ template void Technique::SetUniform(const char * name, const float & value);
 template<GLenum D>
 void Technique::SetTexture(const char * name, unsigned int unit, const GPU::Texture<D> & texture)
 {
+	assert(m_bActive);
 	m_pCurrentPass->SetTexture(name, unit, texture);
 }
 
