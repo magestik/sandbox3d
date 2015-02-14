@@ -31,8 +31,8 @@ public:
 	void	DebugSpecularLights	(void);
 	void	DebugDepth			(void);
 	void	DebugShadows		(void);
-    void	DebugLuminance		(int num);
-    void	DebugBloom          (void);
+	void	DebugLuminance		(int num);
+	void	DebugBloom          (void);
 
 	void	DebugWireframe		(bool d);
 
@@ -61,7 +61,6 @@ private:
 
 	// Rendering
 	Camera		m_camera;
-	Rendering	m_renderer;
 
 	// Navigation
 	ivec2		m_vLastPos;
@@ -80,6 +79,10 @@ private:
 	vec4 m_vAmbientColor;
 
 	std::vector<Mesh*> m_apMeshes;
+
+public:
+
+	Rendering	m_renderer;
 
 signals:
 

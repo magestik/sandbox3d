@@ -207,7 +207,7 @@ void DrawableSurface::paintGL(void)
 	t.Start();
 	{
 		const mat4x4 & matView = m_camera.getViewMatrix();
-		m_renderer.onUpdate(matView, m_vClearColor, m_vAmbientColor, m_bDebugWireframe, m_eRenderType);
+		m_renderer.onUpdate(matView, m_vClearColor, m_bDebugWireframe, m_eRenderType);
 	}
 	t.Stop();
 

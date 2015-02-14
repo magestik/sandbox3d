@@ -128,7 +128,6 @@
      <string>Settings</string>
     </property>
     <addaction name="actionClear_color"/>
-    <addaction name="actionAmbient_color"/>
    </widget>
    <widget class="QMenu" name="menuCamera">
     <property name="title">

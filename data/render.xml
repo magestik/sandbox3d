@@ -75,6 +75,12 @@
 				<output texture="depth" attachment="GL_DEPTH_ATTACHMENT" /> <!-- early z-cull -->
 				<output texture="HDR" attachment="GL_COLOR_ATTACHMENT0" />
 			</pass>
+			<pass name="fog">
+				<shader name="full_fog.vert" type="GL_VERTEX_SHADER" />
+				<shader name="full_fog.frag" type="GL_FRAGMENT_SHADER" />
+				<output texture="depth" attachment="GL_DEPTH_ATTACHMENT" /> <!-- early z-cull -->
+				<output texture="HDR" attachment="GL_COLOR_ATTACHMENT0" />
+			</pass>
 		</technique>
 
 		<technique name="tonemapping">

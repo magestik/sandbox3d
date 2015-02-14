@@ -7,15 +7,17 @@ A sandbox that I use to test some graphic techniques.
 
 Implemented :
 - Light Prepass,
+- Normal mapping,
 - Shadow mapping (PCF),
 - Tone Mapping (the scene is first rendered in HDR format),
 - Bloom,
 - Pick Buffer.
 
 TODO :
-- Fog
-- Ambient Occlusion
-- Depth of Field
+- Ray of God,
+- Ambient Occlusion,
+- Depth of Field,
+- PBR.
 
 ### Build
 

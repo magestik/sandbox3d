@@ -2,10 +2,11 @@
 
 #include <QMainWindow>
 
-class QGLWidget;
+#include "EnvSettingsWidget.h"
+
 class QDockWidget;
-class QColorDialog;
 class QFileDialog;
+class DrawableSurface;
 
 namespace Ui {
 	class MainWindow;
@@ -17,7 +18,7 @@ class MainWindow : public QMainWindow
 
 public:
 
-	explicit	MainWindow		(QWidget *parent = 0);
+	explicit	MainWindow		(QWidget * parent = 0);
 	virtual		~MainWindow		(void);
 
 	void		closeEvent		(QCloseEvent * event);
@@ -29,12 +30,15 @@ private:
 
 	Ui::MainWindow * ui;
 
+protected:
+
+	EnvSettingsWidget * m_pEnvSettingsWidget;
+
 public:
 
-	QGLWidget * m_pDrawable;
+	DrawableSurface * m_pDrawable;
 
 	QColorDialog * m_pClearColorChooser;
-	QColorDialog * m_pAmbientColorChooser;
 
 	QFileDialog * m_pFileChooser;
 
@@ -43,7 +47,7 @@ private slots:
 	void on_actionImport_triggered();
 
 	void on_actionClear_color_triggered();
-	void on_actionAmbient_color_triggered();
+
 
 	void on_actionWireframe_toggled(bool checked);
 	void on_actionFaceCulling_changed();
@@ -55,7 +59,7 @@ private slots:
 	void on_actionLightDiffuse_toggled(bool checked);
 	void on_actionDepth_toggled(bool checked);
 	void on_actionShadows_toggled(bool checked);
-    void on_actionLuminance1_toggled(bool checked);
-    void on_actionLuminance2_toggled(bool checked);
-    void on_actionBloom_toggled(bool checked);
+	void on_actionLuminance1_toggled(bool checked);
+	void on_actionLuminance2_toggled(bool checked);
+	void on_actionBloom_toggled(bool checked);
 };

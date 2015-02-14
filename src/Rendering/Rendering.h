@@ -21,6 +21,8 @@
 #include "Technique.h"
 #include "RenderTexture.h"
 
+#include "Environment.h"
+
 // theses maps contains all shaders, compiled at launch time
 extern std::map<std::string, GPU::Shader<GL_FRAGMENT_SHADER> *>	g_FragmentShaders;
 extern std::map<std::string, GPU::Shader<GL_VERTEX_SHADER> *>	g_VertexShaders;
@@ -58,7 +60,7 @@ public:
 
 	void	onResize				(int width, int height);
 
-	void	onUpdate				(const mat4x4 & mView, const vec4 & clearColor, const vec4 & ambientColor, bool bWireframe, ERenderType eRenderType = FINAL);
+	void	onUpdate				(const mat4x4 & mView, const vec4 & clearColor, bool bWireframe, ERenderType eRenderType = FINAL);
 
 	void	onCreate				(const Mesh::Instance & instance);
 
@@ -97,7 +99,7 @@ protected:
 
 	void    renderBloom                 (void);
 
-	void	renderFinal					(const mat4x4 & mView, const vec4 & clearColor, const vec4 & ambientColor);
+	void	renderFinal					(const mat4x4 & mView, const vec4 & clearColor);
 
 	void	renderIntermediateToScreen	(ERenderType eRenderType);
 
@@ -136,4 +138,9 @@ private:
 
 	std::map<std::string, RenderTexture>	m_mapTargets;
 	std::map<std::string, Technique>		m_mapTechnique;
+
+public:
+
+	EnvironmentSettings environment;
+
 };

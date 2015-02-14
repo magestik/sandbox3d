@@ -16,8 +16,6 @@ MainWindow::MainWindow(QWidget * pParent)
 : QMainWindow(pParent)
 , ui(new Ui::MainWindow)
 {
-	QSettings settings;
-
 	ui->setupUi(this);
 
 	m_pDrawable = new DrawableSurface(this);
@@ -29,14 +27,6 @@ MainWindow::MainWindow(QWidget * pParent)
 		m_pClearColorChooser->setWindowTitle("Clear Color Chooser");
 		connect(m_pClearColorChooser, SIGNAL(currentColorChanged(const QColor &)), m_pDrawable, SLOT(setClearColor(const QColor &)));
 		m_pClearColorChooser->setCurrentColor(QColor::fromRgbF(0.5f, 0.5f, 0.5f));
-	}
-
-	{
-		m_pAmbientColorChooser = new QColorDialog(this);
-		m_pAmbientColorChooser->hide();
-		m_pAmbientColorChooser->setWindowTitle("Ambient Color Chooser");
-		connect(m_pAmbientColorChooser, SIGNAL(currentColorChanged(const QColor &)), m_pDrawable, SLOT(setAmbientColor(const QColor &)));
-		m_pAmbientColorChooser->setCurrentColor(QColor::fromRgbF(0.1f, 0.1f, 0.1f));
 	}
 
 	{
@@ -58,6 +48,11 @@ MainWindow::MainWindow(QWidget * pParent)
 		connect(m_pFileChooser, SIGNAL(fileSelected(const QString &)), m_pDrawable, SLOT(importScene(const QString &)));
 	}
 
+	{
+		m_pEnvSettingsWidget = new EnvSettingsWidget(this, m_pDrawable->m_renderer.environment);
+	}
+
+	QSettings settings;
 	restoreGeometry(settings.value("mainWindowGeometry").toByteArray());
 	restoreState(settings.value("mainWindowState").toByteArray());
 
@@ -164,14 +159,6 @@ void MainWindow::on_actionFaceCulling_changed()
 void MainWindow::on_actionClear_color_triggered()
 {
 	m_pClearColorChooser->show();
-}
-
-/**
- * @brief MainWindow::on_actionAmbient_color_triggered
- */
-void MainWindow::on_actionAmbient_color_triggered()
-{
-	m_pAmbientColorChooser->show();
 }
 
 /**

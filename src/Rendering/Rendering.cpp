@@ -18,7 +18,6 @@ std::map<std::string, GPU::Texture<GL_TEXTURE_2D> *> g_Textures;
 std::map<std::string, Mesh> g_Meshes;
 
 #define SHADOW_MAP_SIZE 1024
-#define DISABLE_BLIT 1
 
 static inline unsigned int toPOT(unsigned int v)
 {
@@ -221,7 +220,7 @@ void Rendering::onResize(int width, int height)
  * @param mProjection
  * @param mView
  */
-void Rendering::onUpdate(const mat4x4 & mView, const vec4 & clearColor, const vec4 & ambientColor, bool bWireframe, ERenderType eRenderType)
+void Rendering::onUpdate(const mat4x4 & mView, const vec4 & clearColor, bool bWireframe, ERenderType eRenderType)
 {
 	//
 	// Render Scene to G-Buffer
@@ -250,7 +249,7 @@ void Rendering::onUpdate(const mat4x4 & mView, const vec4 & clearColor, const ve
 		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	}
 
-	renderFinal(mView, clearColor, ambientColor);
+	renderFinal(mView, clearColor);
 
 	if (bWireframe)
 	{
@@ -638,7 +637,7 @@ void Rendering::renderLightsToAccumBuffer(const mat4x4 & mView)
  * @brief Rendering::renderFinal
  * @param mViewProjection
  */
-void Rendering::renderFinal(const mat4x4 & mView, const vec4 & clearColor, const vec4 & ambientColor)
+void Rendering::renderFinal(const mat4x4 & mView, const vec4 & clearColor)
 {
 	glViewport(0, 0, m_uWidth, m_uHeight);
 
@@ -650,7 +649,17 @@ void Rendering::renderFinal(const mat4x4 & mView, const vec4 & clearColor, const
 	glBindSampler(4, m_uSampler);
 
 	{
-		ComposeTechnique.BeginPass("default");
+		if (environment.isEnabled(EnvironmentSettings::FOG))
+		{
+			ComposeTechnique.BeginPass("fog");
+			ComposeTechnique.SetUniform("FogScattering", environment.fog.Scattering);
+			ComposeTechnique.SetUniform("FogExtinction", environment.fog.Extinction);
+			ComposeTechnique.SetUniform("FogColor", environment.fog.Color);
+		}
+		else
+		{
+			ComposeTechnique.BeginPass("default");
+		}
 
 		glClearColor(clearColor.x, clearColor.y, clearColor.z, clearColor.w);
 		glClear(GL_COLOR_BUFFER_BIT);
@@ -664,7 +673,7 @@ void Rendering::renderFinal(const mat4x4 & mView, const vec4 & clearColor, const
 		ComposeTechnique.SetTexture("specularLightSampler", 1, *(m_mapTargets["lights_specular"].getTexture()));
 		ComposeTechnique.SetTexture("shadowMap", 2, m_pShadowMap->GetTexture());
 
-		ComposeTechnique.SetUniform("ambientColor", ambientColor.xyz);
+		ComposeTechnique.SetUniform("ambientColor", environment.ambient.Color);
 		ComposeTechnique.SetUniform("DepthTransformation", mDepthViewProjection);
 
 		for (Mesh::Instance & object : m_aObjects)
@@ -672,6 +681,7 @@ void Rendering::renderFinal(const mat4x4 & mView, const vec4 & clearColor, const
 			mat4x4 MVP = mCameraViewProjection * object.transformation;
 
 			ComposeTechnique.SetUniform("ModelViewProjection", MVP);
+			ComposeTechnique.SetUniform("ModelView", mView * object.transformation);
 			ComposeTechnique.SetUniform("Model", object.transformation);
 
 			for (SubMesh * m : object.getDrawCommands())
