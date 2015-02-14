@@ -9,7 +9,7 @@ struct VS_OUTPUT
 	vec4 lightCoord;
 };
 
-uniform mat4x4 ModelViewProjection;
+uniform mat4x4 ViewProjection;
 uniform mat4x4 Model;
 
 layout (location = POSITION)	in vec3 inPosition;
@@ -24,7 +24,7 @@ void main(void)
 	vsOut.position = worldPos.xyz;
 	vsOut.texCoord = inTexCoord;
 
-	vec4 pos = vec4(inPosition, 1.0) * ModelViewProjection;
+	vec4 pos = worldPos * ViewProjection;
 	vsOut.lightCoord = pos;
 	gl_Position = pos;
 }

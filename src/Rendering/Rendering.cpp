@@ -397,11 +397,11 @@ void Rendering::renderSceneToShadowMap(void)
 		mat4x4 mDepthView = _lookAt(vec3(0,0,0), m_pLight->GetDirection(), vec3(0.0f, -1.0f, 0.0f));
 		mat4x4 mDepthViewProjection = m_pShadowMap->GetProjection() * mDepthView;
 
+		m_pShadowMap->GetShader()->SetUniform("ViewProjection", mDepthViewProjection);
+
 		for (Mesh::Instance & object : m_aObjects)
 		{
-			mat4x4 MVP = mDepthViewProjection * object.transformation;
-
-			m_pShadowMap->GetShader()->SetUniform("ModelViewProjection", MVP);
+			m_pShadowMap->GetShader()->SetUniform("Model", object.transformation);
 
 			// TODO : remove loop and directly use glDrawElements on the full buffer
 			for (SubMesh * m : object.getDrawCommands())
@@ -540,13 +540,13 @@ void Rendering::renderSceneToGBuffer(const mat4x4 & mView)
 
 		GeometryTechnique.BeginPass("simple");
 
+		GeometryTechnique.SetUniform("ViewProjection", mCameraViewProjection);
+
 		glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		for (Mesh::Instance & object : m_aObjects)
 		{
-			mat4x4 MVP = mCameraViewProjection * object.transformation;
-
 			for (SubMesh * m : object.getDrawCommands())
 			{
 				const GPU::Texture<GL_TEXTURE_2D> * pNormalMap = m->getNormalMap();
@@ -554,7 +554,6 @@ void Rendering::renderSceneToGBuffer(const mat4x4 & mView)
 				if (nullptr == pNormalMap)
 				{
 					GeometryTechnique.SetUniform("shininess", m->m_material.shininess);
-					GeometryTechnique.SetUniform("ModelViewProjection", MVP);
 					GeometryTechnique.SetUniform("Model", object.transformation);
 
 					m->draw();
@@ -566,10 +565,10 @@ void Rendering::renderSceneToGBuffer(const mat4x4 & mView)
 
 		GeometryTechnique.BeginPass("normal_map");
 
+		GeometryTechnique.SetUniform("ViewProjection", mCameraViewProjection);
+
 		for (Mesh::Instance & object : m_aObjects)
 		{
-			mat4x4 MVP = mCameraViewProjection * object.transformation;
-
 			for (SubMesh * m : object.getDrawCommands())
 			{
 				const GPU::Texture<GL_TEXTURE_2D> * pNormalMap = m->getNormalMap();
@@ -578,7 +577,6 @@ void Rendering::renderSceneToGBuffer(const mat4x4 & mView)
 				{
 					GeometryTechnique.SetTexture("normalMap", 0, *pNormalMap);
 					GeometryTechnique.SetUniform("shininess", m->m_material.shininess);
-					GeometryTechnique.SetUniform("ModelViewProjection", MVP);
 					GeometryTechnique.SetUniform("Model", object.transformation);
 
 					m->draw();
@@ -675,13 +673,11 @@ void Rendering::renderFinal(const mat4x4 & mView, const vec4 & clearColor)
 
 		ComposeTechnique.SetUniform("ambientColor", environment.ambient.Color);
 		ComposeTechnique.SetUniform("DepthTransformation", mDepthViewProjection);
+		ComposeTechnique.SetUniform("ViewProjection", mCameraViewProjection);
+		ComposeTechnique.SetUniform("View", mView);
 
 		for (Mesh::Instance & object : m_aObjects)
 		{
-			mat4x4 MVP = mCameraViewProjection * object.transformation;
-
-			ComposeTechnique.SetUniform("ModelViewProjection", MVP);
-			ComposeTechnique.SetUniform("ModelView", mView * object.transformation);
 			ComposeTechnique.SetUniform("Model", object.transformation);
 
 			for (SubMesh * m : object.getDrawCommands())
@@ -778,6 +774,8 @@ void Rendering::renderPickBuffer(const mat4x4 & mView)
 
 		mat4x4 mCameraViewProjection = m_matProjection * mView;
 
+		PickBufferTechnique.SetUniform("ViewProjection", mCameraViewProjection);
+
 		glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 
@@ -785,9 +783,7 @@ void Rendering::renderPickBuffer(const mat4x4 & mView)
 
 		for (Mesh::Instance & object : m_aObjects)
 		{
-			mat4x4 MVP = mCameraViewProjection * object.transformation;
-
-			PickBufferTechnique.SetUniform("ModelViewProjection", MVP);
+			PickBufferTechnique.SetUniform("Model", object.transformation);
 			PickBufferTechnique.SetUniform("id", i);
 
 			for (SubMesh * m : object.getDrawCommands())

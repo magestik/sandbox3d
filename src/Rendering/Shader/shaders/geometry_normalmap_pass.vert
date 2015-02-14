@@ -12,7 +12,7 @@ struct VS_OUTPUT
 
 uniform sampler2D normalMap;
 
-uniform mat4x4 ModelViewProjection;
+uniform mat4x4 ViewProjection;
 uniform mat4x4 Model;
 
 layout (location = POSITION)	in vec3 inPosition;
@@ -30,5 +30,5 @@ void main(void)
 	vsOut.tangent = normalize((vec4(inTangent, 0.0) * Model).xyz);
 	vsOut.bitangent = cross(vsOut.normal, vsOut.tangent);
 
-	gl_Position = vec4(inPosition, 1.0) * ModelViewProjection;
+	gl_Position = (vec4(inPosition, 1.0) * Model) * ViewProjection;
 }

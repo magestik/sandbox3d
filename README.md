@@ -7,6 +7,7 @@ A sandbox that I use to test some graphic techniques.
 
 Implemented :
 - Light Prepass,
+- Simple Fog,
 - Normal mapping,
 - Shadow mapping (PCF),
 - Tone Mapping (the scene is first rendered in HDR format),

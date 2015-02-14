@@ -7,7 +7,7 @@ struct VS_OUTPUT
 	vec3 normal;
 };
 
-uniform mat4x4 ModelViewProjection;
+uniform mat4x4 ViewProjection;
 uniform mat4x4 Model;
 
 layout (location = POSITION)	in vec3 inPosition;
@@ -21,5 +21,5 @@ void main(void)
 
 	vsOut.normal = normal.xyz;
 
-	gl_Position = vec4(inPosition, 1.0) * ModelViewProjection;
+	gl_Position = (vec4(inPosition, 1.0) * Model) * ViewProjection;
 }
