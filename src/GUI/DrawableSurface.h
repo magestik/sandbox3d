@@ -57,7 +57,7 @@ private:
 
 	void loadAllMaterials(const aiScene * scene);
 
-	void addMeshRecursive(const aiNode * nd, const mat4x4 & parentTransformation, const std::vector<SubMesh*> & preloaded);
+	void addMeshRecursive(const aiNode * nd, const mat4x4 & parentTransformation, const std::vector<SubMesh*> & preloaded, const GPU::Buffer<GL_ARRAY_BUFFER> & vertexBuffer, const GPU::Buffer<GL_ELEMENT_ARRAY_BUFFER> & indexBuffer);
 
 	// Rendering
 	Camera		m_camera;

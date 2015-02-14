@@ -9,15 +9,15 @@ struct VS_OUTPUT
 
 uniform mat4x4 ViewProjection;
 uniform mat4x4 Model;
-uniform uint id;
 
 layout (location = POSITION) in vec3 inPosition;
+layout (location = COLOR) in uint inColor;
 
 flat out VS_OUTPUT vsOut;
 
 void main(void)
 {
-	vsOut.color = id;
+	vsOut.color = inColor;
 
 	gl_Position = vec4(inPosition, 1.0) * Model * ViewProjection;
 }

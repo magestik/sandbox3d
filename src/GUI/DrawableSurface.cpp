@@ -515,7 +515,7 @@ void DrawableSurface::loadAllMaterials(const aiScene * scene)
  * @param parentTransformation
  * @param preloaded
  */
-void DrawableSurface::addMeshRecursive(const aiNode * nd, const mat4x4 & parentTransformation, const std::vector<SubMesh *> & preloaded)
+void DrawableSurface::addMeshRecursive(const aiNode * nd, const mat4x4 & parentTransformation, const std::vector<SubMesh *> & preloaded, const GPU::Buffer<GL_ARRAY_BUFFER> & vertexBuffer, const GPU::Buffer<GL_ELEMENT_ARRAY_BUFFER> & indexBuffer)
 {
 	mat4x4 transformation = parentTransformation * ASSIMP_MAT4X4(nd->mTransformation);
 
@@ -539,7 +539,7 @@ void DrawableSurface::addMeshRecursive(const aiNode * nd, const mat4x4 & parentT
 
 	for (int i = 0; i < nd->mNumChildren; ++i)
 	{
-		addMeshRecursive(nd->mChildren[i], transformation, preloaded);
+		addMeshRecursive(nd->mChildren[i], transformation, preloaded, vertexBuffer, indexBuffer);
 	}
 }
 
@@ -595,6 +595,13 @@ void DrawableSurface::reloadShader(const QString & filename)
 	//loadShader(filename);
 }
 
+struct SubMeshOffsets
+{
+	unsigned int triangle_count; // GL_TRIANGLES
+	unsigned int index_offset; // GL_UNSIGNED_INT
+	unsigned int base_vertex;
+};
+
 /**
  * @brief DrawableSurface::importScene
  * @param filename
@@ -615,6 +622,7 @@ void DrawableSurface::importScene(const QString & filename)
 	loadAllMaterials(scene);
 
 	std::vector<SubMesh*> meshes;
+	std::vector<SubMeshOffsets> offsets;
 
 	uint NumVertices = 0;
 	uint NumIndices = 0;
@@ -636,8 +644,48 @@ void DrawableSurface::importScene(const QString & filename)
 	void * pVertexGPU = GPU::mmap(*vertexBuffer, GL_WRITE_ONLY);
 	void * pIndexGPU = GPU::mmap(*indexBuffer, GL_WRITE_ONLY);
 
-	unsigned int vertex_offset = 0;
+	std::vector<Mesh::VertexSpec> specs;
+
+	Mesh::VertexSpec SPEC_POS;
+	SPEC_POS.index			= 0;
+	SPEC_POS.size			= 3;
+	SPEC_POS.type			= GL_FLOAT;
+	SPEC_POS.normalized		= GL_FALSE;
+	SPEC_POS.stride			= sizeof(SubMesh::VertexSimple);
+	SPEC_POS.pointer		= BUFFER_OFFSET(0);
+
+	Mesh::VertexSpec SPEC_UV;
+	SPEC_UV.index			= 2;
+	SPEC_UV.size			= 2;
+	SPEC_UV.type			= GL_FLOAT;
+	SPEC_UV.normalized		= GL_FALSE;
+	SPEC_UV.stride			= sizeof(SubMesh::VertexSimple);
+	SPEC_UV.pointer			= BUFFER_OFFSET(sizeof(float)*3);
+
+	Mesh::VertexSpec SPEC_NORMAL;
+	SPEC_NORMAL.index		= 1;
+	SPEC_NORMAL.size		= 3;
+	SPEC_NORMAL.type		= GL_FLOAT;
+	SPEC_NORMAL.normalized	= GL_FALSE;
+	SPEC_NORMAL.stride		= sizeof(SubMesh::VertexSimple);
+	SPEC_NORMAL.pointer		= BUFFER_OFFSET(sizeof(float)*5);
+
+	Mesh::VertexSpec SPEC_TANGENT;
+	SPEC_TANGENT.index		= 3;
+	SPEC_TANGENT.size		= 3;
+	SPEC_TANGENT.type		= GL_FLOAT;
+	SPEC_TANGENT.normalized	= GL_FALSE;
+	SPEC_TANGENT.stride		= sizeof(SubMesh::VertexSimple);
+	SPEC_TANGENT.pointer	= BUFFER_OFFSET(sizeof(float)*8);
+
+	specs.push_back(SPEC_POS);
+	specs.push_back(SPEC_UV);
+	specs.push_back(SPEC_NORMAL);
+	specs.push_back(SPEC_TANGENT);
+
+	//unsigned int vertex_offset = 0;
 	unsigned int index_offset = 0;
+	unsigned int base_vertex = 0;
 
 	for (int i = 0; i < scene->mNumMeshes; ++i)
 	{
@@ -709,46 +757,8 @@ void DrawableSurface::importScene(const QString & filename)
 		pVertexGPU = (void*)(((char*)pVertexGPU) + vertices.size() * sizeof(SubMesh::VertexSimple));
 		pIndexGPU = (void*)(((char*)pIndexGPU) + triangles.size() * sizeof(unsigned int));
 
-		std::vector<SubMesh::VertexSpec> specs;
-
-		SubMesh::VertexSpec SPEC_POS;
-		SPEC_POS.index			= 0;
-		SPEC_POS.size			= 3;
-		SPEC_POS.type			= GL_FLOAT;
-		SPEC_POS.normalized		= GL_FALSE;
-		SPEC_POS.stride			= sizeof(SubMesh::VertexSimple);
-		SPEC_POS.pointer		= BUFFER_OFFSET(vertex_offset);
-
-		SubMesh::VertexSpec SPEC_UV;
-		SPEC_UV.index			= 2;
-		SPEC_UV.size			= 2;
-		SPEC_UV.type			= GL_FLOAT;
-		SPEC_UV.normalized		= GL_FALSE;
-		SPEC_UV.stride			= sizeof(SubMesh::VertexSimple);
-		SPEC_UV.pointer			= BUFFER_OFFSET(vertex_offset+sizeof(float)*3);
-
-		SubMesh::VertexSpec SPEC_NORMAL;
-		SPEC_NORMAL.index		= 1;
-		SPEC_NORMAL.size		= 3;
-		SPEC_NORMAL.type		= GL_FLOAT;
-		SPEC_NORMAL.normalized	= GL_FALSE;
-		SPEC_NORMAL.stride		= sizeof(SubMesh::VertexSimple);
-		SPEC_NORMAL.pointer		= BUFFER_OFFSET(vertex_offset+sizeof(float)*5);
-
-		SubMesh::VertexSpec SPEC_TANGENT;
-		SPEC_TANGENT.index		= 3;
-		SPEC_TANGENT.size		= 3;
-		SPEC_TANGENT.type		= GL_FLOAT;
-		SPEC_TANGENT.normalized	= GL_FALSE;
-		SPEC_TANGENT.stride		= sizeof(SubMesh::VertexSimple);
-		SPEC_TANGENT.pointer		= BUFFER_OFFSET(vertex_offset+sizeof(float)*8);
-
-		specs.push_back(SPEC_POS);
-		specs.push_back(SPEC_UV);
-		specs.push_back(SPEC_NORMAL);
-		specs.push_back(SPEC_TANGENT);
-
-		SubMesh * submesh = SubMesh::Create(vertexBuffer, triangles.size(), GL_TRIANGLES, specs, indexBuffer, index_offset, GL_UNSIGNED_INT);
+		offsets.push_back({ triangles.size(), index_offset, base_vertex});
+		SubMesh * submesh = SubMesh::Create(vertexBuffer, triangles.size(), GL_TRIANGLES, specs, indexBuffer, index_offset, GL_UNSIGNED_INT, base_vertex);
 		meshes.push_back(submesh);
 
 		submesh->m_vMin = min;
@@ -837,8 +847,9 @@ void DrawableSurface::importScene(const QString & filename)
 			scene->mMaterials[mesh->mMaterialIndex]->Get(AI_MATKEY_SHININESS, submesh->m_material.shininess);
 		}
 
-		vertex_offset += vertices.size() * sizeof(SubMesh::VertexSimple);
+//		vertex_offset += vertices.size() * sizeof(SubMesh::VertexSimple);
 		index_offset += triangles.size() * sizeof(unsigned int);
+		base_vertex += vertices.size();
 	}
 
 	GPU::munmap(*vertexBuffer);
@@ -846,7 +857,7 @@ void DrawableSurface::importScene(const QString & filename)
 
 	const mat4x4 identity (1.0f);
 
-	addMeshRecursive(scene->mRootNode, identity, meshes);
+	addMeshRecursive(scene->mRootNode, identity, meshes, *vertexBuffer, *indexBuffer);
 }
 
 /**

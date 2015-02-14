@@ -6,16 +6,6 @@ class SubMesh
 {
 public:
 
-	struct VertexSpec
-	{
-		GLuint		index;
-		GLint		size;
-		GLenum		type;
-		GLboolean	normalized;
-		GLsizei		stride;
-		GLvoid *	pointer;
-	};
-
 	struct VertexSimple
 	{
 		vec3 position;
@@ -39,18 +29,17 @@ public:
 		float shininess;
 	};
 
+	explicit SubMesh(GLsizei iCount, GLenum eMode);
 	virtual ~SubMesh(void);
 
 	virtual void draw(void) const = 0;
 
 	const GPU::Texture<GL_TEXTURE_2D> * getNormalMap(void) { return(m_pNormalMap); }
 
-	static SubMesh * Create(GPU::Buffer<GL_ARRAY_BUFFER> * pVertexBuffer, GLsizei count, GLenum mode, const std::vector<VertexSpec> & specs);
-	static SubMesh * Create(GPU::Buffer<GL_ARRAY_BUFFER> * pVertexBuffer, GLsizei count, GLenum mode, const std::vector<VertexSpec> & specs, GPU::Buffer<GL_ELEMENT_ARRAY_BUFFER> * pIndexBuffer, unsigned int firstIndex, GLenum type);
+	static SubMesh * Create(GPU::Buffer<GL_ARRAY_BUFFER> * pVertexBuffer, GLsizei count, GLenum mode, const std::vector<Mesh::VertexSpec> & specs);
+	static SubMesh * Create(GPU::Buffer<GL_ARRAY_BUFFER> * pVertexBuffer, GLsizei count, GLenum mode, const std::vector<Mesh::VertexSpec> & specs, GPU::Buffer<GL_ELEMENT_ARRAY_BUFFER> * pIndexBuffer, unsigned int firstIndex, GLenum type, unsigned int base_vertex = 0);
 
 protected:
-
-	explicit SubMesh(GLsizei iCount, GLenum eMode);
 
 	void bindStuff(void);
 	void unbindStuff(void);

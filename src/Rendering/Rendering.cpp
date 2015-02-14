@@ -162,9 +162,9 @@ void Rendering::generateMeshes()
 
 		GPU::realloc(*vertexBuffer, sizeof(points), GL_STATIC_DRAW, points);
 
-		std::vector<SubMesh::VertexSpec> specs;
+		std::vector<Mesh::VertexSpec> specs;
 
-		SubMesh::VertexSpec SPEC_POS;
+		Mesh::VertexSpec SPEC_POS;
 		SPEC_POS.index = 0;
 		SPEC_POS.size = 2;
 		SPEC_POS.type = GL_FLOAT;
@@ -172,7 +172,7 @@ void Rendering::generateMeshes()
 		SPEC_POS.stride = 4 * sizeof(float);
 		SPEC_POS.pointer = 0;
 
-		SubMesh::VertexSpec SPEC_UV;
+		Mesh::VertexSpec SPEC_UV;
 		SPEC_UV.index = 2;
 		SPEC_UV.size = 2;
 		SPEC_UV.type = GL_FLOAT;
@@ -784,7 +784,8 @@ void Rendering::renderPickBuffer(const mat4x4 & mView)
 		for (Mesh::Instance & object : m_aObjects)
 		{
 			PickBufferTechnique.SetUniform("Model", object.transformation);
-			PickBufferTechnique.SetUniform("id", i);
+
+			glVertexAttribI1ui(5, i);
 
 			for (SubMesh * m : object.getDrawCommands())
 			{

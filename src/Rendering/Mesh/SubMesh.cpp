@@ -37,7 +37,7 @@ SubMesh::~SubMesh()
  * @param specs
  * @return
  */
-SubMesh * SubMesh::Create(GPU::Buffer<GL_ARRAY_BUFFER> * pVertexBuffer, GLsizei count, GLenum mode, const std::vector<VertexSpec> & specs)
+SubMesh * SubMesh::Create(GPU::Buffer<GL_ARRAY_BUFFER> * pVertexBuffer, GLsizei count, GLenum mode, const std::vector<Mesh::VertexSpec> & specs)
 {
 	SubMesh * pMesh = new MeshSimple(pVertexBuffer, count, mode, specs);
 	return(pMesh);
@@ -53,8 +53,8 @@ SubMesh * SubMesh::Create(GPU::Buffer<GL_ARRAY_BUFFER> * pVertexBuffer, GLsizei 
  * @param type
  * @return
  */
-SubMesh * SubMesh::Create(GPU::Buffer<GL_ARRAY_BUFFER> * pVertexBuffer, GLsizei count, GLenum mode, const std::vector<VertexSpec> & specs, GPU::Buffer<GL_ELEMENT_ARRAY_BUFFER> * pIndexBuffer, unsigned int firstIndex, GLenum type)
+SubMesh * SubMesh::Create(GPU::Buffer<GL_ARRAY_BUFFER> * pVertexBuffer, GLsizei count, GLenum mode, const std::vector<Mesh::VertexSpec> & specs, GPU::Buffer<GL_ELEMENT_ARRAY_BUFFER> * pIndexBuffer, unsigned int firstIndex, GLenum type, unsigned int base_vertex)
 {
-	SubMesh * pMesh = new MeshIndexed(pVertexBuffer, count, mode, specs, pIndexBuffer, firstIndex, type);
+	SubMesh * pMesh = new MeshIndexed(pVertexBuffer, count, mode, specs, pIndexBuffer, firstIndex, type, base_vertex);
 	return(pMesh);
 }

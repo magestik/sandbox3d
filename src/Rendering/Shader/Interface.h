@@ -5,3 +5,4 @@
 #define TEXCOORD0	2
 #define TANGENT		3
 #define BITANGENT	4
+#define COLOR		5
