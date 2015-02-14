@@ -57,7 +57,18 @@ private:
 
 	void loadAllMaterials(const aiScene * scene);
 
-	void addMeshRecursive(const aiNode * nd, const mat4x4 & parentTransformation, const std::vector<SubMesh*> & preloaded, const GPU::Buffer<GL_ARRAY_BUFFER> & vertexBuffer, const GPU::Buffer<GL_ELEMENT_ARRAY_BUFFER> & indexBuffer);
+	struct SubMeshDefinition
+	{
+		unsigned int triangle_count; // GL_TRIANGLES
+		unsigned int index_offset; // GL_UNSIGNED_INT
+		unsigned int base_vertex;
+		SubMesh::Material material;
+		const GPU::Texture<GL_TEXTURE_2D> * m_pNormalMap;
+		vec3 m_vMin;
+		vec3 m_vMax;
+	};
+
+	void addMeshRecursive(const aiNode * nd, const mat4x4 & parentTransformation, const std::vector<SubMesh*> & preloaded, GPU::Buffer<GL_ARRAY_BUFFER> * vertexBuffer, GPU::Buffer<GL_ELEMENT_ARRAY_BUFFER> * indexBuffer, const std::vector<SubMeshDefinition> & offsets, const std::vector<Mesh::VertexSpec> & specs);
 
 	// Rendering
 	Camera		m_camera;

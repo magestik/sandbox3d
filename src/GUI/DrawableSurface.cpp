@@ -515,31 +515,32 @@ void DrawableSurface::loadAllMaterials(const aiScene * scene)
  * @param parentTransformation
  * @param preloaded
  */
-void DrawableSurface::addMeshRecursive(const aiNode * nd, const mat4x4 & parentTransformation, const std::vector<SubMesh *> & preloaded, const GPU::Buffer<GL_ARRAY_BUFFER> & vertexBuffer, const GPU::Buffer<GL_ELEMENT_ARRAY_BUFFER> & indexBuffer)
+void DrawableSurface::addMeshRecursive(const aiNode * nd, const mat4x4 & parentTransformation, const std::vector<SubMesh *> & preloaded, GPU::Buffer<GL_ARRAY_BUFFER> * vertexBuffer, GPU::Buffer<GL_ELEMENT_ARRAY_BUFFER> * indexBuffer, const std::vector<SubMeshDefinition> & offsets, const std::vector<Mesh::VertexSpec> & specs)
 {
 	mat4x4 transformation = parentTransformation * ASSIMP_MAT4X4(nd->mTransformation);
 
-	std::vector<SubMesh*> submeshes;
+	Mesh * m = new Mesh(vertexBuffer, specs, indexBuffer);
+	m_apMeshes.push_back(m);
 
 	for (int i = 0; i < nd->mNumMeshes; ++i)
 	{
-		submeshes.push_back(preloaded[nd->mMeshes[i]]);
+		const SubMeshDefinition & offset = offsets[nd->mMeshes[i]];
+		SubMesh * subMesh = m->AddSubMesh(offset.triangle_count, GL_TRIANGLES, offset.index_offset, GL_UNSIGNED_INT, offset.base_vertex);
+		subMesh->m_material = offset.material;
+		subMesh->m_pNormalMap = offset.m_pNormalMap;
+//		subMesh->m_vMin = offset.m_vMin;
+//		subMesh->m_vMax = offset.m_vMax;
 	}
 
-	{
-		Mesh * m = new Mesh(submeshes);
-		m_apMeshes.push_back(m);
+	Mesh::Instance instance = m->Instantiate();
 
-		Mesh::Instance instance = m->Instantiate();
+	instance.transformation = transformation;
 
-		instance.transformation = transformation;
-
-		m_renderer.onCreate(instance);
-	}
+	m_renderer.onCreate(instance);
 
 	for (int i = 0; i < nd->mNumChildren; ++i)
 	{
-		addMeshRecursive(nd->mChildren[i], transformation, preloaded, vertexBuffer, indexBuffer);
+		addMeshRecursive(nd->mChildren[i], transformation, preloaded, vertexBuffer, indexBuffer, offsets, specs);
 	}
 }
 
@@ -595,13 +596,6 @@ void DrawableSurface::reloadShader(const QString & filename)
 	//loadShader(filename);
 }
 
-struct SubMeshOffsets
-{
-	unsigned int triangle_count; // GL_TRIANGLES
-	unsigned int index_offset; // GL_UNSIGNED_INT
-	unsigned int base_vertex;
-};
-
 /**
  * @brief DrawableSurface::importScene
  * @param filename
@@ -622,7 +616,7 @@ void DrawableSurface::importScene(const QString & filename)
 	loadAllMaterials(scene);
 
 	std::vector<SubMesh*> meshes;
-	std::vector<SubMeshOffsets> offsets;
+	std::vector<SubMeshDefinition> offsets;
 
 	uint NumVertices = 0;
 	uint NumIndices = 0;
@@ -757,12 +751,15 @@ void DrawableSurface::importScene(const QString & filename)
 		pVertexGPU = (void*)(((char*)pVertexGPU) + vertices.size() * sizeof(SubMesh::VertexSimple));
 		pIndexGPU = (void*)(((char*)pIndexGPU) + triangles.size() * sizeof(unsigned int));
 
-		offsets.push_back({ triangles.size(), index_offset, base_vertex});
-		SubMesh * submesh = SubMesh::Create(vertexBuffer, triangles.size(), GL_TRIANGLES, specs, indexBuffer, index_offset, GL_UNSIGNED_INT, base_vertex);
-		meshes.push_back(submesh);
+		SubMeshDefinition definition;
+		definition.triangle_count = triangles.size();
+		definition.index_offset = index_offset;
+		definition.base_vertex = base_vertex;
 
-		submesh->m_vMin = min;
-		submesh->m_vMax = max;
+		definition.m_vMin = min;
+		definition.m_vMax = max;
+
+		definition.m_pNormalMap = nullptr;
 
 		if (mesh->HasTangentsAndBitangents())
 		{
@@ -772,7 +769,7 @@ void DrawableSurface::importScene(const QString & filename)
 
 			if (g_Textures.find(texture_name) != g_Textures.end())
 			{
-				submesh->m_pNormalMap = g_Textures[texture_name];
+				definition.m_pNormalMap = g_Textures[texture_name];
 			}
 		}
 
@@ -783,18 +780,18 @@ void DrawableSurface::importScene(const QString & filename)
 
 			if (g_Textures.find(texture_name) != g_Textures.end())
 			{
-				submesh->m_material.m_diffuse = g_Textures[texture_name];
+				definition.material.m_diffuse = g_Textures[texture_name];
 			}
 			else
 			{
 				aiColor3D color (0.f, 0.f, 0.f);
 				scene->mMaterials[mesh->mMaterialIndex]->Get(AI_MATKEY_COLOR_DIFFUSE,color);
 
-				submesh->m_material.m_diffuse = new GPU::Texture<GL_TEXTURE_2D>();
+				definition.material.m_diffuse = new GPU::Texture<GL_TEXTURE_2D>();
 
-				submesh->m_material.m_diffuse->init<GL_RGBA8>(1, 1);
+				definition.material.m_diffuse->init<GL_RGBA8>(1, 1);
 
-				glBindTexture(GL_TEXTURE_2D, submesh->m_material.m_diffuse->GetObject());
+				glBindTexture(GL_TEXTURE_2D, definition.material.m_diffuse->GetObject());
 
 				unsigned char texels [] =
 				{
@@ -816,18 +813,18 @@ void DrawableSurface::importScene(const QString & filename)
 
 			if (g_Textures.find(texture_name) != g_Textures.end())
 			{
-				submesh->m_material.m_specular = g_Textures[texture_name];
+				definition.material.m_specular = g_Textures[texture_name];
 			}
 			else
 			{
 				aiColor3D color (0.f, 0.f, 0.f);
 				scene->mMaterials[mesh->mMaterialIndex]->Get(AI_MATKEY_COLOR_DIFFUSE,color);
 
-				submesh->m_material.m_specular = new GPU::Texture<GL_TEXTURE_2D>();
+				definition.material.m_specular = new GPU::Texture<GL_TEXTURE_2D>();
 
-				submesh->m_material.m_specular->init<GL_RGBA8>(1, 1);
+				definition.material.m_specular->init<GL_RGBA8>(1, 1);
 
-				glBindTexture(GL_TEXTURE_2D, submesh->m_material.m_specular->GetObject());
+				glBindTexture(GL_TEXTURE_2D, definition.material.m_specular->GetObject());
 
 				unsigned char texels [] =
 				{
@@ -843,9 +840,11 @@ void DrawableSurface::importScene(const QString & filename)
 		}
 
 		{
-			submesh->m_material.shininess = 1.0;
-			scene->mMaterials[mesh->mMaterialIndex]->Get(AI_MATKEY_SHININESS, submesh->m_material.shininess);
+			definition.material.shininess = 1.0;
+			scene->mMaterials[mesh->mMaterialIndex]->Get(AI_MATKEY_SHININESS, definition.material.shininess);
 		}
+
+		offsets.push_back(definition);
 
 //		vertex_offset += vertices.size() * sizeof(SubMesh::VertexSimple);
 		index_offset += triangles.size() * sizeof(unsigned int);
@@ -857,7 +856,7 @@ void DrawableSurface::importScene(const QString & filename)
 
 	const mat4x4 identity (1.0f);
 
-	addMeshRecursive(scene->mRootNode, identity, meshes, *vertexBuffer, *indexBuffer);
+	addMeshRecursive(scene->mRootNode, identity, meshes, vertexBuffer, indexBuffer, offsets, specs);
 }
 
 /**

@@ -183,7 +183,9 @@ void Rendering::generateMeshes()
 		specs.push_back(SPEC_POS);
 		specs.push_back(SPEC_UV);
 
-		m_pQuadMesh = SubMesh::Create(vertexBuffer, 4, GL_TRIANGLE_STRIP, specs);
+		m_pQuadMesh = new Mesh(vertexBuffer, specs);
+		m_pQuadMesh->AddSubMesh(4, GL_TRIANGLE_STRIP);
+		//SubMesh::Create(vertexBuffer, 4, GL_TRIANGLE_STRIP, specs);
 	}
 
 	// TODO : Sphere / Cone / Cube
@@ -403,11 +405,15 @@ void Rendering::renderSceneToShadowMap(void)
 		{
 			m_pShadowMap->GetShader()->SetUniform("Model", object.transformation);
 
+			object.mesh->bind();
+
 			// TODO : remove loop and directly use glDrawElements on the full buffer
 			for (SubMesh * m : object.getDrawCommands())
 			{
 				m->draw();
 			}
+
+			object.mesh->unbind();
 		}
 
 		glUseProgram(0);
@@ -547,6 +553,8 @@ void Rendering::renderSceneToGBuffer(const mat4x4 & mView)
 
 		for (Mesh::Instance & object : m_aObjects)
 		{
+			object.mesh->bind();
+
 			for (SubMesh * m : object.getDrawCommands())
 			{
 				const GPU::Texture<GL_TEXTURE_2D> * pNormalMap = m->getNormalMap();
@@ -559,6 +567,8 @@ void Rendering::renderSceneToGBuffer(const mat4x4 & mView)
 					m->draw();
 				}
 			}
+
+			object.mesh->unbind();
 		}
 
 		GeometryTechnique.EndPass();
@@ -569,6 +579,8 @@ void Rendering::renderSceneToGBuffer(const mat4x4 & mView)
 
 		for (Mesh::Instance & object : m_aObjects)
 		{
+			object.mesh->bind();
+
 			for (SubMesh * m : object.getDrawCommands())
 			{
 				const GPU::Texture<GL_TEXTURE_2D> * pNormalMap = m->getNormalMap();
@@ -582,6 +594,8 @@ void Rendering::renderSceneToGBuffer(const mat4x4 & mView)
 					m->draw();
 				}
 			}
+
+			object.mesh->unbind();
 		}
 
 		GeometryTechnique.EndPass();
@@ -678,6 +692,8 @@ void Rendering::renderFinal(const mat4x4 & mView, const vec4 & clearColor)
 
 		for (Mesh::Instance & object : m_aObjects)
 		{
+			object.mesh->bind();
+
 			ComposeTechnique.SetUniform("Model", object.transformation);
 
 			for (SubMesh * m : object.getDrawCommands())
@@ -687,6 +703,8 @@ void Rendering::renderFinal(const mat4x4 & mView, const vec4 & clearColor)
 
 				m->draw();
 			}
+
+			object.mesh->unbind();
 		}
 
 		ComposeTechnique.EndPass();
@@ -783,6 +801,8 @@ void Rendering::renderPickBuffer(const mat4x4 & mView)
 
 		for (Mesh::Instance & object : m_aObjects)
 		{
+			object.mesh->bind();
+
 			PickBufferTechnique.SetUniform("Model", object.transformation);
 
 			glVertexAttribI1ui(5, i);
@@ -791,6 +811,8 @@ void Rendering::renderPickBuffer(const mat4x4 & mView)
 			{
 				m->draw();
 			}
+
+			object.mesh->unbind();
 
 			++i;
 		}

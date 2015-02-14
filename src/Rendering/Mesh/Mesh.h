@@ -24,25 +24,44 @@ public:
 		GLvoid *	pointer;
 	};
 
-	struct Instance
+	struct BoundingBox
 	{
-		Instance(const Mesh * m) : transformation(1.0f), mesh(m) { /* ... */ }
-		const std::vector<SubMesh*> & getDrawCommands() const { return(mesh->m_aSubMeshes); }
-		mat4x4 transformation;
-		const Mesh * mesh;
+		BoundingBox() : min(1e10f, 1e10f, 1e10f), max(-1e10f, -1e10f, -1e10f) { /* ... */ }
+		vec3 min;
+		vec3 max;
 	};
 
-	explicit Mesh(void);
-	explicit Mesh(const std::vector<SubMesh*> & submeshes);
+	struct Instance
+	{
+		Instance(Mesh * m) : transformation(1.0f), mesh(m) { /* ... */ }
+		const std::vector<SubMesh*> & getDrawCommands() const { return(mesh->m_aSubMeshes); }
+		mat4x4 transformation;
+		Mesh * mesh;
+	};
+
+	explicit Mesh(GPU::Buffer<GL_ARRAY_BUFFER> * pVertexBuffer, const std::vector<VertexSpec> & specs);
+	explicit Mesh(GPU::Buffer<GL_ARRAY_BUFFER> * pVertexBuffer, const std::vector<VertexSpec> & specs, GPU::Buffer<GL_ELEMENT_ARRAY_BUFFER> * pIndexBuffer);
 	virtual ~Mesh(void);
 
-	void AddSubMesh(GPU::Buffer<GL_ARRAY_BUFFER> * pVertexBuffer, GLsizei count, GLenum mode, const std::vector<VertexSpec> & specs);
-	void AddSubMesh(GPU::Buffer<GL_ARRAY_BUFFER> * pVertexBuffer, GLsizei count, GLenum mode, const std::vector<VertexSpec> & specs, GPU::Buffer<GL_ELEMENT_ARRAY_BUFFER> * pIndexBuffer, unsigned int firstIndex, GLenum type, unsigned int base_vertex = 0);
+	SubMesh * AddSubMesh(GLsizei count, GLenum mode);
+	SubMesh * AddSubMesh(GLsizei count, GLenum mode, unsigned int firstIndex, GLenum type, unsigned int base_vertex = 0);
 
+	void bind();
+	void unbind();
 
-	Instance Instantiate() const { return(Instance(this)); }
+	void draw();
+
+	Instance Instantiate() { return(Instance(this)); }
 
 //private:
 
 	std::vector<SubMesh*> m_aSubMeshes;
+
+private:
+
+	GLuint m_uObject;
+
+	bool m_isBound;
+
+	BoundingBox m_BoundingBox;
 };

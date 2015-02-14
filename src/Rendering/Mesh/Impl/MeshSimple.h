@@ -6,7 +6,7 @@ class MeshSimple : public SubMesh
 {
 public:
 
-	explicit MeshSimple(GPU::Buffer<GL_ARRAY_BUFFER> * pVertexBuffer, GLsizei count, GLenum mode, const std::vector<Mesh::VertexSpec> & specs);
+	explicit MeshSimple(GLsizei count, GLenum mode);
 	virtual ~MeshSimple(void);
 
 	virtual void draw(void) const;

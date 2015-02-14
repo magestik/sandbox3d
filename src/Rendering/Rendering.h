@@ -123,7 +123,7 @@ private:
 	ShadowMap * m_pShadowMap;
 	Light::Directionnal * m_pLight;
 
-	SubMesh *	m_pQuadMesh;
+	Mesh *	m_pQuadMesh;
 
 	enum ETarget
 	{

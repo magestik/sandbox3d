@@ -6,7 +6,7 @@ class MeshIndexed : public SubMesh
 {
 public:
 
-	explicit MeshIndexed(GPU::Buffer<GL_ARRAY_BUFFER> * pVertexBuffer, GLsizei count, GLenum mode, const std::vector<Mesh::VertexSpec> & specs, GPU::Buffer<GL_ELEMENT_ARRAY_BUFFER> * pIndexBuffer, unsigned int offset, GLenum type, unsigned int baseVertex);
+	explicit MeshIndexed(GLsizei count, GLenum mode, unsigned int offset, GLenum type, unsigned int baseVertex);
 	virtual ~MeshIndexed(void);
 
 	virtual void draw(void) const;
