@@ -169,6 +169,25 @@ void Pass::End(void)
 }
 
 /**
+ * @brief Pass::ReadPixel
+ * @param pos
+ * @param result
+ * @return
+ */
+bool Pass::ReadPixel(const ivec2 & pos, unsigned int & result)
+{
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, m_uFramebufferObject);
+	glReadBuffer(GL_COLOR_ATTACHMENT0);
+
+	glReadPixels(pos.x, pos.y, 1, 1, GL_RED_INTEGER, GL_UNSIGNED_INT, &result);
+
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+	glReadBuffer(GL_BACK);
+
+	return(true);
+}
+
+/**
  * @brief Pass::SetUniform
  * @param name
  * @param m

@@ -19,8 +19,6 @@ Libraries needed :
 - Ambient Occlusion
 - Depth of Field
 
-Implement a way to select objects (pick buffer ?).
-
 ### Build
 
 Compile C++ code, and preprocess shaders:

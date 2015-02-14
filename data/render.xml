@@ -8,9 +8,20 @@
 		<texture name="HDR" format="GL_R11F_G11F_B10F" />
 		<texture name="bloom1" format="GL_R11F_G11F_B10F" size_divisor="4" />
 		<texture name="bloom2" format="GL_R11F_G11F_B10F" size_divisor="4" />
+		<texture name="pickbuffer" format="GL_R32UI" />
 	</targets>
 
 	<pipeline>
+
+		<technique name="picking">
+			<depth mask="GL_FALSE" func="GL_EQUAL" />
+			<pass name="default">
+				<shader name="pickbuffer.vert" type="GL_VERTEX_SHADER" />
+				<shader name="pickbuffer.frag" type="GL_FRAGMENT_SHADER" />
+				<output texture="depth" attachment="GL_DEPTH_ATTACHMENT" /> <!-- early z-cull -->
+				<output texture="pickbuffer" attachment="GL_COLOR_ATTACHMENT0" />
+			</pass>
+		</technique>
 
 		<technique name="geometry">
 			<depth mask="GL_TRUE" func="GL_LESS" />

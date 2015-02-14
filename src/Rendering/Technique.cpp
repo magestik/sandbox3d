@@ -13,7 +13,6 @@ using namespace tinyxml2;
  */
 Technique::Technique(void)
 : m_pCurrentPass(nullptr)
-, m_eDepthFunc(GL_LESS)
 , m_bActive(false)
 {
 	// ...
@@ -21,6 +20,7 @@ Technique::Technique(void)
 
 Technique::Technique(const XMLElement * element, const Rendering & rendering)
 : m_pCurrentPass(nullptr)
+, m_bActive(false)
 {
 	{
 		const XMLElement * pass = element->FirstChildElement("pass");
@@ -112,6 +112,9 @@ Technique::Technique(const XMLElement * element, const Rendering & rendering)
  */
 bool Technique::Begin(void)
 {
+	assert(!m_bActive);
+	assert(nullptr == m_pCurrentPass);
+
 	m_bActive = true;
 
 	for (GLenum cap : m_aEnable)
@@ -142,6 +145,7 @@ bool Technique::Begin(void)
 void Technique::End(void)
 {
 	assert(m_bActive);
+	assert(nullptr == m_pCurrentPass);
 
 	if (m_sBlendControl.enable)
 	{
@@ -172,6 +176,7 @@ void Technique::End(void)
 bool Technique::BeginPass(const char * pass)
 {
 	assert(m_bActive);
+	assert(nullptr == m_pCurrentPass);
 
 	m_pCurrentPass = &(m_mapPass[pass]);
 
@@ -186,10 +191,25 @@ bool Technique::BeginPass(const char * pass)
 void Technique::EndPass(void)
 {
 	assert(m_bActive);
+	assert(nullptr != m_pCurrentPass);
 
 	m_pCurrentPass->End();
 
 	m_pCurrentPass = nullptr;
+}
+
+/**
+ * @brief Technique::ReadPixel
+ * @param pos
+ * @param result
+ * @return
+ */
+bool Technique::ReadPixel(const ivec2 & pos, unsigned int & result)
+{
+	assert(m_bActive);
+	assert(nullptr != m_pCurrentPass);
+
+	return(m_pCurrentPass->ReadPixel(pos, result));
 }
 
 /**

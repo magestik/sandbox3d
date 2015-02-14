@@ -27,6 +27,8 @@ public:
 	bool		Begin			(void);
 	void		End				(void);
 
+	bool		ReadPixel		(const ivec2 & pos, unsigned int & result);
+
 	void		SetUniform		(const char * name, const mat4x4 & m);
 	void		SetUniform		(const char * name, const mat3x3 & m);
 	void		SetUniform		(const char * name, const mat2x2 & m);

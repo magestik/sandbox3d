@@ -47,6 +47,12 @@ void RenderTexture::resize(int width, int height)
 		}
 		break;
 
+		case GL_R32UI:
+		{
+			m_pTexture->init<GL_R32UI>(width, height);
+		}
+		break;
+
 		case GL_RGB10_A2:
 		{
 			m_pTexture->init<GL_RGB10_A2>(width, height);

@@ -231,8 +231,8 @@ void DrawableSurface::paintGL(void)
  */
 void DrawableSurface::mousePressEvent(QMouseEvent * event)
 {
-	m_vLastPos.x = event->x();
-	m_vLastPos.y = event->y();
+	ivec2 pos(event->x(), event->y());
+	m_vLastPos = pos;
 	update();
 }
 
@@ -272,8 +272,17 @@ void DrawableSurface::mouseMoveEvent(QMouseEvent * event)
  */
 void DrawableSurface::mouseReleaseEvent(QMouseEvent * event)
 {
-	// ...
-	update();
+	ivec2 pos(event->x(), event->y());
+
+	if (all(pos == m_vLastPos))
+	{
+		void * o = m_renderer.getObjectAtPos(pos);
+		qDebug("obj: %d", o);
+	}
+	else
+	{
+		update();
+	}
 }
 
 /**

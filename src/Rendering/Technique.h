@@ -6,6 +6,8 @@
 
 #include <GPU.h>
 
+#include <Vector.h>
+
 namespace tinyxml2
 {
 	class XMLElement;
@@ -59,6 +61,8 @@ public:
 	bool	BeginPass	(const char * pass);
 	void	EndPass		(void);
 
+	bool	ReadPixel	(const ivec2 & pos, unsigned int & result);
+
 	template<typename T>
 	void SetUniform (const char * name, const T & value);
 
@@ -70,8 +74,6 @@ protected:
 	std::map<std::string, Pass> m_mapPass;
 
 	std::vector<GLenum> m_aEnable;
-
-	GLenum m_eDepthFunc;
 
 	Pass * m_pCurrentPass;
 

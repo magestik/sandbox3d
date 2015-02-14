@@ -279,21 +279,25 @@ void Rendering::onUpdate(const mat4x4 & mView, const vec4 & clearColor, const ve
 
 		Technique & ToneMappingTechnique = m_mapTechnique["tonemapping"];
 
-		ToneMappingTechnique.BeginPass("with_burnout");
+		ToneMappingTechnique.Begin();
 		{
 			float avLum = m_AvLum.getAverage();
 			float white2 = m_AvLum.getMax2();
+			ToneMappingTechnique.BeginPass("with_burnout");
 			ToneMappingTechnique.SetTexture("texSampler", 0, *(m_mapTargets["HDR"].getTexture()));
 			ToneMappingTechnique.SetUniform("avLum", avLum);
 			ToneMappingTechnique.SetUniform("white2", white2);
 			m_pQuadMesh->draw();
+			ToneMappingTechnique.EndPass();
 		}
-		ToneMappingTechnique.EndPass();
+		ToneMappingTechnique.End();
 
 		//
 		// post process
 
 		renderPostProcessEffects();
+
+		renderPickBuffer(mView);
 	}
 	else
 	{
@@ -308,6 +312,39 @@ void Rendering::onUpdate(const mat4x4 & mView, const vec4 & clearColor, const ve
 void Rendering::onCreate(const Mesh::Instance & instance)
 {
 	m_aObjects.push_back(instance);
+}
+
+/**
+ * @brief Rendering::getObjectAtPos
+ * @param pos
+ * @return
+ */
+void * Rendering::getObjectAtPos(const ivec2 & pos)
+{
+	ivec2 glPos(pos.x, m_uHeight - pos.y);
+
+	void * object = nullptr;
+
+	Technique & PickBufferTechnique = m_mapTechnique["picking"];
+
+	PickBufferTechnique.Begin();
+	{
+		PickBufferTechnique.BeginPass("default");
+
+		unsigned int id = UINT32_MAX;
+
+		PickBufferTechnique.ReadPixel(glPos, id);
+
+		if (id < m_aObjects.size())
+		{
+			object = &(m_aObjects[id]);
+		}
+
+		PickBufferTechnique.EndPass();
+	}
+	PickBufferTechnique.End();
+
+	return(object);
 }
 
 /**
@@ -700,20 +737,58 @@ void Rendering::renderPostProcessEffects()
 {
 	glViewport(0, 0, m_uWidth, m_uHeight);
 
+	glBindSampler(0, m_uSampler);
+
 	Technique & BlendTechnique = m_mapTechnique["blend"];
 
 	BlendTechnique.Begin();
-
-	glBindSampler(0, m_uSampler);
-
-	BlendTechnique.BeginPass("bloom");
 	{
+		BlendTechnique.BeginPass("bloom");
 		BlendTechnique.SetTexture("texSampler", 0, *(m_mapTargets["bloom1"].getTexture()));
 		m_pQuadMesh->draw();
+		BlendTechnique.EndPass();
 	}
-	BlendTechnique.EndPass();
+	BlendTechnique.End();
 
 	glBindSampler(0, 0);
+}
 
-	BlendTechnique.End();
+/**
+ * @brief Rendering::renderPickBuffer
+ */
+void Rendering::renderPickBuffer(const mat4x4 & mView)
+{
+	glViewport(0, 0, m_uWidth, m_uHeight);
+
+	Technique & PickBufferTechnique = m_mapTechnique["picking"];
+
+	PickBufferTechnique.Begin();
+	{
+		PickBufferTechnique.BeginPass("default");
+
+		mat4x4 mCameraViewProjection = m_matProjection * mView;
+
+		glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT);
+
+		unsigned int i = 0;
+
+		for (Mesh::Instance & object : m_aObjects)
+		{
+			mat4x4 MVP = mCameraViewProjection * object.transformation;
+
+			PickBufferTechnique.SetUniform("ModelViewProjection", MVP);
+			PickBufferTechnique.SetUniform("id", i);
+
+			for (SubMesh * m : object.getDrawCommands())
+			{
+				m->draw();
+			}
+
+			++i;
+		}
+
+		PickBufferTechnique.EndPass();
+	}
+	PickBufferTechnique.End();
 }

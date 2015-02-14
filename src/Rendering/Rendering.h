@@ -62,6 +62,8 @@ public:
 
 	void	onCreate				(const Mesh::Instance & instance);
 
+	void * getObjectAtPos			(const ivec2 & pos);
+
 	const GPU::Shader<GL_VERTEX_SHADER> * GetVertexShader(const char * name) const
 	{
 		return(g_VertexShaders[name]);
@@ -100,6 +102,8 @@ protected:
 	void	renderIntermediateToScreen	(ERenderType eRenderType);
 
 	void    renderPostProcessEffects    (void);
+
+	void	renderPickBuffer			(const mat4x4 & mView);
 
 private:
 

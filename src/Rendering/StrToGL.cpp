@@ -112,6 +112,10 @@ GLenum strToFormat(const char * strFormat)
 	{
 		return(GL_RGBA32F);
 	}
+	else if (!strcmp(strFormat, "GL_R32UI"))
+	{
+		return(GL_R32UI);
+	}
 	else if (!strcmp(strFormat, "GL_RGB10_A2​"))
 	{
 		return(GL_RGB10_A2);
