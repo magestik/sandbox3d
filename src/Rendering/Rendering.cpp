@@ -13,6 +13,8 @@ std::map<std::string, GPU::Shader<GL_FRAGMENT_SHADER> *> g_FragmentShaders;
 
 std::map<std::string, GPU::Shader<GL_VERTEX_SHADER> *> g_VertexShaders;
 
+std::map<std::string, GPU::Shader<GL_GEOMETRY_SHADER> *> g_GeometryShaders;
+
 std::map<std::string, GPU::Texture<GL_TEXTURE_2D> *> g_Textures;
 
 std::map<std::string, Mesh> g_Meshes;
@@ -41,6 +43,7 @@ Rendering::Rendering()
 , m_pQuadMesh(nullptr)
 , m_mapTargets()
 , m_mapTechnique()
+, m_pSelectedObject(nullptr)
 {
 	// ...
 }
@@ -188,6 +191,33 @@ void Rendering::generateMeshes()
 		//SubMesh::Create(vertexBuffer, 4, GL_TRIANGLE_STRIP, specs);
 	}
 
+	{
+		float points [] =
+		{
+			0.0f, 0.0f,
+		};
+
+		GPU::Buffer<GL_ARRAY_BUFFER> * vertexBuffer = new GPU::Buffer<GL_ARRAY_BUFFER>();
+
+		GPU::realloc(*vertexBuffer, sizeof(points), GL_STATIC_DRAW, points);
+
+		std::vector<Mesh::VertexSpec> specs;
+
+		Mesh::VertexSpec SPEC_POS;
+		SPEC_POS.index = 0;
+		SPEC_POS.size = 2;
+		SPEC_POS.type = GL_FLOAT;
+		SPEC_POS.normalized = GL_FALSE;
+		SPEC_POS.stride = 2 * sizeof(float);
+		SPEC_POS.pointer = 0;
+
+		specs.push_back(SPEC_POS);
+
+		m_pPointMesh = new Mesh(vertexBuffer, specs);
+		m_pPointMesh->AddSubMesh(1, GL_POINTS);
+		//SubMesh::Create(vertexBuffer, 4, GL_TRIANGLE_STRIP, specs);
+	}
+
 	// TODO : Sphere / Cone / Cube
 }
 
@@ -299,6 +329,8 @@ void Rendering::onUpdate(const mat4x4 & mView, const vec4 & clearColor, bool bWi
 		renderPostProcessEffects();
 
 		renderPickBuffer(mView);
+
+		renderBoundingBox(mView);
 	}
 	else
 	{
@@ -313,6 +345,7 @@ void Rendering::onUpdate(const mat4x4 & mView, const vec4 & clearColor, bool bWi
 void Rendering::onCreate(const Mesh::Instance & instance)
 {
 	m_aObjects.push_back(instance);
+	m_pSelectedObject = nullptr;
 }
 
 /**
@@ -324,7 +357,7 @@ void * Rendering::getObjectAtPos(const ivec2 & pos)
 {
 	ivec2 glPos(pos.x, m_uHeight - pos.y);
 
-	void * object = nullptr;
+	Mesh::Instance * object = nullptr;
 
 	Technique & PickBufferTechnique = m_mapTechnique["picking"];
 
@@ -344,6 +377,8 @@ void * Rendering::getObjectAtPos(const ivec2 & pos)
 		PickBufferTechnique.EndPass();
 	}
 	PickBufferTechnique.End();
+
+	m_pSelectedObject = object;
 
 	return(object);
 }
@@ -820,4 +855,37 @@ void Rendering::renderPickBuffer(const mat4x4 & mView)
 		PickBufferTechnique.EndPass();
 	}
 	PickBufferTechnique.End();
+}
+
+/**
+ * @brief Rendering::renderBoundingBox
+ * @param mView
+ */
+void Rendering::renderBoundingBox(const mat4x4 & mView)
+{
+	if (nullptr != m_pSelectedObject)
+	{
+		glViewport(0, 0, m_uWidth, m_uHeight);
+
+		Technique & BBoxTechnique = m_mapTechnique["bbox"];
+
+		BBoxTechnique.Begin();
+		{
+			BBoxTechnique.BeginPass("default");
+
+			mat4x4 mCameraViewProjection = m_matProjection * mView;
+
+			BBoxTechnique.SetUniform("ViewProjection", mCameraViewProjection);
+			BBoxTechnique.SetUniform("Model", m_pSelectedObject->transformation);
+
+			BBoxTechnique.SetUniform("BBoxMin", m_pSelectedObject->mesh->m_BoundingBox.min);
+			BBoxTechnique.SetUniform("BBoxMax", m_pSelectedObject->mesh->m_BoundingBox.max);
+			BBoxTechnique.SetUniform("color", vec3(1.0, 1.0, 1.0));
+
+			m_pPointMesh->draw();
+
+			BBoxTechnique.EndPass();
+		}
+		BBoxTechnique.End();
+	}
 }

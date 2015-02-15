@@ -62,6 +62,10 @@ GLenum strToShaderType(const char * strShaderType)
 	{
 		return(GL_FRAGMENT_SHADER);
 	}
+	else if (!strcmp(strShaderType, "GL_GEOMETRY_SHADER"))
+	{
+		return(GL_GEOMETRY_SHADER);
+	}
 	else
 	{
 		assert(false);

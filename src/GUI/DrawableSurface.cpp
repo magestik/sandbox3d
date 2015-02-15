@@ -233,6 +233,7 @@ void DrawableSurface::mousePressEvent(QMouseEvent * event)
 {
 	ivec2 pos(event->x(), event->y());
 	m_vLastPos = pos;
+	m_bMoved = false;
 	update();
 }
 
@@ -262,6 +263,7 @@ void DrawableSurface::mouseMoveEvent(QMouseEvent * event)
 	}
 
 	m_vLastPos = pos;
+	m_bMoved = true;
 
 	update();
 }
@@ -274,15 +276,13 @@ void DrawableSurface::mouseReleaseEvent(QMouseEvent * event)
 {
 	ivec2 pos(event->x(), event->y());
 
-	if (all(pos == m_vLastPos))
+	if (!m_bMoved)
 	{
 		void * o = m_renderer.getObjectAtPos(pos);
 		qDebug("obj: %d", o);
 	}
-	else
-	{
-		update();
-	}
+
+	update();
 }
 
 /**
@@ -325,6 +325,13 @@ void DrawableSurface::loadShaders(void)
 			successful &= fs->compileFromSource(source.data());
 			//assert(successful);
 			g_FragmentShaders.insert(std::pair<std::string, GPU::Shader<GL_FRAGMENT_SHADER> *>(filename.toStdString(), fs));
+		}
+		else if (filename.endsWith("geom"))
+		{
+			GPU::Shader<GL_GEOMETRY_SHADER> * gs = new GPU::Shader<GL_GEOMETRY_SHADER>();
+			successful &= gs->compileFromSource(source.data());
+			//assert(successful);
+			g_GeometryShaders.insert(std::pair<std::string, GPU::Shader<GL_GEOMETRY_SHADER> *>(filename.toStdString(), gs));
 		}
 
 		f.close();
@@ -528,8 +535,14 @@ void DrawableSurface::addMeshRecursive(const aiNode * nd, const mat4x4 & parentT
 		SubMesh * subMesh = m->AddSubMesh(offset.triangle_count, GL_TRIANGLES, offset.index_offset, GL_UNSIGNED_INT, offset.base_vertex);
 		subMesh->m_material = offset.material;
 		subMesh->m_pNormalMap = offset.m_pNormalMap;
-//		subMesh->m_vMin = offset.m_vMin;
-//		subMesh->m_vMax = offset.m_vMax;
+
+		m->m_BoundingBox.min.x = _min(m->m_BoundingBox.min.x, offset.m_vMin.x);
+		m->m_BoundingBox.min.y = _min(m->m_BoundingBox.min.y, offset.m_vMin.y);
+		m->m_BoundingBox.min.z = _min(m->m_BoundingBox.min.z, offset.m_vMin.z);
+
+		m->m_BoundingBox.max.x = _max(m->m_BoundingBox.max.x, offset.m_vMax.x);
+		m->m_BoundingBox.max.y = _max(m->m_BoundingBox.max.y, offset.m_vMax.y);
+		m->m_BoundingBox.max.z = _max(m->m_BoundingBox.max.z, offset.m_vMax.z);
 	}
 
 	Mesh::Instance instance = m->Instantiate();

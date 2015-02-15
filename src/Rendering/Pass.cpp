@@ -104,6 +104,12 @@ Pass::Pass(const XMLElement * element, const Rendering & rendering)
 					glAttachShader(m_uShaderObject, rendering.GetFragmentShader(name)->GetObject());
 				}
 				break;
+
+				case GL_GEOMETRY_SHADER:
+				{
+					glAttachShader(m_uShaderObject, rendering.GetGeometryShader(name)->GetObject());
+				}
+				break;
 			}
 
 			shader = shader->NextSiblingElement("shader");

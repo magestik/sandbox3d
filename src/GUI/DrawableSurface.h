@@ -75,6 +75,7 @@ private:
 
 	// Navigation
 	ivec2		m_vLastPos;
+	bool		m_bMoved;
 
 	// Debug
 	Rendering::ERenderType	m_eRenderType;

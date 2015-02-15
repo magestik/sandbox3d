@@ -5,6 +5,7 @@ mkdir -p data/shaders/
 
 FRAG=src/Rendering/Shader/shaders/*.frag
 VERT=src/Rendering/Shader/shaders/*.vert
+VERT=src/Rendering/Shader/shaders/*.geom
 
 DEST=data/shaders/
 

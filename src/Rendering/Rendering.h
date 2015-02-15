@@ -26,6 +26,7 @@
 // theses maps contains all shaders, compiled at launch time
 extern std::map<std::string, GPU::Shader<GL_FRAGMENT_SHADER> *>	g_FragmentShaders;
 extern std::map<std::string, GPU::Shader<GL_VERTEX_SHADER> *>	g_VertexShaders;
+extern std::map<std::string, GPU::Shader<GL_GEOMETRY_SHADER> *>	g_GeometryShaders;
 
 extern std::map<std::string, GPU::Texture<GL_TEXTURE_2D> *> g_Textures;
 
@@ -76,6 +77,11 @@ public:
 		return(g_FragmentShaders[name]);
 	}
 
+	const GPU::Shader<GL_GEOMETRY_SHADER> * GetGeometryShader(const char * name) const
+	{
+		return(g_GeometryShaders[name]);
+	}
+
 	const GPU::Texture<GL_TEXTURE_2D> * GetRenderTexture(const char * name) const
 	{
 		return(m_mapTargets.at(name).getTexture());
@@ -107,6 +113,8 @@ protected:
 
 	void	renderPickBuffer			(const mat4x4 & mView);
 
+	void	renderBoundingBox			(const mat4x4 & mView);
+
 private:
 
 	unsigned int m_uWidth;
@@ -124,6 +132,9 @@ private:
 	Light::Directionnal * m_pLight;
 
 	Mesh *	m_pQuadMesh;
+	Mesh *	m_pPointMesh;
+
+	Mesh::Instance * m_pSelectedObject;
 
 	enum ETarget
 	{

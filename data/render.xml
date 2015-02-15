@@ -23,6 +23,14 @@
 			</pass>
 		</technique>
 
+		<technique name="bbox">
+			<pass name="default">
+				<shader name="bbox.vert" type="GL_VERTEX_SHADER" />
+				<shader name="bbox.geom" type="GL_GEOMETRY_SHADER" />
+				<shader name="bbox.frag" type="GL_FRAGMENT_SHADER" />
+			</pass>
+		</technique>
+
 		<technique name="geometry">
 			<depth mask="GL_TRUE" func="GL_LESS" />
 			<pass name="simple">

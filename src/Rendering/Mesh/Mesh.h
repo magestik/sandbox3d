@@ -63,5 +63,7 @@ private:
 
 	bool m_isBound;
 
+public:
+
 	BoundingBox m_BoundingBox;
 };
