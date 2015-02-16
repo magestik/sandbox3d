@@ -25,13 +25,13 @@ public:
 	float getAverage(void);
 	float getMax2(void);
 
-	GLuint	GetObject(void) { return(m_uCurrentObject); }
+	GLuint	GetObject(void) { return(m_uObject); }
 
 	Shader * GetShader(void) { return(m_pCurrentShader); }
 
 private:
 
-	GLuint m_uObjects [2];
+	GLuint m_uObject;
 
 	unsigned int m_uCurrentObject;
 

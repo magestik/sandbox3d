@@ -254,6 +254,27 @@ void Rendering::onResize(int width, int height)
  */
 void Rendering::onUpdate(const mat4x4 & mView, const vec4 & clearColor, bool bWireframe, ERenderType eRenderType)
 {
+	if (FINAL == eRenderType && bWireframe)
+	{
+		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
+		renderSceneToGBuffer(mView);
+
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+		renderLightsToAccumBuffer(mView);
+
+		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
+		renderFinal(mView, clearColor);
+
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+		renderIntermediateToScreen(FINAL);
+
+		return;
+	}
+
 	//
 	// Render Scene to G-Buffer
 	//
@@ -276,17 +297,7 @@ void Rendering::onUpdate(const mat4x4 & mView, const vec4 & clearColor, bool bWi
 	// Render Scene using light buffer
 	//
 
-	if (bWireframe)
-	{
-		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-	}
-
 	renderFinal(mView, clearColor);
-
-	if (bWireframe)
-	{
-		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-	}
 
 	//
 	// Bloom
@@ -471,6 +482,17 @@ void Rendering::renderIntermediateToScreen(ERenderType eRenderType)
 
 	switch (eRenderType)
 	{
+		case FINAL:
+		{
+			DebugTechnique.BeginPass("color");
+			{
+				DebugTechnique.SetTexture("texSampler", 0, *(m_mapTargets["HDR"].getTexture()));
+				m_pQuadMesh->draw();
+			}
+			DebugTechnique.EndPass();
+		}
+		break;
+
 		case DIFFUSE_LIGHTS:
 		{
 			DebugTechnique.BeginPass("color");

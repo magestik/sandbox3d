@@ -98,13 +98,6 @@
 			</pass>
 		</technique>
 
-		<technique name="tonemapping">
-			<pass name="with_burnout">
-				<shader name="fullscreen.vert" type="GL_VERTEX_SHADER" />
-				<shader name="tonemapping.frag" type="GL_FRAGMENT_SHADER" />
-			</pass>
-		</technique>
-
 		<technique name="blend">
 			<blend sfactor="GL_ONE" equation="GL_FUNC_ADD" dfactor="GL_ONE" />
 			<pass name="bloom">
