@@ -11,40 +11,40 @@
  */
 GLenum strToAttachment(const char * strAttachment)
 {
-	if (!strcmp(strAttachment, "GL_DEPTH_ATTACHMENT"))
-	{
-		return(GL_DEPTH_ATTACHMENT);
-	}
-	else if (!strcmp(strAttachment, "GL_STENCIL_ATTACHMENT"))
-	{
-		return(GL_STENCIL_ATTACHMENT);
-	}
-	else if (!strcmp(strAttachment, "GL_DEPTH_STENCIL_ATTACHMENT"))
-	{
-		return(GL_DEPTH_STENCIL_ATTACHMENT);
-	}
-	else if (!strcmp(strAttachment, "GL_COLOR_ATTACHMENT0"))
-	{
-		return(GL_COLOR_ATTACHMENT0);
-	}
-	else if (!strcmp(strAttachment, "GL_COLOR_ATTACHMENT1"))
-	{
-		return(GL_COLOR_ATTACHMENT1);
-	}
-	else if (!strcmp(strAttachment, "GL_COLOR_ATTACHMENT2"))
-	{
-		return(GL_COLOR_ATTACHMENT2);
-	}
-	else if (!strcmp(strAttachment, "GL_COLOR_ATTACHMENT3"))
-	{
-		return(GL_COLOR_ATTACHMENT3);
-	}
-	else
-	{
-		assert(false);
-	}
+    if (!strcmp(strAttachment, "GL_DEPTH_ATTACHMENT"))
+    {
+        return(GL_DEPTH_ATTACHMENT);
+    }
+    else if (!strcmp(strAttachment, "GL_STENCIL_ATTACHMENT"))
+    {
+        return(GL_STENCIL_ATTACHMENT);
+    }
+    else if (!strcmp(strAttachment, "GL_DEPTH_STENCIL_ATTACHMENT"))
+    {
+        return(GL_DEPTH_STENCIL_ATTACHMENT);
+    }
+    else if (!strcmp(strAttachment, "GL_COLOR_ATTACHMENT0"))
+    {
+        return(GL_COLOR_ATTACHMENT0);
+    }
+    else if (!strcmp(strAttachment, "GL_COLOR_ATTACHMENT1"))
+    {
+        return(GL_COLOR_ATTACHMENT1);
+    }
+    else if (!strcmp(strAttachment, "GL_COLOR_ATTACHMENT2"))
+    {
+        return(GL_COLOR_ATTACHMENT2);
+    }
+    else if (!strcmp(strAttachment, "GL_COLOR_ATTACHMENT3"))
+    {
+        return(GL_COLOR_ATTACHMENT3);
+    }
+    else
+    {
+        assert(false);
+    }
 
-	return(0);
+    return(0);
 }
 
 /**
@@ -54,24 +54,24 @@ GLenum strToAttachment(const char * strAttachment)
  */
 GLenum strToShaderType(const char * strShaderType)
 {
-	if (!strcmp(strShaderType, "GL_VERTEX_SHADER"))
-	{
-		return(GL_VERTEX_SHADER);
-	}
-	else if (!strcmp(strShaderType, "GL_FRAGMENT_SHADER"))
-	{
-		return(GL_FRAGMENT_SHADER);
-	}
-	else if (!strcmp(strShaderType, "GL_GEOMETRY_SHADER"))
-	{
-		return(GL_GEOMETRY_SHADER);
-	}
-	else
-	{
-		assert(false);
-	}
+    if (!strcmp(strShaderType, "GL_VERTEX_SHADER"))
+    {
+        return(GL_VERTEX_SHADER);
+    }
+    else if (!strcmp(strShaderType, "GL_FRAGMENT_SHADER"))
+    {
+        return(GL_FRAGMENT_SHADER);
+    }
+    else if (!strcmp(strShaderType, "GL_GEOMETRY_SHADER"))
+    {
+        return(GL_GEOMETRY_SHADER);
+    }
+    else
+    {
+        assert(false);
+    }
 
-	return(0);
+    return(0);
 }
 
 /**
@@ -81,24 +81,24 @@ GLenum strToShaderType(const char * strShaderType)
  */
 GLenum strToCapability(const char * strCapability)
 {
-	if (!strcmp(strCapability, "GL_DEPTH_TEST"))
-	{
-		return(GL_DEPTH_TEST);
-	}
-	else if (!strcmp(strCapability, "GL_BLEND"))
-	{
-		return(GL_BLEND);
-	}
-	else if (!strcmp(strCapability, "GL_POLYGON_OFFSET_FILL"))
-	{
-		return(GL_POLYGON_OFFSET_FILL);
-	}
-	else
-	{
-		assert(false);
-	}
+    if (!strcmp(strCapability, "GL_DEPTH_TEST"))
+    {
+        return(GL_DEPTH_TEST);
+    }
+    else if (!strcmp(strCapability, "GL_BLEND"))
+    {
+        return(GL_BLEND);
+    }
+    else if (!strcmp(strCapability, "GL_POLYGON_OFFSET_FILL"))
+    {
+        return(GL_POLYGON_OFFSET_FILL);
+    }
+    else
+    {
+        assert(false);
+    }
 
-	return(0);
+    return(0);
 }
 
 /**
@@ -108,60 +108,60 @@ GLenum strToCapability(const char * strCapability)
  */
 GLenum strToFormat(const char * strFormat)
 {
-	if (!strcmp(strFormat, "GL_RGBA16F"))
-	{
-		return(GL_RGBA16F);
-	}
-	else if (!strcmp(strFormat, "GL_RGBA32F"))
-	{
-		return(GL_RGBA32F);
-	}
-	else if (!strcmp(strFormat, "GL_R32UI"))
-	{
-		return(GL_R32UI);
-	}
-	else if (!strcmp(strFormat, "GL_RGB10_A2​"))
-	{
-		return(GL_RGB10_A2);
-	}
-	else if (!strcmp(strFormat, "GL_RGB10_A2UI​"))
-	{
-		return(GL_RGB10_A2UI);
-	}
-	else if (!strcmp(strFormat, "GL_R11F_G11F_B10F"))
-	{
-		return(GL_R11F_G11F_B10F);
-	}
-	else if (!strcmp(strFormat, "GL_DEPTH_COMPONENT16"))
-	{
-		return(GL_DEPTH_COMPONENT16);
-	}
-	else if (!strcmp(strFormat, "GL_DEPTH_COMPONENT24"))
-	{
-		return(GL_DEPTH_COMPONENT24);
-	}
-	else if (!strcmp(strFormat, "GL_DEPTH_COMPONENT32F"))
-	{
-		return(GL_DEPTH_COMPONENT32F);
-	}
-	else if (!strcmp(strFormat, "GL_DEPTH24_STENCIL8"))
-	{
-		return(GL_DEPTH24_STENCIL8);
-	}
-	else if (!strcmp(strFormat, "GL_DEPTH32F_STENCIL8"))
-	{
-		return(GL_DEPTH32F_STENCIL8);
-	}
-	else if (!strcmp(strFormat, "GL_STENCIL_INDEX8"))
-	{
-		return(GL_STENCIL_INDEX8);
-	}
-	else
-	{
-		assert(false);
-	}
+    if (!strcmp(strFormat, "GL_RGBA16F"))
+    {
+        return(GL_RGBA16F);
+    }
+    else if (!strcmp(strFormat, "GL_RGBA32F"))
+    {
+        return(GL_RGBA32F);
+    }
+    else if (!strcmp(strFormat, "GL_R32UI"))
+    {
+        return(GL_R32UI);
+    }
+    else if (!strcmp(strFormat, "GL_RGB10_A2​"))
+    {
+        return(GL_RGB10_A2);
+    }
+    else if (!strcmp(strFormat, "GL_RGB10_A2UI​"))
+    {
+        return(GL_RGB10_A2UI);
+    }
+    else if (!strcmp(strFormat, "GL_R11F_G11F_B10F"))
+    {
+        return(GL_R11F_G11F_B10F);
+    }
+    else if (!strcmp(strFormat, "GL_DEPTH_COMPONENT16"))
+    {
+        return(GL_DEPTH_COMPONENT16);
+    }
+    else if (!strcmp(strFormat, "GL_DEPTH_COMPONENT24"))
+    {
+        return(GL_DEPTH_COMPONENT24);
+    }
+    else if (!strcmp(strFormat, "GL_DEPTH_COMPONENT32F"))
+    {
+        return(GL_DEPTH_COMPONENT32F);
+    }
+    else if (!strcmp(strFormat, "GL_DEPTH24_STENCIL8"))
+    {
+        return(GL_DEPTH24_STENCIL8);
+    }
+    else if (!strcmp(strFormat, "GL_DEPTH32F_STENCIL8"))
+    {
+        return(GL_DEPTH32F_STENCIL8);
+    }
+    else if (!strcmp(strFormat, "GL_STENCIL_INDEX8"))
+    {
+        return(GL_STENCIL_INDEX8);
+    }
+    else
+    {
+        assert(false);
+    }
 
-	return(0);
+    return(0);
 }
 
 /**
@@ -171,20 +171,20 @@ GLenum strToFormat(const char * strFormat)
  */
 GLenum strToDepthMask(const char * strDepthMask)
 {
-	if (!strcmp(strDepthMask, "GL_TRUE"))
-	{
-		return(GL_TRUE);
-	}
-	else if (!strcmp(strDepthMask, "GL_FALSE"))
-	{
-		return(GL_FALSE);
-	}
-	else
-	{
-		assert(false);
-	}
+    if (!strcmp(strDepthMask, "GL_TRUE"))
+    {
+        return(GL_TRUE);
+    }
+    else if (!strcmp(strDepthMask, "GL_FALSE"))
+    {
+        return(GL_FALSE);
+    }
+    else
+    {
+        assert(false);
+    }
 
-	return(0);
+    return(0);
 }
 
 /**
@@ -194,44 +194,44 @@ GLenum strToDepthMask(const char * strDepthMask)
  */
 GLenum strToDepthFunc(const char * strDepthFunc)
 {
-	if (!strcmp(strDepthFunc, "GL_EQUAL"))
-	{
-		return(GL_EQUAL);
-	}
-	else if (!strcmp(strDepthFunc, "GL_NOTEQUAL"))
-	{
-		return(GL_NOTEQUAL);
-	}
-	else if (!strcmp(strDepthFunc, "GL_GEQUAL"))
-	{
-		return(GL_GEQUAL);
-	}
-	else if (!strcmp(strDepthFunc, "GL_LEQUAL"))
-	{
-		return(GL_LEQUAL);
-	}
-	else if (!strcmp(strDepthFunc, "GL_GREATER"))
-	{
-		return(GL_GREATER);
-	}
-	else if (!strcmp(strDepthFunc, "GL_LESS"))
-	{
-		return(GL_LESS);
-	}
-	else if (!strcmp(strDepthFunc, "GL_NEVER"))
-	{
-		return(GL_NEVER);
-	}
-	else if (!strcmp(strDepthFunc, "GL_AWAYS"))
-	{
-		return(GL_ALWAYS);
-	}
-	else
-	{
-		assert(false);
-	}
+    if (!strcmp(strDepthFunc, "GL_EQUAL"))
+    {
+        return(GL_EQUAL);
+    }
+    else if (!strcmp(strDepthFunc, "GL_NOTEQUAL"))
+    {
+        return(GL_NOTEQUAL);
+    }
+    else if (!strcmp(strDepthFunc, "GL_GEQUAL"))
+    {
+        return(GL_GEQUAL);
+    }
+    else if (!strcmp(strDepthFunc, "GL_LEQUAL"))
+    {
+        return(GL_LEQUAL);
+    }
+    else if (!strcmp(strDepthFunc, "GL_GREATER"))
+    {
+        return(GL_GREATER);
+    }
+    else if (!strcmp(strDepthFunc, "GL_LESS"))
+    {
+        return(GL_LESS);
+    }
+    else if (!strcmp(strDepthFunc, "GL_NEVER"))
+    {
+        return(GL_NEVER);
+    }
+    else if (!strcmp(strDepthFunc, "GL_AWAYS"))
+    {
+        return(GL_ALWAYS);
+    }
+    else
+    {
+        assert(false);
+    }
 
-	return(0);
+    return(0);
 }
 
 /**
@@ -241,32 +241,32 @@ GLenum strToDepthFunc(const char * strDepthFunc)
  */
 GLenum strToBlendEquation(const char * strBlendEquation)
 {
-	if (!strcmp(strBlendEquation, "GL_FUNC_ADD"))
-	{
-		return(GL_FUNC_ADD);
-	}
-	else if (!strcmp(strBlendEquation, "GL_FUNC_SUBTRACT"))
-	{
-		return(GL_FUNC_SUBTRACT);
-	}
-	else if (!strcmp(strBlendEquation, "GL_FUNC_REVERSE_SUBTRACT"))
-	{
-		return(GL_FUNC_REVERSE_SUBTRACT);
-	}
-	else if (!strcmp(strBlendEquation, "GL_MIN"))
-	{
-		return(GL_MIN);
-	}
-	else if (!strcmp(strBlendEquation, "GL_MAX"))
-	{
-		return(GL_MAX);
-	}
-	else
-	{
-		assert(false);
-	}
+    if (!strcmp(strBlendEquation, "GL_FUNC_ADD"))
+    {
+        return(GL_FUNC_ADD);
+    }
+    else if (!strcmp(strBlendEquation, "GL_FUNC_SUBTRACT"))
+    {
+        return(GL_FUNC_SUBTRACT);
+    }
+    else if (!strcmp(strBlendEquation, "GL_FUNC_REVERSE_SUBTRACT"))
+    {
+        return(GL_FUNC_REVERSE_SUBTRACT);
+    }
+    else if (!strcmp(strBlendEquation, "GL_MIN"))
+    {
+        return(GL_MIN);
+    }
+    else if (!strcmp(strBlendEquation, "GL_MAX"))
+    {
+        return(GL_MAX);
+    }
+    else
+    {
+        assert(false);
+    }
 
-	return(0);
+    return(0);
 }
 
 /**
@@ -276,18 +276,34 @@ GLenum strToBlendEquation(const char * strBlendEquation)
  */
 GLenum strToBlendFunc(const char * strBlendFunc)
 {
-	if (!strcmp(strBlendFunc, "GL_ONE"))
-	{
-		return(GL_ONE);
-	}
-	else if (!strcmp(strBlendFunc, "GL_ZERO"))
-	{
-		return(GL_ZERO);
-	}
-	else
-	{
-		assert(false);
-	}
+    if (!strcmp(strBlendFunc, "GL_ONE"))
+    {
+        return(GL_ONE);
+    }
+    else if (!strcmp(strBlendFunc, "GL_ZERO"))
+    {
+        return(GL_ZERO);
+    }
+    else if (!strcmp(strBlendFunc, "GL_SRC_COLOR"))
+    {
+        return(GL_SRC_COLOR);
+    }
+    else if (!strcmp(strBlendFunc, "GL_DST_COLOR"))
+    {
+        return(GL_DST_COLOR);
+    }
+    else if (!strcmp(strBlendFunc, "GL_SRC_ALPHA"))
+    {
+        return(GL_SRC_ALPHA);
+    }
+    else if (!strcmp(strBlendFunc, "GL_DST_ALPHA"))
+    {
+        return(GL_DST_ALPHA);
+    }
+    else
+    {
+        assert(false);
+    }
 
-	return(0);
+    return(0);
 }

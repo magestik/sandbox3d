@@ -83,12 +83,29 @@
 				<output texture="depth" attachment="GL_DEPTH_ATTACHMENT" /> <!-- early z-cull -->
 				<output texture="HDR" attachment="GL_COLOR_ATTACHMENT0" />
 			</pass>
-			<pass name="fog">
-				<shader name="full_fog.vert" type="GL_VERTEX_SHADER" />
-				<shader name="full_fog.frag" type="GL_FRAGMENT_SHADER" />
-				<output texture="depth" attachment="GL_DEPTH_ATTACHMENT" /> <!-- early z-cull -->
+		</technique>
+
+		<technique name="fog">
+			<!-- dst = src.a * dst + 1 * src.rgb -->
+			<!-- src.a : Extinction ; src.rgb = Scattering -->
+			<blend sfactor="GL_ONE" equation="GL_FUNC_ADD" dfactor="GL_SRC_ALPHA" /> 
+			<pass name="simple">
+				<shader name="fullscreen.vert" type="GL_VERTEX_SHADER" />
+				<shader name="fog_simple.frag" type="GL_FRAGMENT_SHADER" />
 				<output texture="HDR" attachment="GL_COLOR_ATTACHMENT0" />
 			</pass>
+<!--
+			<pass name="scattering">
+				<shader name="fullscreen.vert" type="GL_VERTEX_SHADER" />
+				<shader name="fog_scattering.frag" type="GL_FRAGMENT_SHADER" />
+				<output texture="HDR" attachment="GL_COLOR_ATTACHMENT0" />
+			</pass>
+			<pass name="godrays">
+				<shader name="fullscreen.vert" type="GL_VERTEX_SHADER" />
+				<shader name="fog_godrays.frag" type="GL_FRAGMENT_SHADER" />
+				<output texture="HDR" attachment="GL_COLOR_ATTACHMENT0" />
+			</pass>
+-->
 		</technique>
 
 		<technique name="tonemapping">

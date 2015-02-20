@@ -34,7 +34,7 @@ extern std::map<std::string, Mesh>			g_Meshes;
 
 namespace tinyxml2
 {
-	class XMLElement;
+    class XMLElement;
 }
 
 class Rendering
@@ -42,116 +42,118 @@ class Rendering
 
 public:
 
-	enum ERenderType
-	{
-		FINAL,
-		SPECULAR_LIGHTS,
-		DIFFUSE_LIGHTS,
-		NORMAL_BUFFER,
-		DEPTH,
-		SHADOWS,
-		LUMINANCE1,
-		LUMINANCE2,
-		BLOOM
-	};
+    enum ERenderType
+    {
+        FINAL,
+        SPECULAR_LIGHTS,
+        DIFFUSE_LIGHTS,
+        NORMAL_BUFFER,
+        DEPTH,
+        SHADOWS,
+        LUMINANCE1,
+        LUMINANCE2,
+        BLOOM
+    };
 
-	explicit Rendering		(void);
+    explicit Rendering		(void);
 
-	void	onInitializeComplete	(void);
+    void	onInitializeComplete	(void);
 
-	void	onResize				(int width, int height);
+    void	onResize				(int width, int height);
 
-	void	onUpdate				(const mat4x4 & mView, const vec4 & clearColor, bool bWireframe, ERenderType eRenderType = FINAL);
+    void	onUpdate				(const mat4x4 & mView, const vec4 & clearColor, bool bWireframe, ERenderType eRenderType = FINAL);
 
-	void	onCreate				(const Mesh::Instance & instance);
+    void	onCreate				(const Mesh::Instance & instance);
 
-	void * getObjectAtPos			(const ivec2 & pos);
+    void * getObjectAtPos			(const ivec2 & pos);
 
-	const GPU::Shader<GL_VERTEX_SHADER> * GetVertexShader(const char * name) const
-	{
-		return(g_VertexShaders[name]);
-	}
+    const GPU::Shader<GL_VERTEX_SHADER> * GetVertexShader(const char * name) const
+    {
+        return(g_VertexShaders[name]);
+    }
 
-	const GPU::Shader<GL_FRAGMENT_SHADER> * GetFragmentShader(const char * name) const
-	{
-		return(g_FragmentShaders[name]);
-	}
+    const GPU::Shader<GL_FRAGMENT_SHADER> * GetFragmentShader(const char * name) const
+    {
+        return(g_FragmentShaders[name]);
+    }
 
-	const GPU::Shader<GL_GEOMETRY_SHADER> * GetGeometryShader(const char * name) const
-	{
-		return(g_GeometryShaders[name]);
-	}
+    const GPU::Shader<GL_GEOMETRY_SHADER> * GetGeometryShader(const char * name) const
+    {
+        return(g_GeometryShaders[name]);
+    }
 
-	const GPU::Texture<GL_TEXTURE_2D> * GetRenderTexture(const char * name) const
-	{
-		return(m_mapTargets.at(name).getTexture());
-	}
+    const GPU::Texture<GL_TEXTURE_2D> * GetRenderTexture(const char * name) const
+    {
+        return(m_mapTargets.at(name).getTexture());
+    }
 
 protected:
 
-	void	initializePipelineFromXML	(const char * filename);
-	void	initializeTargets			(const tinyxml2::XMLElement * targets);
-	void	initializeTechniques		(const tinyxml2::XMLElement * techniques);
+    void	initializePipelineFromXML	(const char * filename);
+    void	initializeTargets			(const tinyxml2::XMLElement * targets);
+    void	initializeTechniques		(const tinyxml2::XMLElement * techniques);
 
-	void	generateMeshes				(void);
+    void	generateMeshes				(void);
 
-	void    computeAverageLum           (void);
+    void    computeAverageLum           (void);
 
-	void	renderSceneToGBuffer		(const mat4x4 & mView);
+    void	renderSceneToGBuffer		(const mat4x4 & mView);
 
-	void	renderLightsToAccumBuffer	(const mat4x4 & mView);
+    void	renderLightsToAccumBuffer	(const mat4x4 & mView);
 
-	void	renderSceneToShadowMap		(void);
+    void	renderSceneToShadowMap		(void);
 
-	void    renderBloom                 (void);
+    void    renderBloom                 (void);
 
-	void	renderFinal					(const mat4x4 & mView, const vec4 & clearColor);
+    void	renderFinal					(const mat4x4 & mView, const vec4 & clearColor);
 
-	void	renderIntermediateToScreen	(ERenderType eRenderType);
+    void    renderFog                   (const mat4x4 & mView);
 
-	void    renderPostProcessEffects    (void);
+    void	renderIntermediateToScreen	(ERenderType eRenderType);
 
-	void	renderPickBuffer			(const mat4x4 & mView);
+    void    renderPostProcessEffects    (void);
 
-	void	renderBoundingBox			(const mat4x4 & mView);
+    void	renderPickBuffer			(const mat4x4 & mView);
+
+    void	renderBoundingBox			(const mat4x4 & mView);
 
 private:
 
-	unsigned int m_uWidth;
-	unsigned int m_uHeight;
+    unsigned int m_uWidth;
+    unsigned int m_uHeight;
 
-	unsigned int m_uLuminanceSizePOT;
+    unsigned int m_uLuminanceSizePOT;
 
-	mat4x4 m_matProjection;
+    mat4x4 m_matProjection;
 
-	AverageLuminance    m_AvLum;
+    AverageLuminance    m_AvLum;
 
-	std::vector<Mesh::Instance> m_aObjects;
+    std::vector<Mesh::Instance> m_aObjects;
 
-	ShadowMap * m_pShadowMap;
-	Light::Directionnal * m_pLight;
+    ShadowMap * m_pShadowMap;
+    Light::Directionnal * m_pLight;
 
-	Mesh *	m_pQuadMesh;
-	Mesh *	m_pPointMesh;
+    Mesh *	m_pQuadMesh;
+    Mesh *	m_pPointMesh;
 
-	Mesh::Instance * m_pSelectedObject;
+    Mesh::Instance * m_pSelectedObject;
 
-	enum ETarget
-	{
-		TARGET_LUMINANCE1       = 0,
-		TARGET_LUMINANCE2       = 1,
-		TARGET_MAX              = 2
-	};
+    enum ETarget
+    {
+        TARGET_LUMINANCE1       = 0,
+        TARGET_LUMINANCE2       = 1,
+        TARGET_MAX              = 2
+    };
 
-	GPU::Texture<GL_TEXTURE_2D> * m_apTargets [TARGET_MAX];
+    GPU::Texture<GL_TEXTURE_2D> * m_apTargets [TARGET_MAX];
 
-	GLuint m_uSampler;
+    GLuint m_uSampler;
 
-	std::map<std::string, RenderTexture>	m_mapTargets;
-	std::map<std::string, Technique>		m_mapTechnique;
+    std::map<std::string, RenderTexture>	m_mapTargets;
+    std::map<std::string, Technique>		m_mapTechnique;
 
 public:
 
-	EnvironmentSettings environment;
+    EnvironmentSettings environment;
 
 };
