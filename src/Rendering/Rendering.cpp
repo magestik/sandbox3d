@@ -43,7 +43,6 @@ Rendering::Rendering()
 , m_pQuadMesh(nullptr)
 , m_mapTargets()
 , m_mapTechnique()
-, m_pSelectedObject(nullptr)
 {
     // ...
 }
@@ -252,7 +251,7 @@ void Rendering::onResize(int width, int height)
  * @param mProjection
  * @param mView
  */
-void Rendering::onUpdate(const mat4x4 & mView, const vec4 & clearColor, bool bWireframe, ERenderType eRenderType)
+void Rendering::onUpdate(const mat4x4 & mView, const vec4 & clearColor, bool bWireframe, ERenderType eRenderType, const Mesh::Instance * pSelectedObject)
 {
     if (FINAL == eRenderType && bWireframe)
     {
@@ -350,7 +349,10 @@ void Rendering::onUpdate(const mat4x4 & mView, const vec4 & clearColor, bool bWi
 
         renderPickBuffer(mView);
 
-        renderBoundingBox(mView);
+        if (nullptr != pSelectedObject)
+        {
+            renderBoundingBox(mView, pSelectedObject);
+        }
     }
     else
     {
@@ -365,7 +367,24 @@ void Rendering::onUpdate(const mat4x4 & mView, const vec4 & clearColor, bool bWi
 void Rendering::onCreate(const Mesh::Instance & instance)
 {
     m_aObjects.push_back(instance);
-    m_pSelectedObject = nullptr;
+}
+
+/**
+ * @brief Rendering::onDelete
+ * @param instance
+ */
+void Rendering::onDelete(const Mesh::Instance & instance)
+{
+    for (std::vector<Mesh::Instance>::iterator it = m_aObjects.begin() ; it != m_aObjects.end(); ++it)
+    {
+        const Mesh::Instance & current = *it;
+
+        if (&current == &instance)
+        {
+            m_aObjects.erase(it);
+            break;
+        }
+    }
 }
 
 /**
@@ -373,7 +392,7 @@ void Rendering::onCreate(const Mesh::Instance & instance)
  * @param pos
  * @return
  */
-void * Rendering::getObjectAtPos(const ivec2 & pos)
+Mesh::Instance * Rendering::getObjectAtPos(const ivec2 & pos)
 {
     ivec2 glPos(pos.x, m_uHeight - pos.y);
 
@@ -397,8 +416,6 @@ void * Rendering::getObjectAtPos(const ivec2 & pos)
         PickBufferTechnique.EndPass();
     }
     PickBufferTechnique.End();
-
-    m_pSelectedObject = object;
 
     return(object);
 }
@@ -916,31 +933,28 @@ void Rendering::renderPickBuffer(const mat4x4 & mView)
  * @brief Rendering::renderBoundingBox
  * @param mView
  */
-void Rendering::renderBoundingBox(const mat4x4 & mView)
+void Rendering::renderBoundingBox(const mat4x4 & mView, const Mesh::Instance * pSelectedObject)
 {
-    if (nullptr != m_pSelectedObject)
+    glViewport(0, 0, m_uWidth, m_uHeight);
+
+    Technique & BBoxTechnique = m_mapTechnique["bbox"];
+
+    BBoxTechnique.Begin();
     {
-        glViewport(0, 0, m_uWidth, m_uHeight);
+        BBoxTechnique.BeginPass("default");
 
-        Technique & BBoxTechnique = m_mapTechnique["bbox"];
+        mat4x4 mCameraViewProjection = m_matProjection * mView;
 
-        BBoxTechnique.Begin();
-        {
-            BBoxTechnique.BeginPass("default");
+        BBoxTechnique.SetUniform("ViewProjection", mCameraViewProjection);
+        BBoxTechnique.SetUniform("Model", pSelectedObject->transformation);
 
-            mat4x4 mCameraViewProjection = m_matProjection * mView;
+        BBoxTechnique.SetUniform("BBoxMin", pSelectedObject->mesh->m_BoundingBox.min);
+        BBoxTechnique.SetUniform("BBoxMax", pSelectedObject->mesh->m_BoundingBox.max);
+        BBoxTechnique.SetUniform("color", vec3(1.0, 1.0, 1.0));
 
-            BBoxTechnique.SetUniform("ViewProjection", mCameraViewProjection);
-            BBoxTechnique.SetUniform("Model", m_pSelectedObject->transformation);
+        m_pPointMesh->draw();
 
-            BBoxTechnique.SetUniform("BBoxMin", m_pSelectedObject->mesh->m_BoundingBox.min);
-            BBoxTechnique.SetUniform("BBoxMax", m_pSelectedObject->mesh->m_BoundingBox.max);
-            BBoxTechnique.SetUniform("color", vec3(1.0, 1.0, 1.0));
-
-            m_pPointMesh->draw();
-
-            BBoxTechnique.EndPass();
-        }
-        BBoxTechnique.End();
+        BBoxTechnique.EndPass();
     }
+    BBoxTechnique.End();
 }

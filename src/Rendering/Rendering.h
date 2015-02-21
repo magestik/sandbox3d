@@ -61,11 +61,13 @@ public:
 
     void	onResize				(int width, int height);
 
-    void	onUpdate				(const mat4x4 & mView, const vec4 & clearColor, bool bWireframe, ERenderType eRenderType = FINAL);
+    void	onUpdate				(const mat4x4 & mView, const vec4 & clearColor, bool bWireframe, ERenderType eRenderType = FINAL, const Mesh::Instance * pSelected = nullptr);
 
     void	onCreate				(const Mesh::Instance & instance);
 
-    void * getObjectAtPos			(const ivec2 & pos);
+    void	onDelete				(const Mesh::Instance & instance);
+
+    Mesh::Instance * getObjectAtPos	(const ivec2 & pos);
 
     const GPU::Shader<GL_VERTEX_SHADER> * GetVertexShader(const char * name) const
     {
@@ -115,7 +117,7 @@ protected:
 
     void	renderPickBuffer			(const mat4x4 & mView);
 
-    void	renderBoundingBox			(const mat4x4 & mView);
+    void	renderBoundingBox			(const mat4x4 & mView, const Mesh::Instance * pSelected);
 
 private:
 
@@ -135,8 +137,6 @@ private:
 
     Mesh *	m_pQuadMesh;
     Mesh *	m_pPointMesh;
-
-    Mesh::Instance * m_pSelectedObject;
 
     enum ETarget
     {
