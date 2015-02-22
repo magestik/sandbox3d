@@ -18,8 +18,8 @@
 			<pass name="default">
 				<shader name="pickbuffer.vert" type="GL_VERTEX_SHADER" />
 				<shader name="pickbuffer.frag" type="GL_FRAGMENT_SHADER" />
-				<output texture="depth" attachment="GL_DEPTH_ATTACHMENT" /> <!-- early z-cull -->
-				<output texture="pickbuffer" attachment="GL_COLOR_ATTACHMENT0" />
+				<output texture="depth" /> <!-- early z-cull -->
+				<output texture="pickbuffer" />
 			</pass>
 		</technique>
 
@@ -36,14 +36,14 @@
 			<pass name="simple">
 				<shader name="geometry_pass.vert" type="GL_VERTEX_SHADER" />
 				<shader name="geometry_pass.frag" type="GL_FRAGMENT_SHADER" />
-				<output texture="depth" attachment="GL_DEPTH_ATTACHMENT" />
-				<output texture="normals" attachment="GL_COLOR_ATTACHMENT0" />
+				<output texture="depth" />
+				<output texture="normals" />
 			</pass>
 			<pass name="normal_map">
 				<shader name="geometry_normalmap_pass.vert" type="GL_VERTEX_SHADER" />
 				<shader name="geometry_normalmap_pass.frag" type="GL_FRAGMENT_SHADER" />
-				<output texture="depth" attachment="GL_DEPTH_ATTACHMENT" />
-				<output texture="normals" attachment="GL_COLOR_ATTACHMENT0" />
+				<output texture="depth" />
+				<output texture="normals" />
 			</pass>
 		</technique>
 
@@ -52,8 +52,8 @@
 			<pass name="directional">
 				<shader name="directionnal_light.vert" type="GL_VERTEX_SHADER" />
 				<shader name="directionnal_light.frag" type="GL_FRAGMENT_SHADER" />
-				<output texture="lights_diffuse" attachment="GL_COLOR_ATTACHMENT0" />
-				<output texture="lights_specular" attachment="GL_COLOR_ATTACHMENT1" />
+				<output texture="lights_diffuse" />
+				<output texture="lights_specular" />
 			</pass>
 		</technique>
 
@@ -61,17 +61,17 @@
 			<pass name="bright">
 				<shader name="fullscreen.vert" type="GL_VERTEX_SHADER" />
 				<shader name="fullscreen_bright.frag" type="GL_FRAGMENT_SHADER" />
-				<output texture="bloom1" attachment="GL_COLOR_ATTACHMENT0" />
+				<output texture="bloom1" />
 			</pass>
 			<pass name="horizontal_blur">
 				<shader name="fullscreen.vert" type="GL_VERTEX_SHADER" />
 				<shader name="gaussian_blur_h.frag" type="GL_FRAGMENT_SHADER" />
-				<output texture="bloom2" attachment="GL_COLOR_ATTACHMENT0" />
+				<output texture="bloom2" />
 			</pass>
 			<pass name="vertical_blur">
 				<shader name="fullscreen.vert" type="GL_VERTEX_SHADER" />
 				<shader name="gaussian_blur_v.frag" type="GL_FRAGMENT_SHADER" />
-				<output texture="bloom1" attachment="GL_COLOR_ATTACHMENT0" />
+				<output texture="bloom1" />
 			</pass>
 		</technique>
 
@@ -80,8 +80,8 @@
 			<pass name="default">
 				<shader name="full.vert" type="GL_VERTEX_SHADER" />
 				<shader name="full.frag" type="GL_FRAGMENT_SHADER" />
-				<output texture="depth" attachment="GL_DEPTH_ATTACHMENT" /> <!-- early z-cull -->
-				<output texture="HDR" attachment="GL_COLOR_ATTACHMENT0" />
+				<output texture="depth" /> <!-- early z-cull -->
+				<output texture="HDR" />
 			</pass>
 		</technique>
 
@@ -92,18 +92,18 @@
 			<pass name="simple">
 				<shader name="fullscreen.vert" type="GL_VERTEX_SHADER" />
 				<shader name="fog_simple.frag" type="GL_FRAGMENT_SHADER" />
-				<output texture="HDR" attachment="GL_COLOR_ATTACHMENT0" />
+				<output texture="HDR" />
 			</pass>
 <!--
 			<pass name="scattering">
 				<shader name="fullscreen.vert" type="GL_VERTEX_SHADER" />
 				<shader name="fog_scattering.frag" type="GL_FRAGMENT_SHADER" />
-				<output texture="HDR" attachment="GL_COLOR_ATTACHMENT0" />
+				<output texture="HDR" />
 			</pass>
 			<pass name="godrays">
 				<shader name="fullscreen.vert" type="GL_VERTEX_SHADER" />
 				<shader name="fog_godrays.frag" type="GL_FRAGMENT_SHADER" />
-				<output texture="HDR" attachment="GL_COLOR_ATTACHMENT0" />
+				<output texture="HDR" />
 			</pass>
 -->
 		</technique>

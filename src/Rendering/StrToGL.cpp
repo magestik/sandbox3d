@@ -5,49 +5,6 @@
 // TODO : Use loop everywhere !!!
 
 /**
- * @brief strToAttachment
- * @param strAttachment
- * @return
- */
-GLenum strToAttachment(const char * strAttachment)
-{
-    if (!strcmp(strAttachment, "GL_DEPTH_ATTACHMENT"))
-    {
-        return(GL_DEPTH_ATTACHMENT);
-    }
-    else if (!strcmp(strAttachment, "GL_STENCIL_ATTACHMENT"))
-    {
-        return(GL_STENCIL_ATTACHMENT);
-    }
-    else if (!strcmp(strAttachment, "GL_DEPTH_STENCIL_ATTACHMENT"))
-    {
-        return(GL_DEPTH_STENCIL_ATTACHMENT);
-    }
-    else if (!strcmp(strAttachment, "GL_COLOR_ATTACHMENT0"))
-    {
-        return(GL_COLOR_ATTACHMENT0);
-    }
-    else if (!strcmp(strAttachment, "GL_COLOR_ATTACHMENT1"))
-    {
-        return(GL_COLOR_ATTACHMENT1);
-    }
-    else if (!strcmp(strAttachment, "GL_COLOR_ATTACHMENT2"))
-    {
-        return(GL_COLOR_ATTACHMENT2);
-    }
-    else if (!strcmp(strAttachment, "GL_COLOR_ATTACHMENT3"))
-    {
-        return(GL_COLOR_ATTACHMENT3);
-    }
-    else
-    {
-        assert(false);
-    }
-
-    return(0);
-}
-
-/**
  * @brief strToShaderType
  * @param strShaderType
  * @return

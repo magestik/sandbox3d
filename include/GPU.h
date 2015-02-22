@@ -15,25 +15,25 @@ class Buffer
 {
 public:
 
-	Buffer (const Buffer<T> &) = delete;
+    Buffer (const Buffer<T> &) = delete;
 
-	explicit Buffer(void)
-	{
-		glGenBuffers(1, &m_uObject);
-	}
+    explicit Buffer(void)
+    {
+        glGenBuffers(1, &m_uObject);
+    }
 
-	~Buffer(void)
-	{
-		glDeleteBuffers(1, &m_uObject);
-	}
+    ~Buffer(void)
+    {
+        glDeleteBuffers(1, &m_uObject);
+    }
 
-	GLuint	GetObject (void) const { return(m_uObject); }
+    GLuint	GetObject (void) const { return(m_uObject); }
 
 private:
 
-	Buffer<T> & operator = (const Buffer<T> &) { /* ... */ }
+    Buffer<T> & operator = (const Buffer<T> &) { /* ... */ }
 
-	GLuint m_uObject;
+    GLuint m_uObject;
 };
 
 template<GLenum T>
@@ -41,34 +41,34 @@ class Shader
 {
 public:
 
-	Shader (const Shader<T> &) = delete;
+    Shader (const Shader<T> &) = delete;
 
-	explicit Shader(void)
-	{
-		m_uObject = glCreateShader(T);
-	}
+    explicit Shader(void)
+    {
+        m_uObject = glCreateShader(T);
+    }
 
-	~Shader(void)
-	{
-		glDeleteShader(m_uObject);
-	}
+    ~Shader(void)
+    {
+        glDeleteShader(m_uObject);
+    }
 
-	bool compileFromSource(const char * source)
-	{
-		glShaderSource(m_uObject, 1, &source, NULL);
-		glCompileShader(m_uObject);
-		GLint isCompiled = 0;
-		glGetShaderiv(m_uObject, GL_COMPILE_STATUS, &isCompiled);
-		return(GL_TRUE == isCompiled);
-	}
+    bool compileFromSource(const char * source)
+    {
+        glShaderSource(m_uObject, 1, &source, NULL);
+        glCompileShader(m_uObject);
+        GLint isCompiled = 0;
+        glGetShaderiv(m_uObject, GL_COMPILE_STATUS, &isCompiled);
+        return(GL_TRUE == isCompiled);
+    }
 
-	GLuint	GetObject (void) const { return(m_uObject); }
+    GLuint	GetObject (void) const { return(m_uObject); }
 
 private:
 
-	Shader<T> & operator = (const Shader<T> &) { /* ... */ }
+    Shader<T> & operator = (const Shader<T> &) { /* ... */ }
 
-	GLuint m_uObject;
+    GLuint m_uObject;
 
 };
 
@@ -77,59 +77,70 @@ class Texture
 {
 public:
 
-	Texture (const Texture<T> &) = delete;
+    Texture (const Texture<T> &) = delete;
 
-	explicit Texture(void)
-	{
-		glGenTextures(1, &m_uObject);
-	}
+    explicit Texture(void)
+    {
+        glGenTextures(1, &m_uObject);
+    }
 
-	~Texture(void)
-	{
-		glDeleteTextures(1, &m_uObject);
-	}
+    ~Texture(void)
+    {
+        glDeleteTextures(1, &m_uObject);
+    }
 
-	template<GLint internalFormat>
-	void init(GLsizei width, GLsizei height)
-	{
-		// Normally used to specify pixel data format/type
-		// But GL implementations check what we pass even if data is NULL !
-		// So we have to give acceptable USELESS parameters ...
-		GLenum format = getFormat(internalFormat);
-		GLenum type = getType(internalFormat);
+    template<GLint internalFormat>
+    void init(GLsizei width, GLsizei height)
+    {
+        // Normally used to specify pixel data format/type
+        // But GL implementations check what we pass even if data is NULL !
+        // So we have to give acceptable USELESS parameters ...
+        GLenum format = GPU::getFormat(internalFormat);
+        GLenum type = GPU::getType(internalFormat);
 
-		glBindTexture(T, m_uObject);
-		glTexImage2D(T, 0, internalFormat, width, height, 0, format, type, nullptr);
-		glTexParameteri(T, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-		glTexParameteri(T, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		glTexParameteri(T, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-		glTexParameteri(T, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-		glBindTexture(T, 0);
-	}
+        glBindTexture(T, m_uObject);
+        glTexImage2D(T, 0, internalFormat, width, height, 0, format, type, nullptr);
+        glTexParameteri(T, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexParameteri(T, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(T, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(T, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glBindTexture(T, 0);
+    }
 
-	template<GLint internalFormat>
-	void init(GLsizei width, GLsizei height, const Buffer<GL_PIXEL_UNPACK_BUFFER> & buffer, GLenum format, GLenum type)
-	{
-		glBindBuffer(GL_PIXEL_UNPACK_BUFFER, buffer.GetObject());
+    template<GLint internalFormat>
+    void init(GLsizei width, GLsizei height, const Buffer<GL_PIXEL_UNPACK_BUFFER> & buffer, GLenum format, GLenum type)
+    {
+        glBindBuffer(GL_PIXEL_UNPACK_BUFFER, buffer.GetObject());
 
-		glBindTexture(T, m_uObject);
-		glTexImage2D(T, 0, internalFormat, width, height, 0, format, type, nullptr);
-		glTexParameteri(T, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-		glTexParameteri(T, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		glTexParameteri(T, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-		glTexParameteri(T, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-		glBindTexture(T, 0);
+        glBindTexture(T, m_uObject);
+        glTexImage2D(T, 0, internalFormat, width, height, 0, format, type, nullptr);
+        glTexParameteri(T, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexParameteri(T, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(T, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(T, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glBindTexture(T, 0);
 
-		glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
-	}
+        glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
+    }
 
-	GLuint	GetObject (void) const { return(m_uObject); }
+    GLint getFormat(void) const
+    {
+        GLint format = 0;
+
+        glBindTexture(T, m_uObject);
+        glGetTexLevelParameteriv(T, 0, GL_TEXTURE_INTERNAL_FORMAT, &format);
+        glBindTexture(T, 0);
+
+        return(format);
+    }
+
+    GLuint	GetObject (void) const { return(m_uObject); }
 
 private:
 
-	Texture<T> & operator = (const Texture<T> &) { /* ... */ }
+    Texture<T> & operator = (const Texture<T> &) { /* ... */ }
 
-	GLuint m_uObject;
+    GLuint m_uObject;
 
 };
 
