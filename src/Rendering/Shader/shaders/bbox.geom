@@ -5,10 +5,7 @@
 layout(points) in;
 layout(line_strip, max_vertices = 18) out;
 
-layout (std140) uniform CameraBlock
-{
-	mat4x4 ViewProjection;
-};
+layout (std140) uniform CAMERA_BLOCK_DEFINITION(CameraBlock);
 
 uniform mat4x4 Model;
 

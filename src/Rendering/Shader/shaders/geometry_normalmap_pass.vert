@@ -2,23 +2,17 @@
 
 #include "../Interface.h"
 
-struct VS_OUTPUT
-{
-	vec2 texCoord;
-	vec3 normal;
-	vec3 tangent;
-	vec3 bitangent;
-};
-
-layout (std140) uniform CAMERA_BLOCK_DEFINITION(CameraBlock);
-layout (std140) uniform OBJECT_BLOCK_DEFINITION(ObjectBlock);
-
-uniform sampler2D normalMap;
+#include "geometry_normalmap_pass.h"
 
 layout (location = POSITION)	in vec3 inPosition;
 layout (location = NORMAL)		in vec3 inNormal;
 layout (location = TEXCOORD0)	in vec2 inTexCoord;
 layout (location = TANGENT)		in vec3 inTangent;
+
+layout (std140) uniform CAMERA_BLOCK_DEFINITION(CameraBlock);
+layout (std140) uniform OBJECT_BLOCK_DEFINITION(ObjectBlock);
+
+uniform sampler2D normalMap;
 
 out VS_OUTPUT vsOut;
 

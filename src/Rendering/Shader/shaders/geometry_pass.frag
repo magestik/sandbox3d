@@ -2,10 +2,7 @@
 
 #include "../Interface.h"
 
-struct VS_OUTPUT
-{
-	vec3 normal;
-};
+#include "geometry_pass.h"
 
 uniform float shininess;
 

@@ -2,10 +2,7 @@
 
 #include "../Interface.h"
 
-struct VS_OUTPUT
-{
-	uint color;
-};
+#include "pickbuffer.h"
 
 flat in VS_OUTPUT vsOut;
 

@@ -2,10 +2,7 @@
 
 #include "../Interface.h"
 
-struct VS_OUTPUT
-{
-	vec2 texCoord;
-};
+#include "fullscreen.h"
 
 uniform sampler2D texSampler;
 

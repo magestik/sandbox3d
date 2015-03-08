@@ -2,14 +2,9 @@
 
 #include "../Interface.h"
 
-#define USE_PCF 1
+#include "full.h"
 
-struct VS_OUTPUT
-{
-	vec3 position;
-	vec2 texCoord;
-	vec4 lightCoord;
-};
+#define USE_PCF 1
 
 uniform mat4x4 DepthTransformation;
 

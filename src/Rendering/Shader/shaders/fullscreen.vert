@@ -2,13 +2,10 @@
 
 #include "../Interface.h"
 
-struct VS_OUTPUT
-{
-	vec2 texCoord;
-};
+#include "fullscreen.h"
 
-layout (location = POSITION) in vec2 pos;
-layout (location = TEXCOORD0) in vec2 tex;
+layout (location = POSITION)	in vec2 pos;
+layout (location = TEXCOORD0)	in vec2 tex;
 
 out VS_OUTPUT vsOut;
 

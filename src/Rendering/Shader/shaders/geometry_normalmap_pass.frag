@@ -2,13 +2,7 @@
 
 #include "../Interface.h"
 
-struct VS_OUTPUT
-{
-	vec2 texCoord;
-	vec3 normal;
-	vec3 tangent;
-	vec3 bitangent;
-};
+#include "geometry_normalmap_pass.h"
 
 uniform sampler2D normalMap;
 

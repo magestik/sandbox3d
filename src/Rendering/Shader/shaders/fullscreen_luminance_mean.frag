@@ -2,6 +2,8 @@
 
 #include "../Interface.h"
 
+#include "fullscreen.h"
+
 uniform sampler2D texSampler;
 
 out vec2 outLuminance;

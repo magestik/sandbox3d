@@ -2,11 +2,11 @@
 
 #include "../Interface.h"
 
+layout (location = POSITION) in vec3 pos;
+
 uniform mat4x4 LightViewProjection;
 
 uniform mat4x4 Model;
-
-layout (location = POSITION) in vec3 pos;
 
 void main(void)
 {

@@ -2,16 +2,13 @@
 
 #include "../Interface.h"
 
-struct VS_OUTPUT
-{
-	vec3 normal;
-};
-
-layout (std140) uniform CAMERA_BLOCK_DEFINITION(CameraBlock);
-layout (std140) uniform OBJECT_BLOCK_DEFINITION(ObjectBlock);
+#include "geometry_pass.h"
 
 layout (location = POSITION)	in vec3 inPosition;
 layout (location = NORMAL)		in vec3 inNormal;
+
+layout (std140) uniform CAMERA_BLOCK_DEFINITION(CameraBlock);
+layout (std140) uniform OBJECT_BLOCK_DEFINITION(ObjectBlock);
 
 out VS_OUTPUT vsOut;
 

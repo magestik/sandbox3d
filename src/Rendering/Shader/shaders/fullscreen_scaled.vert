@@ -2,6 +2,8 @@
 
 #include "../Interface.h"
 
+#include "fullscreen.h"
+
 layout (location = POSITION) in vec2 pos;
 
 void main(void)
