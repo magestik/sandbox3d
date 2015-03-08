@@ -14,7 +14,7 @@ ShadowMap::ShadowMap(void)
 , m_matProjection(1.0f)
 , m_pShader(nullptr)
 {
-	// ...
+    // ...
 }
 
 /**
@@ -22,7 +22,7 @@ ShadowMap::ShadowMap(void)
  */
 ShadowMap::~ShadowMap(void)
 {
-	// ...
+    // ...
 }
 
 /**
@@ -33,37 +33,33 @@ ShadowMap::~ShadowMap(void)
  */
 bool ShadowMap::init(unsigned int width, unsigned height)
 {
-	m_pShader = new Shader(g_VertexShaders["depth_only.vert"], g_FragmentShaders["depth_only.frag"]);
+    m_pShader = new Shader(g_VertexShaders["depth_only.vert"], g_FragmentShaders["depth_only.frag"]);
 
-	glGenFramebuffers(1, &m_uFramebufferObject);
+    glGenFramebuffers(1, &m_uFramebufferObject);
 
-	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_uFramebufferObject);
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_uFramebufferObject);
 
-	{
-		m_texture.init<GL_DEPTH_COMPONENT32F>(width, height);
+    {
+        m_texture.init<GL_DEPTH_COMPONENT32F>(width, height);
 
-		glBindTexture(GL_TEXTURE_2D, m_texture.GetObject());
-		//float color [4] = { 1.0f, 1.0f, 1.0f, 1.0f };
-		//glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, color);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		glBindTexture(GL_TEXTURE_2D, 0);
+        glBindTexture(GL_TEXTURE_2D, m_texture.GetObject());
+        //float color [4] = { 1.0f, 1.0f, 1.0f, 1.0f };
+        //glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, color);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
+        glBindTexture(GL_TEXTURE_2D, 0);
 
-		glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, m_texture.GetObject(), 0);
-	}
+        glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, m_texture.GetObject(), 0);
+    }
 
-	//m_matProjection = _perspective(45.0f, 1.0f, 1.0f, 100.0f); // FIXME : spot light 45° hardcoded
-	m_matProjection = _ortho(-20.0f, 20.0f, -20.0f, 20.0f, -10.0f, 100.0f);
+    //m_matProjection = _perspective(45.0f, 1.0f, 1.0f, 100.0f); // FIXME : spot light 45° hardcoded
+    m_matProjection = _ortho(-20.0f, 20.0f, -20.0f, 20.0f, -10.0f, 100.0f);
 
-	GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+    GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
 
-	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 
-	return (status == GL_FRAMEBUFFER_COMPLETE);
+    return (status == GL_FRAMEBUFFER_COMPLETE);
 }
 
 /**
@@ -71,7 +67,7 @@ bool ShadowMap::init(unsigned int width, unsigned height)
  */
 void ShadowMap::free(void)
 {
-	glDeleteFramebuffers(1, &m_uFramebufferObject);
+    glDeleteFramebuffers(1, &m_uFramebufferObject);
 }
 
 /**
@@ -80,19 +76,19 @@ void ShadowMap::free(void)
  */
 bool ShadowMap::Begin(void)
 {
-	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_uFramebufferObject);
-	glDrawBuffer(GL_NONE);
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_uFramebufferObject);
+    glDrawBuffer(GL_NONE);
 
-	glEnable(GL_DEPTH_TEST);
+    glEnable(GL_DEPTH_TEST);
 
-	glPolygonOffset(10.0f, 1.0f);
-	glEnable(GL_POLYGON_OFFSET_FILL);
+    glPolygonOffset(10.0f, 1.0f);
+    glEnable(GL_POLYGON_OFFSET_FILL);
 
-	glClear(GL_DEPTH_BUFFER_BIT);
+    glClear(GL_DEPTH_BUFFER_BIT);
 
-	m_pShader->SetAsCurrent();
+    m_pShader->SetAsCurrent();
 
-	return(true);
+    return(true);
 }
 
 /**
@@ -101,14 +97,14 @@ bool ShadowMap::Begin(void)
  */
 bool ShadowMap::End(void)
 {
-	glUseProgram(0);
+    glUseProgram(0);
 
-	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-	glDrawBuffer(GL_BACK);
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+    glDrawBuffer(GL_BACK);
 
-	glDisable(GL_DEPTH_TEST);
+    glDisable(GL_DEPTH_TEST);
 
-	glDisable(GL_POLYGON_OFFSET_FILL);
+    glDisable(GL_POLYGON_OFFSET_FILL);
 
-	return(true);
+    return(true);
 }

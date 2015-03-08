@@ -164,8 +164,6 @@ private:
     GPU::Buffer<GL_UNIFORM_BUFFER> * m_pCameraBuffer;
     GPU::Buffer<GL_UNIFORM_BUFFER> * m_pObjectsBuffer;
 
-    GLuint m_uSampler;
-
     std::map<std::string, RenderTexture>	m_mapTargets;
     std::map<std::string, Technique>		m_mapTechnique;
 

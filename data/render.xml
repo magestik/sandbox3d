@@ -42,6 +42,7 @@
 			<pass name="normal_map">
 				<shader name="geometry_normalmap_pass.vert" type="GL_VERTEX_SHADER" />
 				<shader name="geometry_normalmap_pass.frag" type="GL_FRAGMENT_SHADER" />
+				<sampler name="normalMap" min_filter="GL_LINEAR" mag_filter="GL_LINEAR" wrap_s="GL_CLAMP_TO_EDGE" wrap_t="GL_CLAMP_TO_EDGE" />
 				<output texture="depth" />
 				<output texture="normals" />
 			</pass>
@@ -52,6 +53,7 @@
 			<pass name="directional">
 				<shader name="directionnal_light.vert" type="GL_VERTEX_SHADER" />
 				<shader name="directionnal_light.frag" type="GL_FRAGMENT_SHADER" />
+				<sampler name="normalSampler" min_filter="GL_LINEAR" mag_filter="GL_LINEAR" wrap_s="GL_CLAMP_TO_EDGE" wrap_t="GL_CLAMP_TO_EDGE" />
 				<output texture="lights_diffuse" />
 				<output texture="lights_specular" />
 			</pass>
@@ -80,6 +82,9 @@
 			<pass name="default">
 				<shader name="full.vert" type="GL_VERTEX_SHADER" />
 				<shader name="full.frag" type="GL_FRAGMENT_SHADER" />
+				<sampler name="diffuseSampler" min_filter="GL_LINEAR" mag_filter="GL_LINEAR" wrap_s="GL_CLAMP_TO_EDGE" wrap_t="GL_CLAMP_TO_EDGE" />
+				<sampler name="specularSampler" min_filter="GL_LINEAR" mag_filter="GL_LINEAR" wrap_s="GL_CLAMP_TO_EDGE" wrap_t="GL_CLAMP_TO_EDGE" />
+				<sampler name="shadowMap" min_filter="GL_LINEAR" mag_filter="GL_LINEAR" wrap_s="GL_CLAMP_TO_BORDER" wrap_t="GL_CLAMP_TO_BORDER" compare_mode="GL_COMPARE_REF_TO_TEXTURE" compare_func="GL_LEQUAL" />
 				<output texture="depth" /> <!-- early z-cull -->
 				<output texture="HDR" />
 			</pass>
@@ -120,6 +125,7 @@
 			<pass name="bloom">
 				<shader name="fullscreen.vert" type="GL_VERTEX_SHADER" />
 				<shader name="fullscreen_color.frag" type="GL_FRAGMENT_SHADER" />
+				<sampler name="texSampler" min_filter="GL_LINEAR" mag_filter="GL_LINEAR" wrap_s="GL_CLAMP_TO_EDGE" wrap_t="GL_CLAMP_TO_EDGE" />
 			</pass>
 		</technique>
 

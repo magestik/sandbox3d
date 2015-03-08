@@ -20,6 +20,8 @@ TODO :
 - Depth of Field,
 - PBR.
 
+Render.xml is great but it should be improved to reduce state change (FBO per Technique instead of per Pass, Avoid sampler duplicate) and to be API independant !
+
 ### Build
 
 Compile C++ code, and preprocess shaders :

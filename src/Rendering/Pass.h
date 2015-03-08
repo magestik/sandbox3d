@@ -6,6 +6,7 @@
 #include <Matrix.h>
 
 #include <vector>
+#include <map>
 
 namespace tinyxml2
 {
@@ -50,6 +51,7 @@ protected:
 
     GLuint m_uFramebufferObject;
     GLuint m_uShaderObject;
+    std::map<std::string, GLuint> m_mapSamplers;
 
     std::vector<GLenum> m_aDrawBuffers;
 };

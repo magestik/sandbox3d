@@ -264,3 +264,166 @@ GLenum strToBlendFunc(const char * strBlendFunc)
 
     return(0);
 }
+
+/**
+ * @brief strToMinFilter
+ * @param strFilter
+ * @return
+ */
+GLenum strToMinFilter(const char * strFilter)
+{
+    if (!strcmp(strFilter, "GL_NEAREST"))
+    {
+        return(GL_NEAREST);
+    }
+    else if (!strcmp(strFilter, "GL_LINEAR"))
+    {
+        return(GL_LINEAR);
+    }
+    else if (!strcmp(strFilter, "GL_NEAREST_MIPMAP_NEAREST"))
+    {
+        return(GL_NEAREST_MIPMAP_NEAREST);
+    }
+    else if (!strcmp(strFilter, "GL_LINEAR_MIPMAP_NEAREST"))
+    {
+        return(GL_LINEAR_MIPMAP_NEAREST);
+    }
+    else if (!strcmp(strFilter, "GL_NEAREST_MIPMAP_LINEAR"))
+    {
+        return(GL_NEAREST_MIPMAP_LINEAR);
+    }
+    else if (!strcmp(strFilter, "GL_LINEAR_MIPMAP_LINEAR"))
+    {
+        return(GL_LINEAR_MIPMAP_LINEAR);
+    }
+    else
+    {
+        assert(false);
+    }
+
+    return(0);
+}
+
+/**
+ * @brief strToMagFilter
+ * @param strFilter
+ * @return
+ */
+GLenum strToMagFilter(const char * strFilter)
+{
+    if (!strcmp(strFilter, "GL_NEAREST"))
+    {
+        return(GL_NEAREST);
+    }
+    else if (!strcmp(strFilter, "GL_LINEAR"))
+    {
+        return(GL_LINEAR);
+    }
+    else
+    {
+        assert(false);
+    }
+
+    return(0);
+}
+
+/**
+ * @brief strToWrapMode
+ * @param strWrapMode
+ * @return
+ */
+GLenum strToWrapMode(const char * strWrapMode)
+{
+    if (!strcmp(strWrapMode, "GL_CLAMP_TO_EDGE"))
+    {
+        return(GL_CLAMP_TO_EDGE);
+    }
+    else if (!strcmp(strWrapMode, "GL_MIRRORED_REPEAT"))
+    {
+        return(GL_MIRRORED_REPEAT);
+    }
+    else if (!strcmp(strWrapMode, "GL_REPEAT"))
+    {
+        return(GL_REPEAT);
+    }
+    else if (!strcmp(strWrapMode, "GL_CLAMP_TO_BORDER"))
+    {
+        return(GL_CLAMP_TO_BORDER);
+    }
+    else
+    {
+        assert(false);
+    }
+
+    return(0);
+}
+
+/**
+ * @brief strToCompareMode
+ * @param strCompareMode
+ * @return
+ */
+GLenum strToCompareMode(const char * strCompareMode)
+{
+    if (!strcmp(strCompareMode, "GL_COMPARE_REF_TO_TEXTURE"))
+    {
+        return(GL_COMPARE_REF_TO_TEXTURE);
+    }
+    else if (!strcmp(strCompareMode, "GL_NONE"))
+    {
+        return(GL_NONE);
+    }
+    else
+    {
+        assert(false);
+    }
+
+    return(0);
+}
+
+/**
+ * @brief strToCompareFunc
+ * @param strCompareFunc
+ * @return
+ */
+GLenum strToCompareFunc(const char * strCompareFunc)
+{
+    if (!strcmp(strCompareFunc, "GL_EQUAL"))
+    {
+        return(GL_EQUAL);
+    }
+    else if (!strcmp(strCompareFunc, "GL_NOTEQUAL"))
+    {
+        return(GL_NOTEQUAL);
+    }
+    else if (!strcmp(strCompareFunc, "GL_GEQUAL"))
+    {
+        return(GL_GEQUAL);
+    }
+    else if (!strcmp(strCompareFunc, "GL_LEQUAL"))
+    {
+        return(GL_LEQUAL);
+    }
+    else if (!strcmp(strCompareFunc, "GL_GREATER"))
+    {
+        return(GL_GREATER);
+    }
+    else if (!strcmp(strCompareFunc, "GL_LESS"))
+    {
+        return(GL_LESS);
+    }
+    else if (!strcmp(strCompareFunc, "GL_NEVER"))
+    {
+        return(GL_NEVER);
+    }
+    else if (!strcmp(strCompareFunc, "GL_AWAYS"))
+    {
+        return(GL_ALWAYS);
+    }
+    else
+    {
+        assert(false);
+    }
+
+    return(0);
+}

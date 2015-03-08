@@ -36,3 +36,11 @@ By default every GL feature is disabled.
 This enable a GL feature (see [glEnable](https://www.opengl.org/sdk/docs/man4/html/glEnable.xhtml)).
 WARNING: This should not be used directly for supported features (GL_DEPTH_TEST and GL_BLEND) !
 This is just an helper for functionnality not yet supported in this file.
+
+### Pass
+
+#### Sampler Control
+
+```
+<sampler name="string" min_filter="GL_ENUM" mag_filter="GL_ENUM" wrap_s="GL_ENUM" wrap_t="GL_ENUM" wrap_r="GL_ENUM" />
+```

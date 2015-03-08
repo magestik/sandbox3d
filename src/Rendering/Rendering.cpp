@@ -75,12 +75,6 @@ void Rendering::onInitializeComplete()
 
     generateMeshes();
 
-    glGenSamplers(1, &m_uSampler);
-    glSamplerParameteri(m_uSampler, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glSamplerParameteri(m_uSampler, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glSamplerParameteri(m_uSampler, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glSamplerParameteri(m_uSampler, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
     glBindBufferRange(GL_UNIFORM_BUFFER, BLOCK_BINDING_CAMERA, m_pCameraBuffer->GetObject(), 0, sizeof(CameraBlock));
 }
 
@@ -481,8 +475,6 @@ void Rendering::computeAverageLum(void)
     m_AvLum.begin();
 
     {
-        glBindSampler(0, m_uSampler);
-
         glViewport(0, 0, m_uLuminanceSizePOT, m_uLuminanceSizePOT);
 
         m_AvLum.GetShader()->SetTexture("texSampler", 0, *(m_mapTargets["HDR"].getTexture()));
@@ -503,8 +495,6 @@ void Rendering::computeAverageLum(void)
 
             texture_scale = texture_scale * 0.5f;
         }
-
-        glBindSampler(0, 0);
     }
 
     m_AvLum.end();
@@ -755,8 +745,6 @@ void Rendering::renderLightsToAccumBuffer(const mat4x4 & mView)
 
     LightsTechnique.Begin();
 
-    glBindSampler(1, m_uSampler);
-
     {
         LightsTechnique.BeginPass("directional");
 
@@ -780,8 +768,6 @@ void Rendering::renderLightsToAccumBuffer(const mat4x4 & mView)
         LightsTechnique.EndPass();
     }
 
-    glBindSampler(1, 0);
-
     LightsTechnique.End();
 }
 
@@ -796,9 +782,6 @@ void Rendering::renderFinal(const mat4x4 & mView, const vec4 & clearColor)
     Technique & ComposeTechnique = m_mapTechnique["compose"];
 
     ComposeTechnique.Begin();
-
-    glBindSampler(3, m_uSampler);
-    glBindSampler(4, m_uSampler);
 
     {
         ComposeTechnique.BeginPass("default");
@@ -840,9 +823,6 @@ void Rendering::renderFinal(const mat4x4 & mView, const vec4 & clearColor)
 
         ComposeTechnique.EndPass();
     }
-
-    glBindSampler(3, 0);
-    glBindSampler(4, 0);
 
     ComposeTechnique.End();
 }
@@ -926,20 +906,19 @@ void Rendering::renderPostProcessEffects()
 {
     glViewport(0, 0, m_uWidth, m_uHeight);
 
-    glBindSampler(0, m_uSampler);
-
     Technique & BlendTechnique = m_mapTechnique["blend"];
 
     BlendTechnique.Begin();
     {
         BlendTechnique.BeginPass("bloom");
+
         BlendTechnique.SetTexture("texSampler", 0, *(m_mapTargets["bloom1"].getTexture()));
+
         m_pQuadMesh->draw();
+
         BlendTechnique.EndPass();
     }
     BlendTechnique.End();
-
-    glBindSampler(0, 0);
 }
 
 /**

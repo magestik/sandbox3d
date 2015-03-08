@@ -11,3 +11,9 @@ GLenum strToDepthMask		(const char * strDepthMask);
 
 GLenum strToBlendEquation	(const char * strBlendEquation);
 GLenum strToBlendFunc		(const char * strBlendFunc);
+
+GLenum strToMinFilter		(const char * strFilter);
+GLenum strToMagFilter		(const char * strFilter);
+GLenum strToWrapMode		(const char * strWrapMode);
+GLenum strToCompareMode     (const char * strCompareMode);
+GLenum strToCompareFunc     (const char * strCompareFunc);

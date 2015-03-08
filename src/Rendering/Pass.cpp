@@ -102,11 +102,11 @@ Pass::Pass(const XMLElement * element, const Rendering & rendering)
         {
             const char * name = shader->Attribute("name");
 
+            assert(nullptr != name);
+
             const char * type = shader->Attribute("type");
 
-            GLenum t = strToShaderType(type);
-
-            switch (t)
+            switch (strToShaderType(type))
             {
                 case GL_VERTEX_SHADER:
                 {
@@ -136,6 +136,75 @@ Pass::Pass(const XMLElement * element, const Rendering & rendering)
         glGetProgramiv(m_uShaderObject, GL_LINK_STATUS, &status);
 
         assert(GL_TRUE == status);
+    }
+
+    //
+    // Samplers
+    {
+        const XMLElement * sampler = element->FirstChildElement("sampler");
+
+        while (NULL != sampler)
+        {
+            GLuint samplerObject = 0;
+            glGenSamplers(1, &samplerObject);
+
+            const char * name = sampler->Attribute("name");
+
+            assert(nullptr != name);
+
+            const char * min_filter = sampler->Attribute("min_filter");
+
+            if (nullptr != min_filter)
+            {
+                glSamplerParameteri(samplerObject, GL_TEXTURE_MIN_FILTER, strToMinFilter(min_filter));
+            }
+
+            const char * mag_filter = sampler->Attribute("mag_filter");
+
+            if (nullptr != mag_filter)
+            {
+                glSamplerParameteri(samplerObject, GL_TEXTURE_MAG_FILTER, strToMagFilter(mag_filter));
+            }
+
+            const char * wrap_s = sampler->Attribute("wrap_s");
+
+            if (nullptr != wrap_s)
+            {
+                glSamplerParameteri(samplerObject, GL_TEXTURE_WRAP_S, strToWrapMode(wrap_s));
+            }
+
+            const char * wrap_t = sampler->Attribute("wrap_t");
+
+            if (nullptr != wrap_t)
+            {
+                glSamplerParameteri(samplerObject, GL_TEXTURE_WRAP_T, strToWrapMode(wrap_t));
+            }
+
+            const char * wrap_r = sampler->Attribute("wrap_r");
+
+            if (nullptr != wrap_r)
+            {
+                glSamplerParameteri(samplerObject, GL_TEXTURE_WRAP_R, strToWrapMode(wrap_r));
+            }
+
+            const char * compare_mode = sampler->Attribute("compare_mode");
+
+            if (nullptr != compare_mode)
+            {
+                glSamplerParameteri(samplerObject, GL_TEXTURE_COMPARE_MODE, strToCompareMode(compare_mode));
+            }
+
+            const char * compare_func = sampler->Attribute("compare_func");
+
+            if (nullptr != compare_func)
+            {
+                glSamplerParameteri(samplerObject, GL_TEXTURE_COMPARE_FUNC, strToCompareFunc(compare_func));
+            }
+
+            m_mapSamplers.insert(std::pair<std::string, GLuint>(name, samplerObject));
+
+            sampler = sampler->NextSiblingElement("sampler");
+        }
     }
 }
 
@@ -343,6 +412,7 @@ void Pass::SetTexture(const char * name, int unit, const GPU::Texture<D> & textu
     SetUniform(name, unit);
     glActiveTexture(GL_TEXTURE0 + unit);
     glBindTexture(D, texture.GetObject());
+    glBindSampler(unit, m_mapSamplers[name]);
 }
 
 template void Pass::SetTexture(const char * name, int unit, const GPU::Texture<GL_TEXTURE_1D> & texture);
