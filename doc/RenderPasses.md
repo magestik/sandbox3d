@@ -2,6 +2,10 @@
 
 Render passes are entirely configurable (with data/render.xml).
 
+## Targets
+
+Define all Render Targets.
+
 ## Technique
 
 ### Depth Control
@@ -42,5 +46,7 @@ This is just an helper for functionnality not yet supported in this file.
 #### Sampler Control
 
 ```
-<sampler name="string" min_filter="GL_ENUM" mag_filter="GL_ENUM" wrap_s="GL_ENUM" wrap_t="GL_ENUM" wrap_r="GL_ENUM" />
+<sampler name="string" min_filter="GL_ENUM" mag_filter="GL_ENUM" wrap_s="GL_ENUM" wrap_t="GL_ENUM" wrap_r="GL_ENUM" compare_mode="GL_ENUM" compare_func="GL_ENUM"/>
 ```
+
+This is used to configure samplers (see [glSamplerParameter](https://www.opengl.org/sdk/docs/man/html/glSamplerParameter.xhtml)).
