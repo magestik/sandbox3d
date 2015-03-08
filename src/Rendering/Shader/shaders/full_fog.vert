@@ -10,7 +10,11 @@ struct VS_OUTPUT
 	float depth_inView;
 };
 
-uniform mat4x4 ViewProjection;
+layout (std140) uniform CameraBlock
+{
+	mat4x4 ViewProjection;
+};
+
 uniform mat4x4 View;
 uniform mat4x4 Model;
 

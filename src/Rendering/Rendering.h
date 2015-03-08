@@ -145,7 +145,14 @@ private:
         TARGET_MAX              = 2
     };
 
+    enum EUniformBlockBinding
+    {
+        BLOCK_BINDING_CAMERA = 0
+    };
+
     GPU::Texture<GL_TEXTURE_2D> * m_apTargets [TARGET_MAX];
+
+    GPU::Buffer<GL_UNIFORM_BUFFER> * m_pCameraBuffer;
 
     GLuint m_uSampler;
 

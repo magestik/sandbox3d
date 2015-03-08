@@ -41,6 +41,7 @@ Rendering::Rendering()
 , m_uHeight(720)
 , m_pShadowMap(nullptr)
 , m_pQuadMesh(nullptr)
+, m_pCameraBuffer(nullptr)
 , m_mapTargets()
 , m_mapTechnique()
 {
@@ -54,6 +55,9 @@ void Rendering::onInitializeComplete()
 {
     m_apTargets[TARGET_LUMINANCE1] = new GPU::Texture<GL_TEXTURE_2D>();
     m_apTargets[TARGET_LUMINANCE2] = new GPU::Texture<GL_TEXTURE_2D>();
+
+    m_pCameraBuffer = new GPU::Buffer<GL_UNIFORM_BUFFER>();
+    GPU::realloc(*m_pCameraBuffer, sizeof(mat4x4), GL_STREAM_DRAW);
 
     initializePipelineFromXML("data/render.xml");
 
@@ -94,6 +98,11 @@ void Rendering::initializePipelineFromXML(const char * filename)
 
     const XMLElement * pipeline = root->FirstChildElement("pipeline");
     initializeTechniques(pipeline);
+
+    for (const std::pair<std::string, Technique> & p : m_mapTechnique)
+    {
+        p.second.SetUniformBlockBinding("CameraBlock", BLOCK_BINDING_CAMERA);
+    }
 }
 
 /**
@@ -253,6 +262,14 @@ void Rendering::onResize(int width, int height)
  */
 void Rendering::onUpdate(const mat4x4 & mView, const vec4 & clearColor, bool bWireframe, ERenderType eRenderType, const Mesh::Instance * pSelectedObject)
 {
+    //m_pCameraBuffer
+
+    mat4x4 CameraViewProjection = m_matProjection * mView;
+
+    GPU::memcpy(*m_pCameraBuffer, &CameraViewProjection, sizeof(CameraViewProjection));
+
+    glBindBufferRange(GL_UNIFORM_BUFFER, BLOCK_BINDING_CAMERA, m_pCameraBuffer->GetObject(), 0, sizeof(CameraViewProjection));
+
     if (FINAL == eRenderType && bWireframe)
     {
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -623,13 +640,9 @@ void Rendering::renderSceneToGBuffer(const mat4x4 & mView)
     GeometryTechnique.Begin();
 
     {
-        mat4x4 mCameraViewProjection = m_matProjection * mView;
-
         // OPTIMIZE THIS !!!!!
 
         GeometryTechnique.BeginPass("simple");
-
-        GeometryTechnique.SetUniform("ViewProjection", mCameraViewProjection);
 
         glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -657,8 +670,6 @@ void Rendering::renderSceneToGBuffer(const mat4x4 & mView)
         GeometryTechnique.EndPass();
 
         GeometryTechnique.BeginPass("normal_map");
-
-        GeometryTechnique.SetUniform("ViewProjection", mCameraViewProjection);
 
         for (Mesh::Instance & object : m_aObjects)
         {
@@ -749,8 +760,6 @@ void Rendering::renderFinal(const mat4x4 & mView, const vec4 & clearColor)
         glClearColor(clearColor.x, clearColor.y, clearColor.z, clearColor.w);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        mat4x4 mCameraViewProjection = m_matProjection * mView;
-
         mat4x4 mDepthView = _lookAt(vec3(0,0,0), m_pLight->GetDirection(), vec3(0.0f, -1.0f, 0.0f));
         mat4x4 mDepthViewProjection = m_pShadowMap->GetProjection() * mDepthView;
 
@@ -760,7 +769,6 @@ void Rendering::renderFinal(const mat4x4 & mView, const vec4 & clearColor)
 
         ComposeTechnique.SetUniform("ambientColor", environment.ambient.Color);
         ComposeTechnique.SetUniform("DepthTransformation", mDepthViewProjection);
-        ComposeTechnique.SetUniform("ViewProjection", mCameraViewProjection);
         ComposeTechnique.SetUniform("View", mView);
 
         for (Mesh::Instance & object : m_aObjects)
@@ -897,10 +905,6 @@ void Rendering::renderPickBuffer(const mat4x4 & mView)
     {
         PickBufferTechnique.BeginPass("default");
 
-        mat4x4 mCameraViewProjection = m_matProjection * mView;
-
-        PickBufferTechnique.SetUniform("ViewProjection", mCameraViewProjection);
-
         glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
@@ -943,9 +947,6 @@ void Rendering::renderBoundingBox(const mat4x4 & mView, const Mesh::Instance * p
     {
         BBoxTechnique.BeginPass("default");
 
-        mat4x4 mCameraViewProjection = m_matProjection * mView;
-
-        BBoxTechnique.SetUniform("ViewProjection", mCameraViewProjection);
         BBoxTechnique.SetUniform("Model", pSelectedObject->transformation);
 
         BBoxTechnique.SetUniform("BBoxMin", pSelectedObject->mesh->m_BoundingBox.min);

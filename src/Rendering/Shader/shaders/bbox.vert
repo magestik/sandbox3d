@@ -2,8 +2,6 @@
 
 #include "../Interface.h"
 
-
-
 layout (location = POSITION) in vec3 inPosition;
 
 void main(void)

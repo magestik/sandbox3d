@@ -5,7 +5,11 @@
 layout(points) in;
 layout(line_strip, max_vertices = 18) out;
 
-uniform mat4x4 ViewProjection;
+layout (std140) uniform CameraBlock
+{
+	mat4x4 ViewProjection;
+};
+
 uniform mat4x4 Model;
 
 uniform vec3 BBoxMin;

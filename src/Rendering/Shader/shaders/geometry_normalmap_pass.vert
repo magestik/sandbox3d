@@ -10,9 +10,13 @@ struct VS_OUTPUT
 	vec3 bitangent;
 };
 
+layout (std140) uniform CameraBlock
+{
+	mat4x4 ViewProjection;
+};
+
 uniform sampler2D normalMap;
 
-uniform mat4x4 ViewProjection;
 uniform mat4x4 Model;
 
 layout (location = POSITION)	in vec3 inPosition;

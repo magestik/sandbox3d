@@ -317,6 +317,21 @@ void Pass::SetUniform(const char * name, float n)
 }
 
 /**
+ * @brief Pass::SetConstantBufferBinding
+ * @param name
+ * @param binding
+ */
+void Pass::SetUniformBlockBinding(const char * name, unsigned int binding) const
+{
+    GLuint blockIndex = glGetUniformBlockIndex(m_uShaderObject, name);
+
+    if (GL_INVALID_INDEX != blockIndex)
+    {
+        glUniformBlockBinding(m_uShaderObject, blockIndex, binding);
+    }
+}
+
+/**
  * @brief Pass::SetTexture
  * @param name
  * @param unit
