@@ -42,6 +42,7 @@ Rendering::Rendering()
 , m_pShadowMap(nullptr)
 , m_pQuadMesh(nullptr)
 , m_pCameraBuffer(nullptr)
+, m_pObjectsBuffer(nullptr)
 , m_mapTargets()
 , m_mapTechnique()
 {
@@ -57,7 +58,10 @@ void Rendering::onInitializeComplete()
     m_apTargets[TARGET_LUMINANCE2] = new GPU::Texture<GL_TEXTURE_2D>();
 
     m_pCameraBuffer = new GPU::Buffer<GL_UNIFORM_BUFFER>();
-    GPU::realloc(*m_pCameraBuffer, sizeof(mat4x4), GL_STREAM_DRAW);
+    GPU::realloc(*m_pCameraBuffer, sizeof(CameraBlock), GL_STREAM_DRAW);
+
+    m_pObjectsBuffer = new GPU::Buffer<GL_UNIFORM_BUFFER>();
+    GPU::realloc(*m_pObjectsBuffer, sizeof(ObjectBlock)*m_aObjects.size(), GL_STREAM_DRAW);
 
     initializePipelineFromXML("data/render.xml");
 
@@ -76,6 +80,8 @@ void Rendering::onInitializeComplete()
     glSamplerParameteri(m_uSampler, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glSamplerParameteri(m_uSampler, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glSamplerParameteri(m_uSampler, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+    glBindBufferRange(GL_UNIFORM_BUFFER, BLOCK_BINDING_CAMERA, m_pCameraBuffer->GetObject(), 0, sizeof(CameraBlock));
 }
 
 
@@ -102,6 +108,7 @@ void Rendering::initializePipelineFromXML(const char * filename)
     for (const std::pair<std::string, Technique> & p : m_mapTechnique)
     {
         p.second.SetUniformBlockBinding("CameraBlock", BLOCK_BINDING_CAMERA);
+        p.second.SetUniformBlockBinding("ObjectBlock", BLOCK_BINDING_OBJECT);
     }
 }
 
@@ -230,6 +237,37 @@ void Rendering::generateMeshes()
 }
 
 /**
+ * @brief Rendering::updateCameraBuffer
+ * @param matView
+ */
+void Rendering::updateCameraBuffer(const mat4x4 & matView)
+{
+    CameraBlock cam;
+    cam.ViewProjection = m_matProjection * matView;
+    cam.View = matView;
+
+    GPU::memcpy(*m_pCameraBuffer, &cam, sizeof(CameraBlock));
+}
+
+/**
+ * @brief Rendering::updateObjectsBuffer
+ */
+void Rendering::updateObjectsBuffer(void)
+{
+    GPU::realloc(*m_pObjectsBuffer, sizeof(ObjectBlock)*m_aObjects.size(), GL_STREAM_DRAW);
+
+    ObjectBlock * ptr = (ObjectBlock*)GPU::mmap(*m_pObjectsBuffer, GL_WRITE_ONLY);
+
+    for (const Mesh::Instance & o : m_aObjects)
+    {
+        ptr->Model = o.transformation;
+        ++ptr;
+    }
+
+    GPU::munmap(*m_pObjectsBuffer);
+}
+
+/**
  * @brief Rendering::onResize
  * @param width
  * @param height
@@ -262,19 +300,13 @@ void Rendering::onResize(int width, int height)
  */
 void Rendering::onUpdate(const mat4x4 & mView, const vec4 & clearColor, bool bWireframe, ERenderType eRenderType, const Mesh::Instance * pSelectedObject)
 {
-    //m_pCameraBuffer
-
-    mat4x4 CameraViewProjection = m_matProjection * mView;
-
-    GPU::memcpy(*m_pCameraBuffer, &CameraViewProjection, sizeof(CameraViewProjection));
-
-    glBindBufferRange(GL_UNIFORM_BUFFER, BLOCK_BINDING_CAMERA, m_pCameraBuffer->GetObject(), 0, sizeof(CameraViewProjection));
+    updateCameraBuffer(mView);
 
     if (FINAL == eRenderType && bWireframe)
     {
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
-        renderSceneToGBuffer(mView);
+        renderSceneToGBuffer();
 
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
@@ -295,7 +327,7 @@ void Rendering::onUpdate(const mat4x4 & mView, const vec4 & clearColor, bool bWi
     // Render Scene to G-Buffer
     //
 
-    renderSceneToGBuffer(mView);
+    renderSceneToGBuffer();
 
     //
     // Render Scene to Shadow Map
@@ -321,7 +353,7 @@ void Rendering::onUpdate(const mat4x4 & mView, const vec4 & clearColor, bool bWi
 
     if (environment.isEnabled(EnvironmentSettings::FOG))
     {
-        renderFog(mView);
+        renderFog();
     }
 
     //
@@ -364,11 +396,11 @@ void Rendering::onUpdate(const mat4x4 & mView, const vec4 & clearColor, bool bWi
 
         renderPostProcessEffects();
 
-        renderPickBuffer(mView);
+        renderPickBuffer();
 
         if (nullptr != pSelectedObject)
         {
-            renderBoundingBox(mView, pSelectedObject);
+            renderBoundingBox(pSelectedObject);
         }
     }
     else
@@ -384,6 +416,8 @@ void Rendering::onUpdate(const mat4x4 & mView, const vec4 & clearColor, bool bWi
 void Rendering::onCreate(const Mesh::Instance & instance)
 {
     m_aObjects.push_back(instance);
+
+    updateObjectsBuffer();
 }
 
 /**
@@ -402,6 +436,8 @@ void Rendering::onDelete(const Mesh::Instance & instance)
             break;
         }
     }
+
+    updateObjectsBuffer();
 }
 
 /**
@@ -488,7 +524,7 @@ void Rendering::renderSceneToShadowMap(void)
         mat4x4 mDepthView = _lookAt(vec3(0,0,0), m_pLight->GetDirection(), vec3(0.0f, -1.0f, 0.0f));
         mat4x4 mDepthViewProjection = m_pShadowMap->GetProjection() * mDepthView;
 
-        m_pShadowMap->GetShader()->SetUniform("ViewProjection", mDepthViewProjection);
+        m_pShadowMap->GetShader()->SetUniform("LightViewProjection", mDepthViewProjection);
 
         for (Mesh::Instance & object : m_aObjects)
         {
@@ -631,7 +667,7 @@ void Rendering::renderIntermediateToScreen(ERenderType eRenderType)
 /**
  * @brief Rendering::renderGBuffer
  */
-void Rendering::renderSceneToGBuffer(const mat4x4 & mView)
+void Rendering::renderSceneToGBuffer(void)
 {
     glViewport(0, 0, m_uWidth, m_uHeight);
 
@@ -643,55 +679,65 @@ void Rendering::renderSceneToGBuffer(const mat4x4 & mView)
         // OPTIMIZE THIS !!!!!
 
         GeometryTechnique.BeginPass("simple");
-
-        glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-        for (Mesh::Instance & object : m_aObjects)
         {
-            object.mesh->bind();
+            glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-            for (SubMesh * m : object.getDrawCommands())
+            unsigned int offset = 0;
+
+            for (Mesh::Instance & object : m_aObjects)
             {
-                const GPU::Texture<GL_TEXTURE_2D> * pNormalMap = m->getNormalMap();
+                glBindBufferRange(GL_UNIFORM_BUFFER, BLOCK_BINDING_OBJECT, m_pObjectsBuffer->GetObject(), sizeof(ObjectBlock)*offset, sizeof(ObjectBlock));
 
-                if (nullptr == pNormalMap)
+                object.mesh->bind();
+
+                for (SubMesh * m : object.getDrawCommands())
                 {
-                    GeometryTechnique.SetUniform("shininess", m->m_material.shininess);
-                    GeometryTechnique.SetUniform("Model", object.transformation);
+                    const GPU::Texture<GL_TEXTURE_2D> * pNormalMap = m->getNormalMap();
 
-                    m->draw();
+                    if (nullptr == pNormalMap)
+                    {
+                        GeometryTechnique.SetUniform("shininess", m->m_material.shininess);
+
+                        m->draw();
+                    }
                 }
+
+                object.mesh->unbind();
+
+                ++offset;
             }
-
-            object.mesh->unbind();
         }
-
         GeometryTechnique.EndPass();
 
         GeometryTechnique.BeginPass("normal_map");
-
-        for (Mesh::Instance & object : m_aObjects)
         {
-            object.mesh->bind();
+            unsigned int offset = 0;
 
-            for (SubMesh * m : object.getDrawCommands())
+            for (Mesh::Instance & object : m_aObjects)
             {
-                const GPU::Texture<GL_TEXTURE_2D> * pNormalMap = m->getNormalMap();
+                glBindBufferRange(GL_UNIFORM_BUFFER, BLOCK_BINDING_OBJECT, m_pObjectsBuffer->GetObject(), sizeof(ObjectBlock)*offset, sizeof(ObjectBlock));
 
-                if (nullptr != pNormalMap)
+                object.mesh->bind();
+
+                for (SubMesh * m : object.getDrawCommands())
                 {
-                    GeometryTechnique.SetTexture("normalMap", 0, *pNormalMap);
-                    GeometryTechnique.SetUniform("shininess", m->m_material.shininess);
-                    GeometryTechnique.SetUniform("Model", object.transformation);
+                    const GPU::Texture<GL_TEXTURE_2D> * pNormalMap = m->getNormalMap();
 
-                    m->draw();
+                    if (nullptr != pNormalMap)
+                    {
+                        GeometryTechnique.SetTexture("normalMap", 0, *pNormalMap);
+                        GeometryTechnique.SetUniform("shininess", m->m_material.shininess);
+
+                        m->draw();
+                    }
                 }
+
+                object.mesh->unbind();
+
+                ++offset;
             }
-
-            object.mesh->unbind();
         }
-
         GeometryTechnique.EndPass();
     }
 
@@ -771,11 +817,13 @@ void Rendering::renderFinal(const mat4x4 & mView, const vec4 & clearColor)
         ComposeTechnique.SetUniform("DepthTransformation", mDepthViewProjection);
         ComposeTechnique.SetUniform("View", mView);
 
+        unsigned int offset = 0;
+
         for (Mesh::Instance & object : m_aObjects)
         {
-            object.mesh->bind();
+            glBindBufferRange(GL_UNIFORM_BUFFER, BLOCK_BINDING_OBJECT, m_pObjectsBuffer->GetObject(), sizeof(ObjectBlock)*offset, sizeof(ObjectBlock));
 
-            ComposeTechnique.SetUniform("Model", object.transformation);
+            object.mesh->bind();
 
             for (SubMesh * m : object.getDrawCommands())
             {
@@ -786,6 +834,8 @@ void Rendering::renderFinal(const mat4x4 & mView, const vec4 & clearColor)
             }
 
             object.mesh->unbind();
+
+            ++offset;
         }
 
         ComposeTechnique.EndPass();
@@ -801,7 +851,7 @@ void Rendering::renderFinal(const mat4x4 & mView, const vec4 & clearColor)
  * @brief Rendering::renderFog
  * @param mView
  */
-void Rendering::renderFog(const mat4x4 & mView)
+void Rendering::renderFog(void)
 {
     glViewport(0, 0, m_uWidth, m_uHeight);
 
@@ -895,7 +945,7 @@ void Rendering::renderPostProcessEffects()
 /**
  * @brief Rendering::renderPickBuffer
  */
-void Rendering::renderPickBuffer(const mat4x4 & mView)
+void Rendering::renderPickBuffer(void)
 {
     glViewport(0, 0, m_uWidth, m_uHeight);
 
@@ -937,7 +987,7 @@ void Rendering::renderPickBuffer(const mat4x4 & mView)
  * @brief Rendering::renderBoundingBox
  * @param mView
  */
-void Rendering::renderBoundingBox(const mat4x4 & mView, const Mesh::Instance * pSelectedObject)
+void Rendering::renderBoundingBox(const Mesh::Instance * pSelectedObject)
 {
     glViewport(0, 0, m_uWidth, m_uHeight);
 

@@ -7,12 +7,8 @@ struct VS_OUTPUT
 	vec3 normal;
 };
 
-layout (std140) uniform CameraBlock
-{
-	mat4x4 ViewProjection;
-};
-
-uniform mat4x4 Model;
+layout (std140) uniform CAMERA_BLOCK_DEFINITION(CameraBlock);
+layout (std140) uniform OBJECT_BLOCK_DEFINITION(ObjectBlock);
 
 layout (location = POSITION)	in vec3 inPosition;
 layout (location = NORMAL)		in vec3 inNormal;

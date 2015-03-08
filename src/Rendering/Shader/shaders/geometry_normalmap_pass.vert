@@ -10,14 +10,10 @@ struct VS_OUTPUT
 	vec3 bitangent;
 };
 
-layout (std140) uniform CameraBlock
-{
-	mat4x4 ViewProjection;
-};
+layout (std140) uniform CAMERA_BLOCK_DEFINITION(CameraBlock);
+layout (std140) uniform OBJECT_BLOCK_DEFINITION(ObjectBlock);
 
 uniform sampler2D normalMap;
-
-uniform mat4x4 Model;
 
 layout (location = POSITION)	in vec3 inPosition;
 layout (location = NORMAL)		in vec3 inNormal;

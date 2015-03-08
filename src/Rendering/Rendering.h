@@ -23,6 +23,8 @@
 
 #include "Environment.h"
 
+#include "Shader/Interface.h"
+
 // theses maps contains all shaders, compiled at launch time
 extern std::map<std::string, GPU::Shader<GL_FRAGMENT_SHADER> *>	g_FragmentShaders;
 extern std::map<std::string, GPU::Shader<GL_VERTEX_SHADER> *>	g_VertexShaders;
@@ -97,9 +99,12 @@ protected:
 
     void	generateMeshes				(void);
 
+    void    updateCameraBuffer          (const mat4x4 & matView);
+    void    updateObjectsBuffer         (void);
+
     void    computeAverageLum           (void);
 
-    void	renderSceneToGBuffer		(const mat4x4 & mView);
+    void	renderSceneToGBuffer		(void);
 
     void	renderLightsToAccumBuffer	(const mat4x4 & mView);
 
@@ -109,17 +114,20 @@ protected:
 
     void	renderFinal					(const mat4x4 & mView, const vec4 & clearColor);
 
-    void    renderFog                   (const mat4x4 & mView);
+    void    renderFog                   (void);
 
     void	renderIntermediateToScreen	(ERenderType eRenderType);
 
     void    renderPostProcessEffects    (void);
 
-    void	renderPickBuffer			(const mat4x4 & mView);
+    void	renderPickBuffer			(void);
 
-    void	renderBoundingBox			(const mat4x4 & mView, const Mesh::Instance * pSelected);
+    void	renderBoundingBox			(const Mesh::Instance * pSelected);
 
 private:
+
+    struct CAMERA_BLOCK_DEFINITION(CameraBlock);
+    struct OBJECT_BLOCK_DEFINITION(ObjectBlock);
 
     unsigned int m_uWidth;
     unsigned int m_uHeight;
@@ -147,12 +155,14 @@ private:
 
     enum EUniformBlockBinding
     {
-        BLOCK_BINDING_CAMERA = 0
+        BLOCK_BINDING_CAMERA = 0,
+        BLOCK_BINDING_OBJECT = 1
     };
 
     GPU::Texture<GL_TEXTURE_2D> * m_apTargets [TARGET_MAX];
 
     GPU::Buffer<GL_UNIFORM_BUFFER> * m_pCameraBuffer;
+    GPU::Buffer<GL_UNIFORM_BUFFER> * m_pObjectsBuffer;
 
     GLuint m_uSampler;
 
