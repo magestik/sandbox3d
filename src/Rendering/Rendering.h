@@ -20,6 +20,7 @@
 
 #include "Technique.h"
 #include "RenderTexture.h"
+#include "Pipeline.h"
 
 #include "Environment.h"
 
@@ -91,9 +92,15 @@ public:
         return(m_mapTargets.at(name).getTexture());
     }
 
+    const Pipeline * GetPipeline(const char * name) const
+    {
+        return(m_mapPipeline.at(name));
+    }
+
 protected:
 
     void	initializePipelineFromXML	(const char * filename);
+    void	initializePipelines     	(const tinyxml2::XMLElement * pipelines);
     void	initializeTargets			(const tinyxml2::XMLElement * targets);
     void	initializeTechniques		(const tinyxml2::XMLElement * techniques);
 
@@ -166,6 +173,7 @@ private:
 
     std::map<std::string, RenderTexture>	m_mapTargets;
     std::map<std::string, Technique>		m_mapTechnique;
+    std::map<std::string, const Pipeline *>       m_mapPipeline;
 
 public:
 

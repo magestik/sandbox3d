@@ -7,6 +7,8 @@
 #include <tinyxml2.h>
 #include "StrToGL.h"
 
+#include "Pipeline.h"
+
 using namespace tinyxml2;
 
 std::map<std::string, GPU::Shader<GL_FRAGMENT_SHADER> *> g_FragmentShaders;
@@ -20,6 +22,8 @@ std::map<std::string, GPU::Texture<GL_TEXTURE_2D> *> g_Textures;
 std::map<std::string, Mesh> g_Meshes;
 
 #define SHADOW_MAP_SIZE 1024
+
+static const char PIPELINE_STR []= "pipeline";
 
 static inline unsigned int toPOT(unsigned int v)
 {
@@ -91,18 +95,41 @@ void Rendering::initializePipelineFromXML(const char * filename)
 
     const XMLElement * root = doc.RootElement();
 
+    const XMLElement * pipelines = root->FirstChildElement("pipelines");
+    initializePipelines(pipelines);
+
     const XMLElement * targets = root->FirstChildElement("targets");
     initializeTargets(targets);
 
     onResize(m_uWidth, m_uHeight);
 
-    const XMLElement * pipeline = root->FirstChildElement("pipeline");
+    const XMLElement * pipeline = root->FirstChildElement("techniques");
     initializeTechniques(pipeline);
 
     for (const std::pair<std::string, Technique> & p : m_mapTechnique)
     {
         p.second.SetUniformBlockBinding("CameraBlock", BLOCK_BINDING_CAMERA);
         p.second.SetUniformBlockBinding("ObjectBlock", BLOCK_BINDING_OBJECT);
+    }
+}
+
+/**
+ * @brief Rendering::initializePipelines
+ * @param pipelines
+ */
+void Rendering::initializePipelines(const XMLElement * root)
+{
+    const XMLElement * elmt = root->FirstChildElement(PIPELINE_STR);
+
+    while (nullptr != elmt)
+    {
+        const char * name = elmt->Attribute("name");
+
+        assert(nullptr != name);
+
+        m_mapPipeline[name] = new Pipeline(elmt, *this);
+
+        elmt = elmt->NextSiblingElement(PIPELINE_STR);
     }
 }
 

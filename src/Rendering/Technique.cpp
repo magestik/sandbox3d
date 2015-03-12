@@ -18,90 +18,35 @@ Technique::Technique(void)
     // ...
 }
 
-Technique::Technique(const XMLElement * element, const Rendering & rendering)
+Technique::Technique(const XMLElement * root, const Rendering & rendering)
 : m_pCurrentPass(nullptr)
 , m_bActive(false)
 {
     {
-        const XMLElement * pass = element->FirstChildElement("pass");
+        const XMLElement * elmt = root->FirstChildElement("pass");
 
-        while (nullptr != pass)
+        while (nullptr != elmt)
         {
-            const char * name = pass->Attribute("name");
+            const char * name = elmt->Attribute("name");
 
             assert(nullptr != name);
 
-            m_mapPass[name] = Pass(pass, rendering);
-
-            pass = pass->NextSiblingElement("pass");
-        }
-    }
-
-    {
-        const XMLElement * enable = element->FirstChildElement("enable");
-
-        while (nullptr != enable)
-        {
-            const char * cap = enable->Attribute("cap");
-
-            assert(nullptr != cap);
-
-            m_aEnable.push_back(strToCapability(cap));
-
-            enable = enable->NextSiblingElement("enable");
-        }
-    }
-
-    {
-        const XMLElement * depth = element->FirstChildElement("depth");
-
-        if (nullptr != depth)
-        {
-            m_sDepthControl.enable = true;
-
-            const char * func = depth->Attribute("func");
-
-            if (nullptr != func)
+            const Pipeline * pipeline = nullptr;
             {
-                m_sDepthControl.func = strToDepthFunc(func);
+                const XMLElement * child = elmt->FirstChildElement("pipeline");
+
+                assert(nullptr != child);
+
+                const char * pipeline_name = child->Attribute("name");
+
+                pipeline = rendering.GetPipeline(pipeline_name);
+
+                assert(nullptr != pipeline);
             }
 
-            const char * mask = depth->Attribute("mask");
+            m_mapPass[name] = Pass(pipeline, elmt, rendering);
 
-            if (nullptr != mask)
-            {
-                m_sDepthControl.mask = strToDepthMask(mask);
-            }
-        }
-    }
-
-    {
-        const XMLElement * blend = element->FirstChildElement("blend");
-
-        if (nullptr != blend)
-        {
-            m_sBlendControl.enable = true;
-
-            const char * equation = blend->Attribute("equation");
-
-            if (nullptr != equation)
-            {
-                m_sBlendControl.equation = strToBlendEquation(equation);
-            }
-
-            const char * sfactor = blend->Attribute("sfactor");
-
-            if (nullptr != sfactor)
-            {
-                m_sBlendControl.sfactor = strToBlendFunc(sfactor);
-            }
-
-            const char * dfactor = blend->Attribute("dfactor");
-
-            if (nullptr != dfactor)
-            {
-                m_sBlendControl.dfactor = strToBlendFunc(dfactor);
-            }
+            elmt = elmt->NextSiblingElement("pass");
         }
     }
 }
@@ -117,25 +62,6 @@ bool Technique::Begin(void)
 
     m_bActive = true;
 
-    for (GLenum cap : m_aEnable)
-    {
-        glEnable(cap);
-    }
-
-    if (m_sDepthControl.enable)
-    {
-        glEnable(GL_DEPTH_TEST);
-        glDepthFunc(m_sDepthControl.func);
-        glDepthMask(m_sDepthControl.mask);
-    }
-
-    if (m_sBlendControl.enable)
-    {
-        glEnable(GL_BLEND);
-        glBlendEquation(m_sBlendControl.equation);
-        glBlendFunc(m_sBlendControl.sfactor, m_sBlendControl.dfactor);
-    }
-
     return(true);
 }
 
@@ -146,25 +72,6 @@ void Technique::End(void)
 {
     assert(m_bActive);
     assert(nullptr == m_pCurrentPass);
-
-    if (m_sBlendControl.enable)
-    {
-        glDisable(GL_BLEND);
-        glBlendEquation(GL_FUNC_ADD);
-        glBlendFunc(GL_ONE, GL_ZERO);
-    }
-
-    if (m_sDepthControl.enable)
-    {
-        glDisable(GL_DEPTH_TEST);
-        glDepthFunc(GL_LESS);
-        glDepthMask(GL_TRUE);
-    }
-
-    for (GLenum cap : m_aEnable)
-    {
-        glDisable(cap);
-    }
 
     m_bActive = false;
 }

@@ -8,6 +8,8 @@
 
 #include <Vector.h>
 
+#include "Pipeline.h"
+
 namespace tinyxml2
 {
     class XMLElement;
@@ -15,38 +17,6 @@ namespace tinyxml2
 
 class Rendering;
 class Pass;
-
-struct DepthControl
-{
-    DepthControl(void)
-    {
-        enable	= false;
-        mask	= GL_TRUE;
-        func	= GL_LESS;
-    }
-
-    bool enable;
-
-    GLboolean mask;
-    GLenum func;
-};
-
-struct BlendControl
-{
-    BlendControl(void)
-    {
-        enable		= false;
-        sfactor		= GL_ONE;
-        sfactor		= GL_ZERO;
-        equation	= GL_FUNC_ADD;
-    }
-
-    bool enable;
-
-    GLenum sfactor;
-    GLenum dfactor;
-    GLenum equation;
-};
 
 class Technique
 {
@@ -75,12 +45,7 @@ protected:
 
     std::map<std::string, Pass> m_mapPass;
 
-    std::vector<GLenum> m_aEnable;
-
     Pass * m_pCurrentPass;
-
-    DepthControl m_sDepthControl;
-    BlendControl m_sBlendControl;
 
     bool m_bActive;
 };

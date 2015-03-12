@@ -11,13 +11,125 @@
 		<texture name="pickbuffer" format="GL_R32UI" />
 	</targets>
 
-	<pipeline>
+	<pipelines>
+		<pipeline name="pickbuffer">
+			<depth mask="GL_FALSE" func="GL_EQUAL" />
+			<shader name="pickbuffer.vert" type="GL_VERTEX_SHADER" />
+			<shader name="pickbuffer.frag" type="GL_FRAGMENT_SHADER" />
+		</pipeline>
+		<pipeline name="bbox">
+			<shader name="bbox.vert" type="GL_VERTEX_SHADER" />
+			<shader name="bbox.geom" type="GL_GEOMETRY_SHADER" />
+			<shader name="bbox.frag" type="GL_FRAGMENT_SHADER" />
+		</pipeline>
+		<pipeline name="geometry_simple">
+			<depth mask="GL_TRUE" func="GL_LESS" />
+			<shader name="geometry_pass.vert" type="GL_VERTEX_SHADER" />
+			<shader name="geometry_pass.frag" type="GL_FRAGMENT_SHADER" />
+		</pipeline>
+		<pipeline name="geometry_normalmap">
+			<depth mask="GL_TRUE" func="GL_LESS" />
+			<shader name="geometry_normalmap_pass.vert" type="GL_VERTEX_SHADER" />
+			<shader name="geometry_normalmap_pass.frag" type="GL_FRAGMENT_SHADER" />
+			<sampler name="normalMap" min_filter="GL_LINEAR" mag_filter="GL_LINEAR" wrap_s="GL_CLAMP_TO_EDGE" wrap_t="GL_CLAMP_TO_EDGE" />
+		</pipeline>
+		<pipeline name="lights_directional">
+			<blend sfactor="GL_ONE" equation="GL_FUNC_ADD" dfactor="GL_ONE" />
+			<shader name="directionnal_light.vert" type="GL_VERTEX_SHADER" />
+			<shader name="directionnal_light.frag" type="GL_FRAGMENT_SHADER" />
+			<sampler name="depthSampler" min_filter="GL_NEAREST" mag_filter="GL_NEAREST" wrap_s="GL_CLAMP_TO_EDGE" wrap_t="GL_CLAMP_TO_EDGE" />
+			<sampler name="normalSampler" min_filter="GL_NEAREST" mag_filter="GL_NEAREST" wrap_s="GL_CLAMP_TO_EDGE" wrap_t="GL_CLAMP_TO_EDGE" />
+		</pipeline>
+		<pipeline name="bloom_bright">
+			<shader name="fullscreen.vert" type="GL_VERTEX_SHADER" />
+			<shader name="fullscreen_bright.frag" type="GL_FRAGMENT_SHADER" />
+			<sampler name="texSampler" min_filter="GL_NEAREST" mag_filter="GL_NEAREST" wrap_s="GL_CLAMP_TO_EDGE" wrap_t="GL_CLAMP_TO_EDGE" />
+		</pipeline>
+		<pipeline name="bloom_horizontal_blur">
+			<shader name="fullscreen.vert" type="GL_VERTEX_SHADER" />
+			<shader name="gaussian_blur_h.frag" type="GL_FRAGMENT_SHADER" />
+			<sampler name="texSampler" min_filter="GL_NEAREST" mag_filter="GL_NEAREST" wrap_s="GL_CLAMP_TO_EDGE" wrap_t="GL_CLAMP_TO_EDGE" />
+		</pipeline>
+		<pipeline name="bloom_vertical_blur">
+			<shader name="fullscreen.vert" type="GL_VERTEX_SHADER" />
+			<shader name="gaussian_blur_v.frag" type="GL_FRAGMENT_SHADER" />
+			<sampler name="texSampler" min_filter="GL_NEAREST" mag_filter="GL_NEAREST" wrap_s="GL_CLAMP_TO_EDGE" wrap_t="GL_CLAMP_TO_EDGE" />
+		</pipeline>
+		<pipeline name="compose">
+			<depth mask="GL_FALSE" func="GL_EQUAL" />
+			<shader name="full.vert" type="GL_VERTEX_SHADER" />
+			<shader name="full.frag" type="GL_FRAGMENT_SHADER" />
+			<sampler name="diffuseSampler" min_filter="GL_LINEAR" mag_filter="GL_LINEAR" wrap_s="GL_CLAMP_TO_EDGE" wrap_t="GL_CLAMP_TO_EDGE" />
+			<sampler name="specularSampler" min_filter="GL_LINEAR" mag_filter="GL_LINEAR" wrap_s="GL_CLAMP_TO_EDGE" wrap_t="GL_CLAMP_TO_EDGE" />
+			<sampler name="diffuseLightSampler" min_filter="GL_NEAREST" mag_filter="GL_NEAREST" wrap_s="GL_CLAMP_TO_EDGE" wrap_t="GL_CLAMP_TO_EDGE" />
+			<sampler name="specularLightSampler" min_filter="GL_NEAREST" mag_filter="GL_NEAREST" wrap_s="GL_CLAMP_TO_EDGE" wrap_t="GL_CLAMP_TO_EDGE" />
+			<sampler name="shadowMap" min_filter="GL_LINEAR" mag_filter="GL_LINEAR" wrap_s="GL_CLAMP_TO_BORDER" wrap_t="GL_CLAMP_TO_BORDER" compare_mode="GL_COMPARE_REF_TO_TEXTURE" compare_func="GL_LEQUAL" />
+		</pipeline>
+		<pipeline name="fog_simple">
+			<!-- dst = src.a * dst + 1 * src.rgb -->
+			<!-- src.a : Extinction ; src.rgb = Scattering -->
+			<blend sfactor="GL_ONE" equation="GL_FUNC_ADD" dfactor="GL_SRC_ALPHA" />
+			<shader name="fullscreen.vert" type="GL_VERTEX_SHADER" />
+			<shader name="fog_simple.frag" type="GL_FRAGMENT_SHADER" />
+			<sampler name="texSampler" min_filter="GL_NEAREST" mag_filter="GL_NEAREST" wrap_s="GL_CLAMP_TO_EDGE" wrap_t="GL_CLAMP_TO_EDGE" />
+			<sampler name="depthMapSampler" min_filter="GL_NEAREST" mag_filter="GL_NEAREST" wrap_s="GL_CLAMP_TO_EDGE" wrap_t="GL_CLAMP_TO_EDGE" />
+		</pipeline>
+		<pipeline name="fog_scattering">
+			<!-- dst = src.a * dst + 1 * src.rgb -->
+			<!-- src.a : Extinction ; src.rgb = Scattering -->
+			<blend sfactor="GL_ONE" equation="GL_FUNC_ADD" dfactor="GL_SRC_ALPHA" />
+			<shader name="fullscreen.vert" type="GL_VERTEX_SHADER" />
+			<shader name="fog_scattering.frag" type="GL_FRAGMENT_SHADER" />
+			<sampler name="texSampler" min_filter="GL_NEAREST" mag_filter="GL_NEAREST" wrap_s="GL_CLAMP_TO_EDGE" wrap_t="GL_CLAMP_TO_EDGE" />
+			<sampler name="depthMapSampler" min_filter="GL_NEAREST" mag_filter="GL_NEAREST" wrap_s="GL_CLAMP_TO_EDGE" wrap_t="GL_CLAMP_TO_EDGE" />
+		</pipeline>
+		<pipeline name="fog_godrays">
+			<!-- dst = src.a * dst + 1 * src.rgb -->
+			<!-- src.a : Extinction ; src.rgb = Scattering -->
+			<blend sfactor="GL_ONE" equation="GL_FUNC_ADD" dfactor="GL_SRC_ALPHA" />
+			<shader name="fullscreen.vert" type="GL_VERTEX_SHADER" />
+			<shader name="fog_godrays.frag" type="GL_FRAGMENT_SHADER" />
+			<sampler name="texSampler" min_filter="GL_NEAREST" mag_filter="GL_NEAREST" wrap_s="GL_CLAMP_TO_EDGE" wrap_t="GL_CLAMP_TO_EDGE" />
+			<sampler name="depthMapSampler" min_filter="GL_NEAREST" mag_filter="GL_NEAREST" wrap_s="GL_CLAMP_TO_EDGE" wrap_t="GL_CLAMP_TO_EDGE" />
+		</pipeline>
+		<pipeline name="tonemapping">
+			<shader name="fullscreen.vert" type="GL_VERTEX_SHADER" />
+			<shader name="tonemapping.frag" type="GL_FRAGMENT_SHADER" />
+			<sampler name="texSampler" min_filter="GL_NEAREST" mag_filter="GL_NEAREST" wrap_s="GL_CLAMP_TO_EDGE" wrap_t="GL_CLAMP_TO_EDGE" />
+		</pipeline>
+		<pipeline name="bloom">
+			<blend sfactor="GL_ONE" equation="GL_FUNC_ADD" dfactor="GL_ONE" />
+			<shader name="fullscreen.vert" type="GL_VERTEX_SHADER" />
+			<shader name="fullscreen_color.frag" type="GL_FRAGMENT_SHADER" />
+			<sampler name="texSampler" min_filter="GL_LINEAR" mag_filter="GL_LINEAR" wrap_s="GL_CLAMP_TO_EDGE" wrap_t="GL_CLAMP_TO_EDGE" />
+		</pipeline>
+		<pipeline name="debug_depth">
+			<shader name="fullscreen.vert" type="GL_VERTEX_SHADER" />
+			<shader name="fullscreen_depth.frag" type="GL_FRAGMENT_SHADER" />
+			<sampler name="texSampler" min_filter="GL_NEAREST" mag_filter="GL_NEAREST" wrap_s="GL_CLAMP_TO_EDGE" wrap_t="GL_CLAMP_TO_EDGE" />
+		</pipeline>
+		<pipeline name="debug_normal">
+			<shader name="fullscreen.vert" type="GL_VERTEX_SHADER" />
+			<shader name="fullscreen_normal.frag" type="GL_FRAGMENT_SHADER" />
+			<sampler name="texSampler" min_filter="GL_NEAREST" mag_filter="GL_NEAREST" wrap_s="GL_CLAMP_TO_EDGE" wrap_t="GL_CLAMP_TO_EDGE" />
+		</pipeline>
+		<pipeline name="debug_color">
+			<shader name="fullscreen.vert" type="GL_VERTEX_SHADER" />
+			<shader name="fullscreen_color.frag" type="GL_FRAGMENT_SHADER" />
+			<sampler name="texSampler" min_filter="GL_NEAREST" mag_filter="GL_NEAREST" wrap_s="GL_CLAMP_TO_EDGE" wrap_t="GL_CLAMP_TO_EDGE" />
+		</pipeline>
+		<pipeline name="debug_luminance">
+			<shader name="fullscreen.vert" type="GL_VERTEX_SHADER" />
+			<shader name="fullscreen_exp.frag" type="GL_FRAGMENT_SHADER" />
+			<sampler name="texSampler" min_filter="GL_NEAREST" mag_filter="GL_NEAREST" wrap_s="GL_CLAMP_TO_EDGE" wrap_t="GL_CLAMP_TO_EDGE" />
+		</pipeline>
+	</pipelines>
+
+	<techniques>
 
 		<technique name="picking">
-			<depth mask="GL_FALSE" func="GL_EQUAL" />
 			<pass name="default">
-				<shader name="pickbuffer.vert" type="GL_VERTEX_SHADER" />
-				<shader name="pickbuffer.frag" type="GL_FRAGMENT_SHADER" />
+				<pipeline name="pickbuffer" />
 				<output texture="depth" /> <!-- early z-cull -->
 				<output texture="pickbuffer" />
 			</pass>
@@ -25,35 +137,26 @@
 
 		<technique name="bbox">
 			<pass name="default">
-				<shader name="bbox.vert" type="GL_VERTEX_SHADER" />
-				<shader name="bbox.geom" type="GL_GEOMETRY_SHADER" />
-				<shader name="bbox.frag" type="GL_FRAGMENT_SHADER" />
+				<pipeline name="bbox" />
 			</pass>
 		</technique>
 
 		<technique name="geometry">
-			<depth mask="GL_TRUE" func="GL_LESS" />
 			<pass name="simple">
-				<shader name="geometry_pass.vert" type="GL_VERTEX_SHADER" />
-				<shader name="geometry_pass.frag" type="GL_FRAGMENT_SHADER" />
+				<pipeline name="geometry_simple" />
 				<output texture="depth" />
 				<output texture="normals" />
 			</pass>
 			<pass name="normal_map">
-				<shader name="geometry_normalmap_pass.vert" type="GL_VERTEX_SHADER" />
-				<shader name="geometry_normalmap_pass.frag" type="GL_FRAGMENT_SHADER" />
-				<sampler name="normalMap" min_filter="GL_LINEAR" mag_filter="GL_LINEAR" wrap_s="GL_CLAMP_TO_EDGE" wrap_t="GL_CLAMP_TO_EDGE" />
+				<pipeline name="geometry_normalmap" />
 				<output texture="depth" />
 				<output texture="normals" />
 			</pass>
 		</technique>
 
 		<technique name="lights">
-			<blend sfactor="GL_ONE" equation="GL_FUNC_ADD" dfactor="GL_ONE" />
 			<pass name="directional">
-				<shader name="directionnal_light.vert" type="GL_VERTEX_SHADER" />
-				<shader name="directionnal_light.frag" type="GL_FRAGMENT_SHADER" />
-				<sampler name="normalSampler" min_filter="GL_LINEAR" mag_filter="GL_LINEAR" wrap_s="GL_CLAMP_TO_EDGE" wrap_t="GL_CLAMP_TO_EDGE" />
+				<pipeline name="lights_directional" />
 				<output texture="lights_diffuse" />
 				<output texture="lights_specular" />
 			</pass>
@@ -61,93 +164,69 @@
 
 		<technique name="bloom">
 			<pass name="bright">
-				<shader name="fullscreen.vert" type="GL_VERTEX_SHADER" />
-				<shader name="fullscreen_bright.frag" type="GL_FRAGMENT_SHADER" />
+				<pipeline name="bloom_bright" />
 				<output texture="bloom1" />
 			</pass>
 			<pass name="horizontal_blur">
-				<shader name="fullscreen.vert" type="GL_VERTEX_SHADER" />
-				<shader name="gaussian_blur_h.frag" type="GL_FRAGMENT_SHADER" />
+				<pipeline name="bloom_horizontal_blur" />
 				<output texture="bloom2" />
 			</pass>
 			<pass name="vertical_blur">
-				<shader name="fullscreen.vert" type="GL_VERTEX_SHADER" />
-				<shader name="gaussian_blur_v.frag" type="GL_FRAGMENT_SHADER" />
+				<pipeline name="bloom_vertical_blur" />
 				<output texture="bloom1" />
 			</pass>
 		</technique>
 
 		<technique name="compose">
-			<depth mask="GL_FALSE" func="GL_EQUAL" />
 			<pass name="default">
-				<shader name="full.vert" type="GL_VERTEX_SHADER" />
-				<shader name="full.frag" type="GL_FRAGMENT_SHADER" />
-				<sampler name="diffuseSampler" min_filter="GL_LINEAR" mag_filter="GL_LINEAR" wrap_s="GL_CLAMP_TO_EDGE" wrap_t="GL_CLAMP_TO_EDGE" />
-				<sampler name="specularSampler" min_filter="GL_LINEAR" mag_filter="GL_LINEAR" wrap_s="GL_CLAMP_TO_EDGE" wrap_t="GL_CLAMP_TO_EDGE" />
-				<sampler name="shadowMap" min_filter="GL_LINEAR" mag_filter="GL_LINEAR" wrap_s="GL_CLAMP_TO_BORDER" wrap_t="GL_CLAMP_TO_BORDER" compare_mode="GL_COMPARE_REF_TO_TEXTURE" compare_func="GL_LEQUAL" />
+				<pipeline name="compose" />
 				<output texture="depth" /> <!-- early z-cull -->
 				<output texture="HDR" />
 			</pass>
 		</technique>
 
 		<technique name="fog">
-			<!-- dst = src.a * dst + 1 * src.rgb -->
-			<!-- src.a : Extinction ; src.rgb = Scattering -->
-			<blend sfactor="GL_ONE" equation="GL_FUNC_ADD" dfactor="GL_SRC_ALPHA" /> 
 			<pass name="simple">
-				<shader name="fullscreen.vert" type="GL_VERTEX_SHADER" />
-				<shader name="fog_simple.frag" type="GL_FRAGMENT_SHADER" />
+				<pipeline name="fog_simple" />
 				<output texture="HDR" />
 			</pass>
-<!--
 			<pass name="scattering">
-				<shader name="fullscreen.vert" type="GL_VERTEX_SHADER" />
-				<shader name="fog_scattering.frag" type="GL_FRAGMENT_SHADER" />
+				<pipeline name="fog_scattering" />
 				<output texture="HDR" />
 			</pass>
 			<pass name="godrays">
-				<shader name="fullscreen.vert" type="GL_VERTEX_SHADER" />
-				<shader name="fog_godrays.frag" type="GL_FRAGMENT_SHADER" />
+				<pipeline name="fog_godrays" />
 				<output texture="HDR" />
 			</pass>
--->
 		</technique>
 
 		<technique name="tonemapping">
 			<pass name="with_burnout">
-				<shader name="fullscreen.vert" type="GL_VERTEX_SHADER" />
-				<shader name="tonemapping.frag" type="GL_FRAGMENT_SHADER" />
+				<pipeline name="tonemapping" />
 			</pass>
 		</technique>
 
 		<technique name="blend">
-			<blend sfactor="GL_ONE" equation="GL_FUNC_ADD" dfactor="GL_ONE" />
 			<pass name="bloom">
-				<shader name="fullscreen.vert" type="GL_VERTEX_SHADER" />
-				<shader name="fullscreen_color.frag" type="GL_FRAGMENT_SHADER" />
-				<sampler name="texSampler" min_filter="GL_LINEAR" mag_filter="GL_LINEAR" wrap_s="GL_CLAMP_TO_EDGE" wrap_t="GL_CLAMP_TO_EDGE" />
+				<pipeline name="bloom" />
 			</pass>
 		</technique>
 
 		<technique name="debug">
 			<pass name="depth">
-				<shader name="fullscreen.vert" type="GL_VERTEX_SHADER" />
-				<shader name="fullscreen_depth.frag" type="GL_FRAGMENT_SHADER" />
+				<pipeline name="debug_depth" />
 			</pass>
 			<pass name="normal">
-				<shader name="fullscreen.vert" type="GL_VERTEX_SHADER" />
-				<shader name="fullscreen_normal.frag" type="GL_FRAGMENT_SHADER" />
+				<pipeline name="debug_normal" />
 			</pass>
 			<pass name="color">
-				<shader name="fullscreen.vert" type="GL_VERTEX_SHADER" />
-				<shader name="fullscreen_color.frag" type="GL_FRAGMENT_SHADER" />
+				<pipeline name="debug_color" />
 			</pass>
 			<pass name="luminance">
-				<shader name="fullscreen.vert" type="GL_VERTEX_SHADER" />
-				<shader name="fullscreen_exp.frag" type="GL_FRAGMENT_SHADER" />
+				<pipeline name="debug_luminance" />
 			</pass>
 		</technique>
 
-	</pipeline>
+	</techniques>
 
 </render>

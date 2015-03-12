@@ -3,10 +3,11 @@
 #include <GPU.h>
 
 #include <Vector.h>
-#include <Matrix.h>
 
 #include <vector>
 #include <map>
+
+#include "Pipeline.h"
 
 namespace tinyxml2
 {
@@ -22,7 +23,8 @@ class Pass
 public:
 
     explicit	Pass			(void);
-    explicit	Pass			(const tinyxml2::XMLElement * element, const Rendering & rendering);
+    explicit	Pass			(const Pipeline * pipeline);
+    explicit	Pass			(const Pipeline * pipeline, const tinyxml2::XMLElement * element, const Rendering & rendering);
     virtual		~Pass			(void);
 
     bool		Begin			(void);
@@ -30,28 +32,28 @@ public:
 
     bool		ReadPixel		(const ivec2 & pos, unsigned int & result);
 
-    void		SetUniform		(const char * name, const mat4x4 & m);
-    void		SetUniform		(const char * name, const mat3x3 & m);
-    void		SetUniform		(const char * name, const mat2x2 & m);
+    void SetUniformBlockBinding  (const char * name, unsigned int binding) const
+    {
+        m_Pipeline->SetUniformBlockBinding(name, binding);
+    }
 
-    void		SetUniform		(const char * name, const vec4 & v);
-    void		SetUniform		(const char * name, const vec3 & v);
-    void		SetUniform		(const char * name, const vec2 & v);
-
-    void		SetUniform		(const char * name, int n);
-    void		SetUniform		(const char * name, unsigned int n);
-    void		SetUniform		(const char * name, float n);
-
-    void        SetUniformBlockBinding  (const char * name, unsigned int binding) const;
+    template<typename T>
+    void SetUniform (const char * name, const T & value) const
+    {
+        m_Pipeline->SetUniform(name, value);
+    }
 
     template<GLenum D>
-    void		SetTexture		(const char * name, int unit, const GPU::Texture<D> & texture);
+    void SetTexture (const char * name, unsigned int binding, const GPU::Texture<D> & texture) const
+    {
+        m_Pipeline->SetTexture(name, binding, texture);
+    }
 
 protected:
 
     GLuint m_uFramebufferObject;
-    GLuint m_uShaderObject;
-    std::map<std::string, GLuint> m_mapSamplers;
+
+    const Pipeline * m_Pipeline;
 
     std::vector<GLenum> m_aDrawBuffers;
 };
