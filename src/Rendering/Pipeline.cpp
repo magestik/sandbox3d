@@ -11,8 +11,7 @@ using namespace tinyxml2;
  * @brief Pipeline::Pipeline
  */
 Pipeline::Pipeline()
-: m_bActive(false)
-, m_uShaderObject(0)
+: m_uShaderObject(0)
 {
     // ...
 }
@@ -23,8 +22,7 @@ Pipeline::Pipeline()
  * @param rendering
  */
 Pipeline::Pipeline(const XMLElement * root, const Rendering & rendering)
-: m_bActive(false)
-, m_uShaderObject(0)
+: m_uShaderObject(0)
 {
     // misc glEnable(...)
     {

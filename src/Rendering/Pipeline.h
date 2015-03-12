@@ -82,13 +82,8 @@ protected:
     DepthControl m_sDepthControl;
     BlendControl m_sBlendControl;
 
-public:
-
     GLuint m_uShaderObject;
-
-protected:
 
     std::map<std::string, GLuint> m_mapSamplers;
 
-    bool m_bActive;
 };

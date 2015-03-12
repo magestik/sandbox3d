@@ -6,7 +6,9 @@ Render passes are entirely configurable (with data/render.xml).
 
 Define all Render Targets.
 
-## Technique
+## Pipelines
+
+Define all Pipelines.
 
 ### Depth Control
 
@@ -29,6 +31,15 @@ By default, blending is disabled. To enable it use :
 
 This is used to enable blending and specify equation (see [glBlendFunc](https://www.opengl.org/sdk/docs/man4/html/glBlendFunc.xhtml)) and source/dest factors (see [glBlendEquation](https://www.opengl.org/sdk/docs/man4/html/glBlendEquation.xhtml)).
 
+
+### Sampler Control
+
+```
+<sampler name="string" min_filter="GL_ENUM" mag_filter="GL_ENUM" wrap_s="GL_ENUM" wrap_t="GL_ENUM" wrap_r="GL_ENUM" compare_mode="GL_ENUM" compare_func="GL_ENUM"/>
+```
+
+This is used to configure samplers (see [glSamplerParameter](https://www.opengl.org/sdk/docs/man/html/glSamplerParameter.xhtml)).
+
 ### Enable
 
 By default every GL feature is disabled.
@@ -41,12 +52,15 @@ This enable a GL feature (see [glEnable](https://www.opengl.org/sdk/docs/man4/ht
 WARNING: This should not be used directly for supported features (GL_DEPTH_TEST and GL_BLEND) !
 This is just an helper for functionnality not yet supported in this file.
 
-### Pass
+## Techniques
 
-#### Sampler Control
+Define all Techniques.
 
-```
-<sampler name="string" min_filter="GL_ENUM" mag_filter="GL_ENUM" wrap_s="GL_ENUM" wrap_t="GL_ENUM" wrap_r="GL_ENUM" compare_mode="GL_ENUM" compare_func="GL_ENUM"/>
-```
+### Technique
 
-This is used to configure samplers (see [glSamplerParameter](https://www.opengl.org/sdk/docs/man/html/glSamplerParameter.xhtml)).
+Define a Technique.
+
+#### Pass
+
+Define a Pass.
+
