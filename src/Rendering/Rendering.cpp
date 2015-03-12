@@ -73,7 +73,7 @@ void Rendering::onInitializeComplete()
 
     {
         m_pLight = new Light::Directionnal(vec3(-20.0f, -20.0f, -20.0f));
-        m_pShadowMap = new ShadowMap();
+        m_pShadowMap = new ShadowMap(m_mapPipeline["shadow_map"]);
         m_pShadowMap->init(SHADOW_MAP_SIZE, SHADOW_MAP_SIZE);
     }
 
@@ -537,15 +537,18 @@ void Rendering::renderSceneToShadowMap(void)
 
     m_pShadowMap->Begin();
 
+    glClear(GL_DEPTH_BUFFER_BIT);
+    glPolygonOffset(10.0f, 1.0f);
+
     {
         mat4x4 mDepthView = _lookAt(vec3(0,0,0), m_pLight->GetDirection(), vec3(0.0f, -1.0f, 0.0f));
         mat4x4 mDepthViewProjection = m_pShadowMap->GetProjection() * mDepthView;
 
-        m_pShadowMap->GetShader()->SetUniform("LightViewProjection", mDepthViewProjection);
+        m_pShadowMap->SetUniform("LightViewProjection", mDepthViewProjection);
 
         for (Mesh::Instance & object : m_aObjects)
         {
-            m_pShadowMap->GetShader()->SetUniform("Model", object.transformation);
+            m_pShadowMap->SetUniform("Model", object.transformation);
 
             object.mesh->bind();
 

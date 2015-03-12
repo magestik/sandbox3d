@@ -17,6 +17,12 @@
 			<shader name="pickbuffer.vert" type="GL_VERTEX_SHADER" />
 			<shader name="pickbuffer.frag" type="GL_FRAGMENT_SHADER" />
 		</pipeline>
+		<pipeline name="shadow_map">
+			<enable cap="GL_POLYGON_OFFSET_FILL" />
+			<depth mask="GL_TRUE" func="GL_LESS" />
+			<shader name="depth_only.vert" type="GL_VERTEX_SHADER" />
+			<shader name="depth_only.frag" type="GL_FRAGMENT_SHADER" />
+		</pipeline>
 		<pipeline name="bbox">
 			<shader name="bbox.vert" type="GL_VERTEX_SHADER" />
 			<shader name="bbox.geom" type="GL_GEOMETRY_SHADER" />

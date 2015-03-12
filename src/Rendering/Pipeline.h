@@ -67,7 +67,7 @@ public:
         GLenum equation;
     };
 
-    typedef GLuint SamplerControl;
+    typedef GLuint Sampler;
 
     typedef GLuint Shader;
 
@@ -102,7 +102,7 @@ protected:
     StencilControl      m_sStencilControl;
     BlendControl        m_sBlendControl;
 
-    std::map<std::string, SamplerControl> m_mapSamplers;
+    std::map<std::string, Sampler> m_mapSamplers;
 
     Shader m_uShaderObject;
 };

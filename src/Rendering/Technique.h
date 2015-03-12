@@ -9,6 +9,7 @@
 #include <Vector.h>
 
 #include "Pipeline.h"
+#include "Pass.h"
 
 namespace tinyxml2
 {
@@ -16,7 +17,6 @@ namespace tinyxml2
 }
 
 class Rendering;
-class Pass;
 
 class Technique
 {
