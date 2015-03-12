@@ -16,41 +16,60 @@ namespace tinyxml2
 
 class Rendering;
 
-struct DepthControl
-{
-    DepthControl(void)
-    {
-        enable	= false;
-        mask	= GL_TRUE;
-        func	= GL_LESS;
-    }
-
-    bool enable;
-
-    GLboolean mask;
-    GLenum func;
-};
-
-struct BlendControl
-{
-    BlendControl(void)
-    {
-        enable		= false;
-        sfactor		= GL_ONE;
-        sfactor		= GL_ZERO;
-        equation	= GL_FUNC_ADD;
-    }
-
-    bool enable;
-
-    GLenum sfactor;
-    GLenum dfactor;
-    GLenum equation;
-};
-
 class Pipeline
 {
 public:
+
+    struct DepthControl
+    {
+        DepthControl(void)
+        {
+            enable	= false;
+            mask	= GL_TRUE;
+            func	= GL_LESS;
+        }
+
+        bool enable;
+
+        GLboolean mask;
+        GLenum func;
+    };
+
+    struct StencilControl
+    {
+        StencilControl(void)
+        {
+            enable	= false;
+            mask	= UINT32_MAX;
+            func	= GL_ALWAYS;
+        }
+
+        bool enable;
+
+        GLuint mask;
+        GLenum func;
+    };
+
+    struct BlendControl
+    {
+        BlendControl(void)
+        {
+            enable		= false;
+            sfactor		= GL_ONE;
+            sfactor		= GL_ZERO;
+            equation	= GL_FUNC_ADD;
+        }
+
+        bool enable;
+
+        GLenum sfactor;
+        GLenum dfactor;
+        GLenum equation;
+    };
+
+    typedef GLuint SamplerControl;
+
+    typedef GLuint Shader;
 
     Pipeline();
     Pipeline(const tinyxml2::XMLElement * element, const Rendering & rendering);
@@ -79,11 +98,11 @@ protected:
 
     std::vector<GLenum> m_aEnable;
 
-    DepthControl m_sDepthControl;
-    BlendControl m_sBlendControl;
+    DepthControl        m_sDepthControl;
+    StencilControl      m_sStencilControl;
+    BlendControl        m_sBlendControl;
 
-    GLuint m_uShaderObject;
+    std::map<std::string, SamplerControl> m_mapSamplers;
 
-    std::map<std::string, GLuint> m_mapSamplers;
-
+    Shader m_uShaderObject;
 };

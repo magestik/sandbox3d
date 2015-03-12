@@ -21,6 +21,17 @@ By default, the depth functionalities are disabled (both zWrite and zRead).
 This is used to enable depth test and set the compare function (see [glDepthFunc](https://www.opengl.org/sdk/docs/man4/html/glDepthFunc.xhtml)).
 It is also used to enable or disable zWrite (see [glDepthMask](https://www.opengl.org/sdk/docs/man4/html/glDepthMask.xhtml)).
 
+### Stencil Control
+
+By default, the stencil functionalities are disabled (both write and compare). 
+
+```
+<stencil mask="GL_UNSIGNED" func="GL_ENUM" />
+```
+
+This is used to enable stencil test and set the compare function (see [glStencilFunc](https://www.opengl.org/sdk/docs/man4/html/glStencilFunc.xhtml)).
+It is also used to change to stencil mask (see [glStencilMask](https://www.opengl.org/sdk/docs/man4/html/glStencilMask.xhtml)).
+
 ### Blend Control
 
 By default, blending is disabled. To enable it use :

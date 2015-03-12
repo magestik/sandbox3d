@@ -64,6 +64,30 @@ Pipeline::Pipeline(const XMLElement * root, const Rendering & rendering)
         }
     }
 
+    // Stencil Control
+    {
+        const XMLElement * stencil = root->FirstChildElement("stencil");
+
+        if (nullptr != stencil)
+        {
+            m_sDepthControl.enable = true;
+
+            const char * func = stencil->Attribute("func");
+
+            if (nullptr != func)
+            {
+                m_sDepthControl.func = strToStencilFunc(func);
+            }
+
+            const char * mask = stencil->Attribute("mask");
+
+            if (nullptr != mask)
+            {
+                m_sDepthControl.mask = strToStencilMask(mask);
+            }
+        }
+    }
+
     // Blend Control
     {
         const XMLElement * blend = root->FirstChildElement("blend");
@@ -212,7 +236,7 @@ Pipeline::Pipeline(const XMLElement * root, const Rendering & rendering)
 }
 
 /**
- * @brief Pipeline::Begin
+ * @brief Pipeline::OnBind
  * @return
  */
 bool Pipeline::Bind(void) const
@@ -229,6 +253,13 @@ bool Pipeline::Bind(void) const
         glDepthMask(m_sDepthControl.mask);
     }
 
+    if (m_sStencilControl.enable)
+    {
+        glEnable(GL_STENCIL_TEST);
+        glStencilFunc(m_sStencilControl.func, 0, UINT32_MAX);
+        glStencilMask(m_sStencilControl.mask);
+    }
+
     if (m_sBlendControl.enable)
     {
         glEnable(GL_BLEND);
@@ -242,7 +273,7 @@ bool Pipeline::Bind(void) const
 }
 
 /**
- * @brief Pipeline::End
+ * @brief Pipeline::OnUnBind
  */
 void Pipeline::UnBind(void) const
 {
@@ -253,6 +284,13 @@ void Pipeline::UnBind(void) const
         glDisable(GL_BLEND);
         glBlendEquation(GL_FUNC_ADD);
         glBlendFunc(GL_ONE, GL_ZERO);
+    }
+
+    if (m_sStencilControl.enable)
+    {
+        glDisable(GL_STENCIL_TEST);
+        glStencilFunc(GL_ALWAYS, 0, UINT32_MAX);
+        glStencilMask(UINT32_MAX);
     }
 
     if (m_sDepthControl.enable)

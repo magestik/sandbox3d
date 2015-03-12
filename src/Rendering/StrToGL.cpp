@@ -2,6 +2,8 @@
 
 #include <assert.h>
 
+#include <stdlib.h>
+
 // TODO : Use loop everywhere !!!
 
 /**
@@ -426,4 +428,61 @@ GLenum strToCompareFunc(const char * strCompareFunc)
     }
 
     return(0);
+}
+
+/**
+ * @brief strToStencilFunc
+ * @param strDepthFunc
+ * @return
+ */
+GLenum strToStencilFunc(const char * strStencilFunc)
+{
+    if (!strcmp(strStencilFunc, "GL_EQUAL"))
+    {
+        return(GL_EQUAL);
+    }
+    else if (!strcmp(strStencilFunc, "GL_NOTEQUAL"))
+    {
+        return(GL_NOTEQUAL);
+    }
+    else if (!strcmp(strStencilFunc, "GL_GEQUAL"))
+    {
+        return(GL_GEQUAL);
+    }
+    else if (!strcmp(strStencilFunc, "GL_LEQUAL"))
+    {
+        return(GL_LEQUAL);
+    }
+    else if (!strcmp(strStencilFunc, "GL_GREATER"))
+    {
+        return(GL_GREATER);
+    }
+    else if (!strcmp(strStencilFunc, "GL_LESS"))
+    {
+        return(GL_LESS);
+    }
+    else if (!strcmp(strStencilFunc, "GL_NEVER"))
+    {
+        return(GL_NEVER);
+    }
+    else if (!strcmp(strStencilFunc, "GL_AWAYS"))
+    {
+        return(GL_ALWAYS);
+    }
+    else
+    {
+        assert(false);
+    }
+
+    return(0);
+}
+
+/**
+ * @brief strToStencilMask
+ * @param strDepthMask
+ * @return
+ */
+GLuint strToStencilMask(const char * strStencilMask)
+{
+    return(strtoul(strStencilMask, nullptr, 2));
 }
