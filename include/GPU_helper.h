@@ -209,6 +209,8 @@ inline GLenum getFormat(GLint internalFormat)
             assert(false);
         }
     }
+
+    return(GL_RGBA);
 }
 
 /**
@@ -362,6 +364,8 @@ inline GLenum getType(GLint internalFormat)
             assert(false);
         }
     }
+
+    return(GL_INT);
 }
 
 }
