@@ -10,7 +10,6 @@
 #include <string>
 
 // class definitions
-#include "Shader/Shader.h"
 #include "Light/Light.h"
 #include "Mesh/Mesh.h"
 #include "Mesh/SubMesh.h"
