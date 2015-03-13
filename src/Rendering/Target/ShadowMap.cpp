@@ -58,4 +58,5 @@ bool ShadowMap::init(unsigned int width, unsigned height)
 void ShadowMap::free(void)
 {
     glDeleteFramebuffers(1, &m_uFramebufferObject);
+    m_uFramebufferObject = 0;
 }

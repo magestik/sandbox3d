@@ -5,41 +5,30 @@
 #include <Vector.h>
 #include <Matrix.h>
 
-class Shader;
+#include "../Pass.h"
 
-class AverageLuminance
+class AverageLuminance : public Pass
 {
 public:
 
-	AverageLuminance(void);
-	~AverageLuminance(void);
+    AverageLuminance(const Pipeline * pipeline);
+    ~AverageLuminance(void);
 
-	bool	init	(const GPU::Texture<GL_TEXTURE_2D> * pTexture1, const GPU::Texture<GL_TEXTURE_2D> * pTexture2);
-	void	free	(void);
+    bool	init	(const GPU::Texture<GL_TEXTURE_2D> * pTexture1, const GPU::Texture<GL_TEXTURE_2D> * pTexture2);
+    void	free	(void);
 
-	bool	begin	(void);
-	bool	end		(void);
+    bool	begin	(void);
+    bool	end		(void);
 
-	unsigned int    next    (void);
+    unsigned int    next    (void);
 
-	float getAverage(void);
-	float getMax2(void);
-
-	GLuint	GetObject(void) { return(m_uObject); }
-
-	Shader * GetShader(void) { return(m_pCurrentShader); }
+    float getAverage(void);
+    float getMax2(void);
 
 private:
 
-	GLuint m_uObject;
+    unsigned int m_uCurrentObject;
 
-	unsigned int m_uCurrentObject;
-
-	Shader * m_pShader_convert;
-	Shader * m_pShader_mean;
-
-	Shader * m_pCurrentShader;
-
-	float m_fSumLog;
-	float m_fMax;
+    float m_fSumLog;
+    float m_fMax;
 };

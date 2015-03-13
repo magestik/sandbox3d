@@ -143,7 +143,7 @@ private:
 
     mat4x4 m_matProjection;
 
-    AverageLuminance    m_AvLum;
+    AverageLuminance * m_AvLum;
 
     std::vector<Mesh::Instance> m_aObjects;
 
@@ -153,20 +153,11 @@ private:
     Mesh *	m_pQuadMesh;
     Mesh *	m_pPointMesh;
 
-    enum ETarget
-    {
-        TARGET_LUMINANCE1       = 0,
-        TARGET_LUMINANCE2       = 1,
-        TARGET_MAX              = 2
-    };
-
     enum EUniformBlockBinding
     {
         BLOCK_BINDING_CAMERA = 0,
         BLOCK_BINDING_OBJECT = 1
     };
-
-    GPU::Texture<GL_TEXTURE_2D> * m_apTargets [TARGET_MAX];
 
     GPU::Buffer<GL_UNIFORM_BUFFER> * m_pCameraBuffer;
     GPU::Buffer<GL_UNIFORM_BUFFER> * m_pObjectsBuffer;

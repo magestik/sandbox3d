@@ -67,7 +67,11 @@ GLenum strToCapability(const char * strCapability)
  */
 GLenum strToFormat(const char * strFormat)
 {
-    if (!strcmp(strFormat, "GL_RGBA16F"))
+    if (!strcmp(strFormat, "GL_RG16F"))
+    {
+        return(GL_RG16F);
+    }
+    else if (!strcmp(strFormat, "GL_RGBA16F"))
     {
         return(GL_RGBA16F);
     }

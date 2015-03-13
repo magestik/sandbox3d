@@ -49,6 +49,7 @@ Rendering::Rendering()
 , m_pObjectsBuffer(nullptr)
 , m_mapTargets()
 , m_mapTechnique()
+, m_AvLum(nullptr)
 {
     // ...
 }
@@ -58,9 +59,6 @@ Rendering::Rendering()
  */
 void Rendering::onInitializeComplete()
 {
-    m_apTargets[TARGET_LUMINANCE1] = new GPU::Texture<GL_TEXTURE_2D>();
-    m_apTargets[TARGET_LUMINANCE2] = new GPU::Texture<GL_TEXTURE_2D>();
-
     m_pCameraBuffer = new GPU::Buffer<GL_UNIFORM_BUFFER>();
     GPU::realloc(*m_pCameraBuffer, sizeof(CameraBlock), GL_STREAM_DRAW);
 
@@ -69,7 +67,8 @@ void Rendering::onInitializeComplete()
 
     initializePipelineFromXML("data/render.xml");
 
-    assert(m_AvLum.init(m_apTargets[TARGET_LUMINANCE1], m_apTargets[TARGET_LUMINANCE2]));
+    m_AvLum = new AverageLuminance(m_mapPipeline["average_luminance"]);
+    m_AvLum->init(m_mapTargets["luminance1"].getTexture(), m_mapTargets["luminance2"].getTexture());
 
     {
         m_pLight = new Light::Directionnal(vec3(-20.0f, -20.0f, -20.0f));
@@ -303,14 +302,16 @@ void Rendering::onResize(int width, int height)
     float ratio = m_uWidth/(float)m_uHeight;
     m_matProjection = _perspective(75.0f, ratio, 1.0f, 1000.0f);
 
-    // see https://www.opengl.org/wiki/Image_Format#Required_formats
-
-    m_apTargets[TARGET_LUMINANCE1]->init<GL_RG16F>(m_uLuminanceSizePOT, m_uLuminanceSizePOT);
-    m_apTargets[TARGET_LUMINANCE2]->init<GL_RG16F>(m_uLuminanceSizePOT, m_uLuminanceSizePOT);
-
     for (std::map<std::string, RenderTexture>::iterator it = m_mapTargets.begin(); it != m_mapTargets.end(); ++it)
     {
-        it->second.resize(m_uWidth, m_uHeight);
+        if (it->first == "luminance1" || it->first == "luminance2")
+        {
+            it->second.resize(m_uLuminanceSizePOT, m_uLuminanceSizePOT);
+        }
+        else
+        {
+            it->second.resize(m_uWidth, m_uHeight);
+        }
     }
 }
 
@@ -384,30 +385,64 @@ void Rendering::onUpdate(const mat4x4 & mView, const vec4 & clearColor, bool bWi
     renderBloom();
 
     //
-    // Tone Mapping
-    //
-
-    computeAverageLum();
-
-    //
     // Render to Screen
     //
 
     if (eRenderType == FINAL)
     {
-        glViewport(0, 0, m_uWidth, m_uHeight);
+
 
         Technique & ToneMappingTechnique = m_mapTechnique["tonemapping"];
 
         ToneMappingTechnique.Begin();
         {
-            float avLum = m_AvLum.getAverage();
-            float white2 = m_AvLum.getMax2();
+            glViewport(0, 0, m_uLuminanceSizePOT, m_uLuminanceSizePOT);
+
+            ToneMappingTechnique.BeginPass("to_luminance");
+            {
+                ToneMappingTechnique.SetTexture("texSampler", 0, *(m_mapTargets["HDR"].getTexture()));
+                m_pQuadMesh->draw();
+            }
+            ToneMappingTechnique.EndPass();
+
+            const GPU::Texture<GL_TEXTURE_2D> * textures [2] =
+            {
+                m_mapTargets["luminance1"].getTexture(),
+                m_mapTargets["luminance2"].getTexture()
+            };
+
+            m_AvLum->begin();
+            {
+                vec2 texture_scale (1.0f, 1.0f);
+
+                for (int size = m_uLuminanceSizePOT >> 1; size > 1; size >>= 1)
+                {
+                    glViewport(0, 0, size, size);
+
+                    unsigned int tex = m_AvLum->next();
+
+                    m_AvLum->SetTexture("texSampler", 0, *(textures[tex]));
+                    m_AvLum->SetUniform("textureScale", texture_scale);
+
+                    m_pQuadMesh->draw();
+
+                    texture_scale = texture_scale * 0.5f;
+                }
+            }
+            m_AvLum->end();
+
+            float avLum = m_AvLum->getAverage();
+            float white2 = m_AvLum->getMax2();
+
+            glViewport(0, 0, m_uWidth, m_uHeight);
+
             ToneMappingTechnique.BeginPass("with_burnout");
-            ToneMappingTechnique.SetTexture("texSampler", 0, *(m_mapTargets["HDR"].getTexture()));
-            ToneMappingTechnique.SetUniform("avLum", avLum);
-            ToneMappingTechnique.SetUniform("white2", white2);
-            m_pQuadMesh->draw();
+            {
+                ToneMappingTechnique.SetTexture("texSampler", 0, *(m_mapTargets["HDR"].getTexture()));
+                ToneMappingTechnique.SetUniform("avLum", avLum);
+                ToneMappingTechnique.SetUniform("white2", white2);
+                m_pQuadMesh->draw();
+            }
             ToneMappingTechnique.EndPass();
         }
         ToneMappingTechnique.End();
@@ -492,39 +527,6 @@ Mesh::Instance * Rendering::getObjectAtPos(const ivec2 & pos)
     PickBufferTechnique.End();
 
     return(object);
-}
-
-/**
- * @brief Rendering::computeAverageLum
- */
-void Rendering::computeAverageLum(void)
-{
-    m_AvLum.begin();
-
-    {
-        glViewport(0, 0, m_uLuminanceSizePOT, m_uLuminanceSizePOT);
-
-        m_AvLum.GetShader()->SetTexture("texSampler", 0, *(m_mapTargets["HDR"].getTexture()));
-        m_pQuadMesh->draw();
-
-        vec2 texture_scale (1.0f, 1.0f);
-
-        for (int size = m_uLuminanceSizePOT >> 1; size > 1; size >>= 1)
-        {
-            glViewport(0, 0, size, size);
-
-            unsigned int tex = m_AvLum.next();
-
-            m_AvLum.GetShader()->SetTexture("texSampler", 0, *(m_apTargets[TARGET_LUMINANCE1 + tex]));
-            m_AvLum.GetShader()->SetUniform("textureScale", texture_scale);
-
-            m_pQuadMesh->draw();
-
-            texture_scale = texture_scale * 0.5f;
-        }
-    }
-
-    m_AvLum.end();
 }
 
 /**
@@ -651,7 +653,7 @@ void Rendering::renderIntermediateToScreen(ERenderType eRenderType)
         {
             DebugTechnique.BeginPass("luminance");
             {
-                DebugTechnique.SetTexture("texSampler", 0, *(m_apTargets[TARGET_LUMINANCE1]));
+                DebugTechnique.SetTexture("texSampler", 0, *(m_mapTargets["luminance1"].getTexture()));
                 m_pQuadMesh->draw();
             }
             DebugTechnique.EndPass();
@@ -662,7 +664,7 @@ void Rendering::renderIntermediateToScreen(ERenderType eRenderType)
         {
             DebugTechnique.BeginPass("luminance");
             {
-                DebugTechnique.SetTexture("texSampler", 0, *(m_apTargets[TARGET_LUMINANCE2]));
+                DebugTechnique.SetTexture("texSampler", 0, *(m_mapTargets["luminance2"].getTexture()));
                 m_pQuadMesh->draw();
             }
             DebugTechnique.EndPass();

@@ -9,6 +9,8 @@
 		<texture name="bloom1" format="GL_R11F_G11F_B10F" size_divisor="4" />
 		<texture name="bloom2" format="GL_R11F_G11F_B10F" size_divisor="4" />
 		<texture name="pickbuffer" format="GL_R32UI" />
+		<texture name="luminance1" format="GL_RG16F" />
+		<texture name="luminance2" format="GL_RG16F" />
 	</targets>
 
 	<pipelines>
@@ -97,6 +99,16 @@
 			<shader name="fog_godrays.frag" type="GL_FRAGMENT_SHADER" />
 			<sampler name="texSampler" min_filter="GL_NEAREST" mag_filter="GL_NEAREST" wrap_s="GL_CLAMP_TO_EDGE" wrap_t="GL_CLAMP_TO_EDGE" />
 			<sampler name="depthMapSampler" min_filter="GL_NEAREST" mag_filter="GL_NEAREST" wrap_s="GL_CLAMP_TO_EDGE" wrap_t="GL_CLAMP_TO_EDGE" />
+		</pipeline>
+		<pipeline name="luminance_conversion">
+			<shader name="fullscreen.vert" type="GL_VERTEX_SHADER" />
+			<shader name="fullscreen_luminance.frag" type="GL_FRAGMENT_SHADER" />
+			<sampler name="texSampler" min_filter="GL_LINEAR" mag_filter="GL_LINEAR" wrap_s="GL_CLAMP_TO_EDGE" wrap_t="GL_CLAMP_TO_EDGE" />
+		</pipeline>
+		<pipeline name="average_luminance">
+			<shader name="fullscreen.vert" type="GL_VERTEX_SHADER" />
+			<shader name="fullscreen_luminance_mean.frag" type="GL_FRAGMENT_SHADER" />
+			<sampler name="texSampler" min_filter="GL_LINEAR" mag_filter="GL_LINEAR" wrap_s="GL_CLAMP_TO_EDGE" wrap_t="GL_CLAMP_TO_EDGE" />
 		</pipeline>
 		<pipeline name="tonemapping">
 			<shader name="fullscreen.vert" type="GL_VERTEX_SHADER" />
@@ -207,6 +219,10 @@
 		</technique>
 
 		<technique name="tonemapping">
+			<pass name="to_luminance">
+				<pipeline name="luminance_conversion" />
+				<output texture="luminance1" />
+			</pass>
 			<pass name="with_burnout">
 				<pipeline name="tonemapping" />
 			</pass>
