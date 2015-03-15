@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<!DOCTYPE render SYSTEM "render.dtd">
 <render>
 
 	<targets>
@@ -146,106 +148,87 @@
 	<techniques>
 
 		<technique name="picking">
-			<pass name="default">
-				<pipeline name="pickbuffer" />
+			<pass name="default" pipeline="pickbuffer">
 				<output texture="depth" /> <!-- early z-cull -->
 				<output texture="pickbuffer" />
 			</pass>
 		</technique>
 
 		<technique name="bbox">
-			<pass name="default">
-				<pipeline name="bbox" />
+			<pass name="default" pipeline="bbox">
 			</pass>
 		</technique>
 
 		<technique name="geometry">
-			<pass name="simple">
-				<pipeline name="geometry_simple" />
+			<pass name="simple" pipeline="geometry_simple">
 				<output texture="depth" />
 				<output texture="normals" />
 			</pass>
-			<pass name="normal_map">
-				<pipeline name="geometry_normalmap" />
+			<pass name="normal_map" pipeline="geometry_normalmap">
 				<output texture="depth" />
 				<output texture="normals" />
 			</pass>
 		</technique>
 
 		<technique name="lights">
-			<pass name="directional">
-				<pipeline name="lights_directional" />
+			<pass name="directional" pipeline="lights_directional">
 				<output texture="lights_diffuse" />
 				<output texture="lights_specular" />
 			</pass>
 		</technique>
 
 		<technique name="bloom">
-			<pass name="bright">
-				<pipeline name="bloom_bright" />
+			<pass name="bright" pipeline="bloom_bright">
 				<output texture="bloom1" />
 			</pass>
-			<pass name="horizontal_blur">
-				<pipeline name="bloom_horizontal_blur" />
+			<pass name="horizontal_blur" pipeline="bloom_horizontal_blur">
 				<output texture="bloom2" />
 			</pass>
-			<pass name="vertical_blur">
-				<pipeline name="bloom_vertical_blur" />
+			<pass name="vertical_blur" pipeline="bloom_vertical_blur">
 				<output texture="bloom1" />
 			</pass>
 		</technique>
 
 		<technique name="compose">
-			<pass name="default">
-				<pipeline name="compose" />
+			<pass name="default" pipeline="compose">
 				<output texture="depth" /> <!-- early z-cull -->
 				<output texture="HDR" />
 			</pass>
 		</technique>
 
 		<technique name="fog">
-			<pass name="simple">
-				<pipeline name="fog_simple" />
+			<pass name="simple" pipeline="fog_simple">
 				<output texture="HDR" />
 			</pass>
-			<pass name="scattering">
-				<pipeline name="fog_scattering" />
+			<pass name="scattering" pipeline="fog_scattering">
 				<output texture="HDR" />
 			</pass>
-			<pass name="godrays">
-				<pipeline name="fog_godrays" />
+			<pass name="godrays" pipeline="fog_godrays">
 				<output texture="HDR" />
 			</pass>
 		</technique>
 
 		<technique name="tonemapping">
-			<pass name="to_luminance">
-				<pipeline name="luminance_conversion" />
+			<pass name="to_luminance" pipeline="luminance_conversion">
 				<output texture="luminance1" />
 			</pass>
-			<pass name="with_burnout">
-				<pipeline name="tonemapping" />
+			<pass name="with_burnout" pipeline="tonemapping">
 			</pass>
 		</technique>
 
 		<technique name="blend">
-			<pass name="bloom">
-				<pipeline name="bloom" />
+			<pass name="bloom" pipeline="bloom">
 			</pass>
 		</technique>
 
 		<technique name="debug">
-			<pass name="depth">
-				<pipeline name="debug_depth" />
+			<pass name="depth" pipeline="debug_depth">
 			</pass>
-			<pass name="normal">
-				<pipeline name="debug_normal" />
+			<pass name="normal" pipeline="debug_normal">
 			</pass>
-			<pass name="color">
-				<pipeline name="debug_color" />
+			<pass name="color" pipeline="debug_color">
 			</pass>
-			<pass name="luminance">
-				<pipeline name="debug_luminance" />
+			<pass name="luminance" pipeline="debug_luminance">
 			</pass>
 		</technique>
 

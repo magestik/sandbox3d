@@ -73,3 +73,4 @@ target_link_libraries(${PROJECT_NAME} ${OPENGL_LIBRARIES} ${assimp_LIBRARIES} ${
 add_custom_target(deploy_shaders ALL COMMAND ${PROJECT_SOURCE_DIR}/scripts/deploy_shaders.sh WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})
 
 add_test(NAME check_shaders COMMAND ${PROJECT_SOURCE_DIR}/scripts/check_shaders.sh WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/data/shaders)
+add_test(NAME check_renderer COMMAND xmllint --noout --valid render.xml WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/data)

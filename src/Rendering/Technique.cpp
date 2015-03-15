@@ -31,18 +31,11 @@ Technique::Technique(const XMLElement * root, const Rendering & rendering)
 
             assert(nullptr != name);
 
-            const Pipeline * pipeline = nullptr;
-            {
-                const XMLElement * child = elmt->FirstChildElement("pipeline");
+            const char * pipeline_name = elmt->Attribute("pipeline");
 
-                assert(nullptr != child);
+            assert(nullptr != pipeline_name);
 
-                const char * pipeline_name = child->Attribute("name");
-
-                pipeline = rendering.GetPipeline(pipeline_name);
-
-                assert(nullptr != pipeline);
-            }
+            const Pipeline * pipeline = rendering.GetPipeline(pipeline_name);
 
             m_mapPass[name] = Pass(pipeline, elmt, rendering);
 
