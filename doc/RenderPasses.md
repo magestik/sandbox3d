@@ -49,6 +49,7 @@ This is used to enable blending and specify equation (see [glBlendFunc](https://
 ```
 
 This is used to configure samplers (see [glSamplerParameter](https://www.opengl.org/sdk/docs/man/html/glSamplerParameter.xhtml)).
+The name should exist inthe Shader Program.
 
 ### Primitives Setup
 
@@ -76,9 +77,17 @@ Define all Techniques.
 
 ### Technique
 
-Define a Technique.
+```
+<technique name="string">
+```
+
+Define a named Technique.
 
 #### Pass
 
-Define a Pass.
+```
+<pass name="string" pipeline="string">
+```
+
+Define a named Pass and attach a pipeline.
 

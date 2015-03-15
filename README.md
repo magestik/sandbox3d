@@ -41,4 +41,8 @@ Libraries needed :
 - OpenGL 3.3
 - Assimp
 - TinyXML2
+
+Other requierements :
 - cpp (to preprocess shaders)
+- xmllint (to check render.xml)
+
