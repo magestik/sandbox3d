@@ -4,32 +4,45 @@
 
 #include <stdlib.h>
 
-// TODO : Use loop everywhere !!!
+#define STR2ENUM(str, aString, aValues) \
+for (unsigned int i = 0; i < sizeof(aValues)/sizeof(aValues[0]); ++i) \
+{ \
+    if (!strcmp(str, aStrings[i])) \
+    { \
+        return(aValues[i]); \
+    } \
+}
+
+#define DECLARE_STRINGS(aStrings) static const char * aStrings [] = ENUM_LIST
+#define DECLARE_VALUES(aValues) static GLenum aValues [] = ENUM_LIST
 
 /**
  * @brief strToShaderType
  * @param strShaderType
  * @return
  */
-GLenum strToShaderType(const char * strShaderType)
+GLenum strToShaderType(const char * str)
 {
-    if (!strcmp(strShaderType, "GL_VERTEX_SHADER"))
-    {
-        return(GL_VERTEX_SHADER);
-    }
-    else if (!strcmp(strShaderType, "GL_FRAGMENT_SHADER"))
-    {
-        return(GL_FRAGMENT_SHADER);
-    }
-    else if (!strcmp(strShaderType, "GL_GEOMETRY_SHADER"))
-    {
-        return(GL_GEOMETRY_SHADER);
-    }
-    else
-    {
-        assert(false);
+    #define ENUM_LIST \
+    { \
+        X(GL_VERTEX_SHADER), \
+        X(GL_FRAGMENT_SHADER), \
+        X(GL_GEOMETRY_SHADER) \
     }
 
+    #define X(e) #e
+    DECLARE_STRINGS(aStrings);
+    #undef X
+
+    #define X(e) e
+    DECLARE_VALUES(aValues);
+    #undef X
+
+    STR2ENUM(str, aStrings, aValues)
+
+    #undef ENUM_LIST
+
+    assert(false);
     return(0);
 }
 
@@ -38,25 +51,28 @@ GLenum strToShaderType(const char * strShaderType)
  * @param strCapability
  * @return
  */
-GLenum strToCapability(const char * strCapability)
+GLenum strToCapability(const char * str)
 {
-    if (!strcmp(strCapability, "GL_DEPTH_TEST"))
-    {
-        return(GL_DEPTH_TEST);
-    }
-    else if (!strcmp(strCapability, "GL_BLEND"))
-    {
-        return(GL_BLEND);
-    }
-    else if (!strcmp(strCapability, "GL_POLYGON_OFFSET_FILL"))
-    {
-        return(GL_POLYGON_OFFSET_FILL);
-    }
-    else
-    {
-        assert(false);
+    #define ENUM_LIST \
+    { \
+        X(GL_DEPTH_TEST), \
+        X(GL_BLEND), \
+        X(GL_POLYGON_OFFSET_FILL) \
     }
 
+    #define X(e) #e
+    DECLARE_STRINGS(aStrings);
+    #undef X
+
+    #define X(e) e
+    DECLARE_VALUES(aValues);
+    #undef X
+
+    STR2ENUM(str, aStrings, aValues)
+
+    #undef ENUM_LIST
+
+    assert(false);
     return(0);
 }
 
@@ -65,65 +81,43 @@ GLenum strToCapability(const char * strCapability)
  * @param strFormat
  * @return
  */
-GLenum strToFormat(const char * strFormat)
+GLenum strToFormat(const char * str)
 {
-    if (!strcmp(strFormat, "GL_RG16F"))
-    {
-        return(GL_RG16F);
-    }
-    else if (!strcmp(strFormat, "GL_RGBA16F"))
-    {
-        return(GL_RGBA16F);
-    }
-    else if (!strcmp(strFormat, "GL_RGBA32F"))
-    {
-        return(GL_RGBA32F);
-    }
-    else if (!strcmp(strFormat, "GL_R32UI"))
-    {
-        return(GL_R32UI);
-    }
-    else if (!strcmp(strFormat, "GL_RGB10_A2​"))
-    {
-        return(GL_RGB10_A2);
-    }
-    else if (!strcmp(strFormat, "GL_RGB10_A2UI​"))
-    {
-        return(GL_RGB10_A2UI);
-    }
-    else if (!strcmp(strFormat, "GL_R11F_G11F_B10F"))
-    {
-        return(GL_R11F_G11F_B10F);
-    }
-    else if (!strcmp(strFormat, "GL_DEPTH_COMPONENT16"))
-    {
-        return(GL_DEPTH_COMPONENT16);
-    }
-    else if (!strcmp(strFormat, "GL_DEPTH_COMPONENT24"))
-    {
-        return(GL_DEPTH_COMPONENT24);
-    }
-    else if (!strcmp(strFormat, "GL_DEPTH_COMPONENT32F"))
-    {
-        return(GL_DEPTH_COMPONENT32F);
-    }
-    else if (!strcmp(strFormat, "GL_DEPTH24_STENCIL8"))
-    {
-        return(GL_DEPTH24_STENCIL8);
-    }
-    else if (!strcmp(strFormat, "GL_DEPTH32F_STENCIL8"))
-    {
-        return(GL_DEPTH32F_STENCIL8);
-    }
-    else if (!strcmp(strFormat, "GL_STENCIL_INDEX8"))
-    {
-        return(GL_STENCIL_INDEX8);
-    }
-    else
-    {
-        assert(false);
+    #define ENUM_LIST \
+    { \
+        X(GL_R16F), \
+        X(GL_RG16F), \
+        X(GL_RGBA16F), \
+        X(GL_R32F), \
+        X(GL_RG32F), \
+        X(GL_RGBA32F), \
+        X(GL_R32UI), \
+        X(GL_RG32UI), \
+        X(GL_RGBA32UI), \
+        X(GL_RGB10_A2), \
+        X(GL_RGB10_A2UI), \
+        X(GL_R11F_G11F_B10F), \
+        X(GL_DEPTH_COMPONENT16), \
+        X(GL_DEPTH_COMPONENT24), \
+        X(GL_DEPTH_COMPONENT32F), \
+        X(GL_DEPTH24_STENCIL8), \
+        X(GL_DEPTH32F_STENCIL8), \
+        X(GL_STENCIL_INDEX8) \
     }
 
+    #define X(e) #e
+    DECLARE_STRINGS(aStrings);
+    #undef X
+
+    #define X(e) e
+    DECLARE_VALUES(aValues);
+    #undef X
+
+    STR2ENUM(str, aStrings, aValues)
+
+    #undef ENUM_LIST
+
+    assert(false);
     return(0);
 }
 
@@ -132,21 +126,27 @@ GLenum strToFormat(const char * strFormat)
  * @param strDepthMask
  * @return
  */
-GLenum strToDepthMask(const char * strDepthMask)
+GLenum strToDepthMask(const char * str)
 {
-    if (!strcmp(strDepthMask, "GL_TRUE"))
-    {
-        return(GL_TRUE);
-    }
-    else if (!strcmp(strDepthMask, "GL_FALSE"))
-    {
-        return(GL_FALSE);
-    }
-    else
-    {
-        assert(false);
+    #define ENUM_LIST \
+    { \
+        X(GL_TRUE), \
+        X(GL_FALSE) \
     }
 
+    #define X(e) #e
+    DECLARE_STRINGS(aStrings);
+    #undef X
+
+    #define X(e) e
+    DECLARE_VALUES(aValues);
+    #undef X
+
+    STR2ENUM(str, aStrings, aValues)
+
+    #undef ENUM_LIST
+
+    assert(false);
     return(0);
 }
 
@@ -155,45 +155,33 @@ GLenum strToDepthMask(const char * strDepthMask)
  * @param strBoolean
  * @return
  */
-GLenum strToDepthFunc(const char * strDepthFunc)
+GLenum strToDepthFunc(const char * str)
 {
-    if (!strcmp(strDepthFunc, "GL_EQUAL"))
-    {
-        return(GL_EQUAL);
-    }
-    else if (!strcmp(strDepthFunc, "GL_NOTEQUAL"))
-    {
-        return(GL_NOTEQUAL);
-    }
-    else if (!strcmp(strDepthFunc, "GL_GEQUAL"))
-    {
-        return(GL_GEQUAL);
-    }
-    else if (!strcmp(strDepthFunc, "GL_LEQUAL"))
-    {
-        return(GL_LEQUAL);
-    }
-    else if (!strcmp(strDepthFunc, "GL_GREATER"))
-    {
-        return(GL_GREATER);
-    }
-    else if (!strcmp(strDepthFunc, "GL_LESS"))
-    {
-        return(GL_LESS);
-    }
-    else if (!strcmp(strDepthFunc, "GL_NEVER"))
-    {
-        return(GL_NEVER);
-    }
-    else if (!strcmp(strDepthFunc, "GL_AWAYS"))
-    {
-        return(GL_ALWAYS);
-    }
-    else
-    {
-        assert(false);
+    #define ENUM_LIST \
+    { \
+        X(GL_EQUAL), \
+        X(GL_NOTEQUAL), \
+        X(GL_GEQUAL), \
+        X(GL_LEQUAL), \
+        X(GL_GREATER), \
+        X(GL_LESS), \
+        X(GL_NEVER), \
+        X(GL_ALWAYS) \
     }
 
+    #define X(e) #e
+    DECLARE_STRINGS(aStrings);
+    #undef X
+
+    #define X(e) e
+    DECLARE_VALUES(aValues);
+    #undef X
+
+    STR2ENUM(str, aStrings, aValues)
+
+    #undef ENUM_LIST
+
+    assert(false);
     return(0);
 }
 
@@ -202,33 +190,30 @@ GLenum strToDepthFunc(const char * strDepthFunc)
  * @param strBlendEquation
  * @return
  */
-GLenum strToBlendEquation(const char * strBlendEquation)
+GLenum strToBlendEquation(const char * str)
 {
-    if (!strcmp(strBlendEquation, "GL_FUNC_ADD"))
-    {
-        return(GL_FUNC_ADD);
-    }
-    else if (!strcmp(strBlendEquation, "GL_FUNC_SUBTRACT"))
-    {
-        return(GL_FUNC_SUBTRACT);
-    }
-    else if (!strcmp(strBlendEquation, "GL_FUNC_REVERSE_SUBTRACT"))
-    {
-        return(GL_FUNC_REVERSE_SUBTRACT);
-    }
-    else if (!strcmp(strBlendEquation, "GL_MIN"))
-    {
-        return(GL_MIN);
-    }
-    else if (!strcmp(strBlendEquation, "GL_MAX"))
-    {
-        return(GL_MAX);
-    }
-    else
-    {
-        assert(false);
+    #define ENUM_LIST \
+    { \
+        X(GL_FUNC_ADD), \
+        X(GL_FUNC_SUBTRACT), \
+        X(GL_FUNC_REVERSE_SUBTRACT), \
+        X(GL_MIN), \
+        X(GL_MAX) \
     }
 
+    #define X(e) #e
+    DECLARE_STRINGS(aStrings);
+    #undef X
+
+    #define X(e) e
+    DECLARE_VALUES(aValues);
+    #undef X
+
+    STR2ENUM(str, aStrings, aValues)
+
+    #undef ENUM_LIST
+
+    assert(false);
     return(0);
 }
 
@@ -237,37 +222,31 @@ GLenum strToBlendEquation(const char * strBlendEquation)
  * @param strBlendFunc
  * @return
  */
-GLenum strToBlendFunc(const char * strBlendFunc)
+GLenum strToBlendFunc(const char * str)
 {
-    if (!strcmp(strBlendFunc, "GL_ONE"))
-    {
-        return(GL_ONE);
-    }
-    else if (!strcmp(strBlendFunc, "GL_ZERO"))
-    {
-        return(GL_ZERO);
-    }
-    else if (!strcmp(strBlendFunc, "GL_SRC_COLOR"))
-    {
-        return(GL_SRC_COLOR);
-    }
-    else if (!strcmp(strBlendFunc, "GL_DST_COLOR"))
-    {
-        return(GL_DST_COLOR);
-    }
-    else if (!strcmp(strBlendFunc, "GL_SRC_ALPHA"))
-    {
-        return(GL_SRC_ALPHA);
-    }
-    else if (!strcmp(strBlendFunc, "GL_DST_ALPHA"))
-    {
-        return(GL_DST_ALPHA);
-    }
-    else
-    {
-        assert(false);
+    #define ENUM_LIST \
+    { \
+        X(GL_ONE), \
+        X(GL_ZERO), \
+        X(GL_SRC_COLOR), \
+        X(GL_DST_COLOR), \
+        X(GL_SRC_ALPHA), \
+        X(GL_DST_ALPHA) \
     }
 
+    #define X(e) #e
+    DECLARE_STRINGS(aStrings);
+    #undef X
+
+    #define X(e) e
+    DECLARE_VALUES(aValues);
+    #undef X
+
+    STR2ENUM(str, aStrings, aValues)
+
+    #undef ENUM_LIST
+
+    assert(false);
     return(0);
 }
 
@@ -276,37 +255,31 @@ GLenum strToBlendFunc(const char * strBlendFunc)
  * @param strFilter
  * @return
  */
-GLenum strToMinFilter(const char * strFilter)
+GLenum strToMinFilter(const char * str)
 {
-    if (!strcmp(strFilter, "GL_NEAREST"))
-    {
-        return(GL_NEAREST);
-    }
-    else if (!strcmp(strFilter, "GL_LINEAR"))
-    {
-        return(GL_LINEAR);
-    }
-    else if (!strcmp(strFilter, "GL_NEAREST_MIPMAP_NEAREST"))
-    {
-        return(GL_NEAREST_MIPMAP_NEAREST);
-    }
-    else if (!strcmp(strFilter, "GL_LINEAR_MIPMAP_NEAREST"))
-    {
-        return(GL_LINEAR_MIPMAP_NEAREST);
-    }
-    else if (!strcmp(strFilter, "GL_NEAREST_MIPMAP_LINEAR"))
-    {
-        return(GL_NEAREST_MIPMAP_LINEAR);
-    }
-    else if (!strcmp(strFilter, "GL_LINEAR_MIPMAP_LINEAR"))
-    {
-        return(GL_LINEAR_MIPMAP_LINEAR);
-    }
-    else
-    {
-        assert(false);
+    #define ENUM_LIST \
+    { \
+        X(GL_NEAREST), \
+        X(GL_LINEAR), \
+        X(GL_NEAREST_MIPMAP_NEAREST), \
+        X(GL_LINEAR_MIPMAP_NEAREST), \
+        X(GL_NEAREST_MIPMAP_LINEAR), \
+        X(GL_LINEAR_MIPMAP_LINEAR) \
     }
 
+    #define X(e) #e
+    DECLARE_STRINGS(aStrings);
+    #undef X
+
+    #define X(e) e
+    DECLARE_VALUES(aValues);
+    #undef X
+
+    STR2ENUM(str, aStrings, aValues)
+
+    #undef ENUM_LIST
+
+    assert(false);
     return(0);
 }
 
@@ -315,21 +288,27 @@ GLenum strToMinFilter(const char * strFilter)
  * @param strFilter
  * @return
  */
-GLenum strToMagFilter(const char * strFilter)
+GLenum strToMagFilter(const char * str)
 {
-    if (!strcmp(strFilter, "GL_NEAREST"))
-    {
-        return(GL_NEAREST);
-    }
-    else if (!strcmp(strFilter, "GL_LINEAR"))
-    {
-        return(GL_LINEAR);
-    }
-    else
-    {
-        assert(false);
+    #define ENUM_LIST \
+    { \
+        X(GL_NEAREST), \
+        X(GL_LINEAR) \
     }
 
+    #define X(e) #e
+    DECLARE_STRINGS(aStrings);
+    #undef X
+
+    #define X(e) e
+    DECLARE_VALUES(aValues);
+    #undef X
+
+    STR2ENUM(str, aStrings, aValues)
+
+    #undef ENUM_LIST
+
+    assert(false);
     return(0);
 }
 
@@ -338,29 +317,29 @@ GLenum strToMagFilter(const char * strFilter)
  * @param strWrapMode
  * @return
  */
-GLenum strToWrapMode(const char * strWrapMode)
+GLenum strToWrapMode(const char * str)
 {
-    if (!strcmp(strWrapMode, "GL_CLAMP_TO_EDGE"))
-    {
-        return(GL_CLAMP_TO_EDGE);
-    }
-    else if (!strcmp(strWrapMode, "GL_MIRRORED_REPEAT"))
-    {
-        return(GL_MIRRORED_REPEAT);
-    }
-    else if (!strcmp(strWrapMode, "GL_REPEAT"))
-    {
-        return(GL_REPEAT);
-    }
-    else if (!strcmp(strWrapMode, "GL_CLAMP_TO_BORDER"))
-    {
-        return(GL_CLAMP_TO_BORDER);
-    }
-    else
-    {
-        assert(false);
+    #define ENUM_LIST \
+    { \
+        X(GL_CLAMP_TO_EDGE), \
+        X(GL_MIRRORED_REPEAT), \
+        X(GL_REPEAT), \
+        X(GL_CLAMP_TO_BORDER) \
     }
 
+    #define X(e) #e
+    DECLARE_STRINGS(aStrings);
+    #undef X
+
+    #define X(e) e
+    DECLARE_VALUES(aValues);
+    #undef X
+
+    STR2ENUM(str, aStrings, aValues)
+
+    #undef ENUM_LIST
+
+    assert(false);
     return(0);
 }
 
@@ -369,21 +348,27 @@ GLenum strToWrapMode(const char * strWrapMode)
  * @param strCompareMode
  * @return
  */
-GLenum strToCompareMode(const char * strCompareMode)
+GLenum strToCompareMode(const char * str)
 {
-    if (!strcmp(strCompareMode, "GL_COMPARE_REF_TO_TEXTURE"))
-    {
-        return(GL_COMPARE_REF_TO_TEXTURE);
-    }
-    else if (!strcmp(strCompareMode, "GL_NONE"))
-    {
-        return(GL_NONE);
-    }
-    else
-    {
-        assert(false);
+    #define ENUM_LIST \
+    { \
+        X(GL_COMPARE_REF_TO_TEXTURE), \
+        X(GL_NONE) \
     }
 
+    #define X(e) #e
+    DECLARE_STRINGS(aStrings);
+    #undef X
+
+    #define X(e) e
+    DECLARE_VALUES(aValues);
+    #undef X
+
+    STR2ENUM(str, aStrings, aValues)
+
+    #undef ENUM_LIST
+
+    assert(false);
     return(0);
 }
 
@@ -392,45 +377,32 @@ GLenum strToCompareMode(const char * strCompareMode)
  * @param strCompareFunc
  * @return
  */
-GLenum strToCompareFunc(const char * strCompareFunc)
+GLenum strToCompareFunc(const char * str)
 {
-    if (!strcmp(strCompareFunc, "GL_EQUAL"))
-    {
-        return(GL_EQUAL);
-    }
-    else if (!strcmp(strCompareFunc, "GL_NOTEQUAL"))
-    {
-        return(GL_NOTEQUAL);
-    }
-    else if (!strcmp(strCompareFunc, "GL_GEQUAL"))
-    {
-        return(GL_GEQUAL);
-    }
-    else if (!strcmp(strCompareFunc, "GL_LEQUAL"))
-    {
-        return(GL_LEQUAL);
-    }
-    else if (!strcmp(strCompareFunc, "GL_GREATER"))
-    {
-        return(GL_GREATER);
-    }
-    else if (!strcmp(strCompareFunc, "GL_LESS"))
-    {
-        return(GL_LESS);
-    }
-    else if (!strcmp(strCompareFunc, "GL_NEVER"))
-    {
-        return(GL_NEVER);
-    }
-    else if (!strcmp(strCompareFunc, "GL_AWAYS"))
-    {
-        return(GL_ALWAYS);
-    }
-    else
-    {
-        assert(false);
+    #define ENUM_LIST \
+    { \
+        X(GL_EQUAL), \
+        X(GL_NOTEQUAL), \
+        X(GL_LEQUAL), \
+        X(GL_GREATER), \
+        X(GL_LESS), \
+        X(GL_NEVER), \
+        X(GL_ALWAYS) \
     }
 
+    #define X(e) #e
+    DECLARE_STRINGS(aStrings);
+    #undef X
+
+    #define X(e) e
+    DECLARE_VALUES(aValues);
+    #undef X
+
+    STR2ENUM(str, aStrings, aValues)
+
+    #undef ENUM_LIST
+
+    assert(false);
     return(0);
 }
 
@@ -439,45 +411,32 @@ GLenum strToCompareFunc(const char * strCompareFunc)
  * @param strDepthFunc
  * @return
  */
-GLenum strToStencilFunc(const char * strStencilFunc)
+GLenum strToStencilFunc(const char * str)
 {
-    if (!strcmp(strStencilFunc, "GL_EQUAL"))
-    {
-        return(GL_EQUAL);
-    }
-    else if (!strcmp(strStencilFunc, "GL_NOTEQUAL"))
-    {
-        return(GL_NOTEQUAL);
-    }
-    else if (!strcmp(strStencilFunc, "GL_GEQUAL"))
-    {
-        return(GL_GEQUAL);
-    }
-    else if (!strcmp(strStencilFunc, "GL_LEQUAL"))
-    {
-        return(GL_LEQUAL);
-    }
-    else if (!strcmp(strStencilFunc, "GL_GREATER"))
-    {
-        return(GL_GREATER);
-    }
-    else if (!strcmp(strStencilFunc, "GL_LESS"))
-    {
-        return(GL_LESS);
-    }
-    else if (!strcmp(strStencilFunc, "GL_NEVER"))
-    {
-        return(GL_NEVER);
-    }
-    else if (!strcmp(strStencilFunc, "GL_AWAYS"))
-    {
-        return(GL_ALWAYS);
-    }
-    else
-    {
-        assert(false);
+    #define ENUM_LIST \
+    { \
+        X(GL_EQUAL), \
+        X(GL_NOTEQUAL), \
+        X(GL_LEQUAL), \
+        X(GL_GREATER), \
+        X(GL_LESS), \
+        X(GL_NEVER), \
+        X(GL_ALWAYS) \
     }
 
+    #define X(e) #e
+    DECLARE_STRINGS(aStrings);
+    #undef X
+
+    #define X(e) e
+    DECLARE_VALUES(aValues);
+    #undef X
+
+    STR2ENUM(str, aStrings, aValues)
+
+    #undef ENUM_LIST
+
+    assert(false);
     return(0);
 }
 
