@@ -15,6 +15,7 @@ Implemented :
 - Pick Buffer.
 
 TODO :
+- FXAA,
 - Ray of God,
 - Ambient Occlusion,
 - Depth of Field,
