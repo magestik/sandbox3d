@@ -22,6 +22,8 @@ out vec3 outColor;
 
 uniform vec3 ambientColor;
 
+const mat3x3 sRGB_to_XYZ = mat3x3(0.4124564, 0.2126729, 0.0193339, 0.3575761, 0.7151522, 0.1191920, 0.1804375, 0.0721750, 0.9503041);
+
 float getShadow(vec3 position)
 {
 	vec4 shadowCoord = vec4(position, 1.0) * DepthTransformation;
@@ -62,8 +64,8 @@ vec3 getDiffuseLight(vec4 position)
 
 void main(void)
 {
-	vec3 diffuse = texture(diffuseSampler, vsOut.texCoord).rgb;
-	vec3 specular = texture(specularSampler, vsOut.texCoord).rgb;
+	vec3 diffuse = sRGB_to_XYZ * texture(diffuseSampler, vsOut.texCoord).rgb;
+	vec3 specular = sRGB_to_XYZ * texture(specularSampler, vsOut.texCoord).rgb;
 
 	float shadow_factor = getShadow(vsOut.position);
 

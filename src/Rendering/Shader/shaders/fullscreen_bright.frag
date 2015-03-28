@@ -18,7 +18,7 @@ void main(void)
 {
 	vec3 color = texture(texSampler, vsOut.texCoord).rgb;
 
-	float lum = dot(color, LUMINANCE);
+	float lum = color.y;
 
 	if (lum > threshold)
 	{
