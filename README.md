@@ -12,10 +12,10 @@ Implemented :
 - Shadow mapping (PCF),
 - Tone Mapping (the scene is first rendered in HDR format),
 - Bloom,
+- FXAA (just plugged Timothy Lottes implementation),
 - Pick Buffer.
 
 TODO :
-- FXAA,
 - Ray of God,
 - Ambient Occlusion,
 - Depth of Field,
@@ -46,4 +46,3 @@ Libraries needed :
 Other requierements :
 - cpp (to preprocess shaders)
 - xmllint (to check render.xml)
-
