@@ -5,7 +5,7 @@
 	<!ELEMENT targets (texture*)>
 		<!ELEMENT texture EMPTY>
 		<!ATTLIST texture name CDATA #REQUIRED>
-		<!ATTLIST texture format (GL_DEPTH_COMPONENT32F|GL_RGBA16F|GL_R11F_G11F_B10F|GL_R32UI|GL_RG16F) #REQUIRED>
+		<!ATTLIST texture format (GL_DEPTH_COMPONENT32F|GL_RGBA8|GL_RGBA16F|GL_R11F_G11F_B10F|GL_R32UI|GL_RG16F) #REQUIRED>
 		<!ATTLIST texture size_divisor CDATA #IMPLIED>
 
 	<!-- list of pipelines -->

@@ -8,6 +8,7 @@
 		<texture name="lights_diffuse" format="GL_R11F_G11F_B10F" />
 		<texture name="lights_specular" format="GL_R11F_G11F_B10F" />
 		<texture name="HDR" format="GL_R11F_G11F_B10F" />
+		<texture name="LDR" format="GL_RGBA8" />
 		<texture name="bloom1" format="GL_R11F_G11F_B10F" size_divisor="4" />
 		<texture name="bloom2" format="GL_R11F_G11F_B10F" size_divisor="4" />
 		<texture name="pickbuffer" format="GL_R32UI" />
@@ -117,6 +118,11 @@
 			<shader name="tonemapping.frag" type="GL_FRAGMENT_SHADER" />
 			<sampler name="texSampler" min_filter="GL_NEAREST" mag_filter="GL_NEAREST" wrap_s="GL_CLAMP_TO_EDGE" wrap_t="GL_CLAMP_TO_EDGE" />
 		</pipeline>
+		<pipeline name="fxaa">
+			<shader name="fullscreen.vert" type="GL_VERTEX_SHADER" />
+			<shader name="fullscreen_fxaa.frag" type="GL_FRAGMENT_SHADER" />
+			<sampler name="texSampler" min_filter="GL_NEAREST" mag_filter="GL_NEAREST" wrap_s="GL_CLAMP_TO_EDGE" wrap_t="GL_CLAMP_TO_EDGE" />
+		</pipeline>
 		<pipeline name="bloom">
 			<blend sfactor="GL_ONE" equation="GL_FUNC_ADD" dfactor="GL_ONE" />
 			<shader name="fullscreen.vert" type="GL_VERTEX_SHADER" />
@@ -213,6 +219,12 @@
 				<output texture="luminance1" />
 			</pass>
 			<pass name="with_burnout" pipeline="tonemapping">
+				<output texture="LDR" />
+			</pass>
+		</technique>
+
+		<technique name="anti-aliasing">
+			<pass name="fxaa" pipeline="fxaa">
 			</pass>
 		</technique>
 

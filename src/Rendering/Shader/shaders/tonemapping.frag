@@ -12,7 +12,7 @@ uniform float avLum;
 
 in VS_OUTPUT vsOut;
 
-out vec3 outColor;
+out vec4 outColor;
 
 const float keyValue = 0.18;
 
@@ -52,7 +52,8 @@ void main(void)
 	color_XYZ.b = color_Yxy.r * (1 - color_Yxy.g - color_Yxy.b) / color_Yxy.b;
 
 	// RGB color
-	outColor = XYZ_to_sRGB * color_XYZ;
+	outColor.rgb = sqrt(XYZ_to_sRGB * color_XYZ); // gamma 2.0
+	outColor.a = sqrt(color_XYZ.g);
 }
 
 

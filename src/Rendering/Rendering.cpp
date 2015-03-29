@@ -396,8 +396,6 @@ void Rendering::onUpdate(const mat4x4 & mView, const vec4 & clearColor, bool bWi
 
 	if (eRenderType == FINAL)
 	{
-
-
 		Technique & ToneMappingTechnique = m_mapTechnique["tonemapping"];
 
 		ToneMappingTechnique.Begin();
@@ -453,8 +451,21 @@ void Rendering::onUpdate(const mat4x4 & mView, const vec4 & clearColor, bool bWi
 		}
 		ToneMappingTechnique.End();
 
-		return;
+		Technique & AntiAliasingTechnique = m_mapTechnique["anti-aliasing"];
 
+		AntiAliasingTechnique.Begin();
+		{
+			AntiAliasingTechnique.BeginPass("fxaa");
+			{
+				AntiAliasingTechnique.SetTexture("texSampler", 0, *(m_mapTargets["LDR"].getTexture()));
+				AntiAliasingTechnique.SetUniform("fxaaQualityRcpFrame", vec2(1.0/m_uWidth, 1.0/m_uHeight));
+				m_pQuadMesh->draw();
+			}
+			AntiAliasingTechnique.EndPass();
+		}
+		AntiAliasingTechnique.End();
+
+return;
 		//
 		// post process
 

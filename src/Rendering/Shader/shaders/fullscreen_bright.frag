@@ -10,8 +10,6 @@ in VS_OUTPUT vsOut;
 
 out vec3 outColor;
 
-const vec3 LUMINANCE = vec3(0.2125f, 0.7154f, 0.0721f);
-
 const float threshold = 0.8;
 
 void main(void)
