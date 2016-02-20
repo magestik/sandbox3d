@@ -1,0 +1,3 @@
+[submodule "external/linear-algebra"]
+	path = external/linear-algebra
+	url = git@github.com:magestik/linear-algebra.git

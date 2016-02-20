@@ -465,7 +465,6 @@ void Rendering::onUpdate(const mat4x4 & mView, const vec4 & clearColor, bool bWi
 		}
 		AntiAliasingTechnique.End();
 
-return;
 		//
 		// post process
 

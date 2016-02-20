@@ -4,6 +4,16 @@
 
 #include "GUI/MainWindow.h"
 
+void getToto()
+{
+
+}
+void setToto()
+{
+
+}
+int test [[ri::name("Test", "Test Variable"), setter(getToto), getter(setToto)]];
+
 bool setDefaultFormatOpenGL(void)
 {
 	QGLFormat fmt;

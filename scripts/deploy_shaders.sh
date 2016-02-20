@@ -16,5 +16,5 @@ do
 done
 
 cd build
-ctest check_shaders -VV
+#ctest check_shaders -VV
 
