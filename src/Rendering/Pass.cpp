@@ -13,9 +13,24 @@ using namespace tinyxml2;
  */
 Pass::Pass(void)
 : m_pCurrentPass(nullptr)
+, m_iSubpassCount(0)
 , m_bActive(false)
 {
 	// ...
+}
+
+/**
+ * @brief Move constructor
+ * @param pass
+ */
+Pass::Pass(Pass && pass)
+: m_pCurrentPass(pass.m_pCurrentPass)
+, m_iSubpassCount(pass.m_iSubpassCount)
+, m_bActive(pass.m_bActive)
+{
+	pass.m_pCurrentPass = nullptr;
+	pass.m_iSubpassCount = 0;
+	pass.m_bActive = false;
 }
 
 /**
@@ -25,6 +40,7 @@ Pass::Pass(void)
  */
 Pass::Pass(const XMLElement * root, const Rendering & rendering)
 : m_pCurrentPass(nullptr)
+, m_iSubpassCount(0)
 , m_bActive(false)
 {
 	{
@@ -44,9 +60,40 @@ Pass::Pass(const XMLElement * root, const Rendering & rendering)
 
 			m_mapPass[name] = Subpass(pipeline, elmt, rendering);
 
+			++m_iSubpassCount;
+
 			elmt = elmt->NextSiblingElement("subpass");
 		}
 	}
+}
+
+/**
+ * @brief Pass::~Pass
+ */
+Pass::~Pass(void)
+{
+
+}
+
+/**
+ * @brief Pass::operator =
+ * @param pass
+ * @return
+ */
+Pass & Pass::operator=(Pass && pass)
+{
+	m_pCurrentPass = pass.m_pCurrentPass;
+	pass.m_pCurrentPass = nullptr;
+
+	m_iSubpassCount = pass.m_iSubpassCount;
+	pass.m_iSubpassCount = 0;
+
+	m_bActive = pass.m_bActive;
+	pass.m_bActive = false;
+
+	m_mapPass = std::move(pass.m_mapPass);
+
+	return(*this);
 }
 
 /**
@@ -125,7 +172,7 @@ bool Pass::ReadPixel(const ivec2 & pos, unsigned int & result)
  */
 void Pass::SetUniformBlockBinding(const char *name, unsigned int binding) const
 {
-	for (const std::pair<std::string, Subpass> & p : m_mapPass)
+	for (auto const & p : m_mapPass)
 	{
 		p.second.SetUniformBlockBinding(name, binding);
 	}

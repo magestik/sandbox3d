@@ -109,7 +109,7 @@ void Rendering::initializePipelineFromXML(const char * filename)
 	const XMLElement * passes = root->FirstChildElement("pass_list");
 	initializePasses(passes);
 
-	for (const std::pair<std::string, Pass> & p : m_mapTechnique)
+	for (auto const & p : m_mapTechnique)
 	{
 		p.second.SetUniformBlockBinding("CameraBlock", BLOCK_BINDING_CAMERA);
 		p.second.SetUniformBlockBinding("ObjectBlock", BLOCK_BINDING_OBJECT);

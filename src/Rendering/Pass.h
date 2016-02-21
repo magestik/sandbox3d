@@ -22,8 +22,13 @@ class Pass
 {
 public:
 
-	Pass();
-	Pass(const tinyxml2::XMLElement * element, const Rendering & rendering);
+				Pass			(void);
+				Pass			(const Pass & pass) = delete;
+				Pass			(Pass && pass);
+	explicit	Pass			(const tinyxml2::XMLElement * element, const Rendering & rendering);
+				~Pass			(void);
+
+	Pass &		operator =		(Pass && pass);
 
 	bool	BeginRenderPass		(void);
 	void	EndRenderPass		(void);
@@ -47,5 +52,7 @@ protected:
 
 	Subpass * m_pCurrentPass;
 
-	bool m_bActive;
+	int m_iSubpassCount;
+
+	bool m_bActive; // just for debugging
 };

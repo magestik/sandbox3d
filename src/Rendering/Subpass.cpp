@@ -18,6 +18,19 @@ Subpass::Subpass(void)
 }
 
 /**
+ * @brief Move constructor
+ * @param subpass
+ */
+Subpass::Subpass(Subpass && subpass)
+: m_uFramebufferObject(subpass.m_uFramebufferObject)
+, m_Pipeline(subpass.m_Pipeline)
+, m_aDrawBuffers(std::move(subpass.m_aDrawBuffers))
+{
+	subpass.m_uFramebufferObject = 0;
+	subpass.m_Pipeline = nullptr;
+}
+
+/**
  * @brief Subpass::Subpass
  * @param pipeline
  */
@@ -103,20 +116,26 @@ Subpass::Subpass(const Pipeline * pipeline, const XMLElement * element, const Re
  */
 Subpass::~Subpass(void)
 {
-#if 0
 	glDeleteFramebuffers(1, &m_uFramebufferObject);
+	m_uFramebufferObject = 0;
+}
 
-	GLuint shaders [10];
-	GLsizei size = 0;
-	glGetAttachedShaders(m_uShaderObject, 10, &size, shaders);
+/**
+ * @brief Move assignment
+ * @param subpass
+ * @return
+ */
+Subpass & Subpass::operator=(Subpass && subpass)
+{
+	m_uFramebufferObject = subpass.m_uFramebufferObject;
+	subpass.m_uFramebufferObject = 0;
 
-	for (int i = 0; i < size; ++i)
-	{
-		glDetachShader(m_uShaderObject, shaders[i]);
-	}
+	m_Pipeline = subpass.m_Pipeline;
+	subpass.m_Pipeline = nullptr;
 
-	glDeleteProgram(m_uShaderObject);
-#endif
+	m_aDrawBuffers = std::move(subpass.m_aDrawBuffers);
+
+	return(*this);
 }
 
 /**
