@@ -1,6 +1,7 @@
 #include "Pass.h"
 
 #include "Rendering.h"
+#include "Subpass.h"
 
 #include <tinyxml2.h>
 #include "StrToGL.h"
@@ -11,137 +12,96 @@ using namespace tinyxml2;
  * @brief Pass::Pass
  */
 Pass::Pass(void)
-: m_uFramebufferObject(0)
-, m_Pipeline(nullptr)
+: m_pCurrentPass(nullptr)
+, m_bActive(false)
 {
-    // ...
-}
-
-Pass::Pass(const Pipeline * pipeline)
-: m_uFramebufferObject(0)
-, m_Pipeline(pipeline)
-{
-    // ...
+	// ...
 }
 
 /**
- * @brief Pass::init
- * @param element
+ * @brief Pass::Pass
+ * @param root
  * @param rendering
+ */
+Pass::Pass(const XMLElement * root, const Rendering & rendering)
+: m_pCurrentPass(nullptr)
+, m_bActive(false)
+{
+	{
+		const XMLElement * elmt = root->FirstChildElement("subpass");
+
+		while (nullptr != elmt)
+		{
+			const char * name = elmt->Attribute("name");
+
+			assert(nullptr != name);
+
+			const char * pipeline_name = elmt->Attribute("pipeline");
+
+			assert(nullptr != pipeline_name);
+
+			const Pipeline * pipeline = rendering.GetPipeline(pipeline_name);
+
+			m_mapPass[name] = Subpass(pipeline, elmt, rendering);
+
+			elmt = elmt->NextSiblingElement("subpass");
+		}
+	}
+}
+
+/**
+ * @brief Pass::Begin
  * @return
  */
-Pass::Pass(const Pipeline * pipeline, const XMLElement * element, const Rendering & rendering)
-: m_uFramebufferObject(0)
-, m_Pipeline(pipeline)
+bool Pass::BeginRenderPass(void)
 {
-    //
-    // Framebuffer
-    {
-        const XMLElement * output = element->FirstChildElement("output");
+	assert(!m_bActive);
+	assert(nullptr == m_pCurrentPass);
 
-        if (NULL != output)
-        {
-            glGenFramebuffers(1, &m_uFramebufferObject);
+	m_bActive = true;
 
-            glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_uFramebufferObject);
-
-            GLenum current_color_attachment = GL_COLOR_ATTACHMENT0;
-
-            while (NULL != output)
-            {
-                const char * texture = output->Attribute("texture");
-
-                assert(nullptr != texture);
-
-                if (nullptr != texture)
-                {
-                    GLenum a = current_color_attachment;
-
-                    const GPU::Texture<GL_TEXTURE_2D> * pRenderTexture = rendering.GetRenderTexture(texture);
-
-                    const GLint format = pRenderTexture->getFormat();
-
-                    if (GPU::isDepthStencilFormat(format))
-                    {
-                        a = GL_DEPTH_STENCIL_ATTACHMENT;
-                    }
-                    else if (GPU::isDepthFormat(format))
-                    {
-                        a = GL_DEPTH_ATTACHMENT;
-                    }
-                    else if (GPU::isStencilFormat(format))
-                    {
-                        a = GL_STENCIL_ATTACHMENT;
-                    }
-                    else
-                    {
-                        current_color_attachment += 1;
-                        m_aDrawBuffers.push_back(a);
-                    }
-
-                    glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, a, GL_TEXTURE_2D, pRenderTexture->GetObject(), 0);
-                }
-
-                output = output->NextSiblingElement("output");
-            }
-
-            GLenum status = glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER);
-
-            glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-
-            assert(GL_FRAMEBUFFER_COMPLETE == status);
-        }
-    }
+	return(true);
 }
 
 /**
- * @brief Pass::~Pass
+ * @brief Pass::EndRenderPass
  */
-Pass::~Pass(void)
+void Pass::EndRenderPass(void)
 {
-#if 0
-    glDeleteFramebuffers(1, &m_uFramebufferObject);
+	assert(m_bActive);
+	assert(nullptr == m_pCurrentPass);
 
-    GLuint shaders [10];
-    GLsizei size = 0;
-    glGetAttachedShaders(m_uShaderObject, 10, &size, shaders);
-
-    for (int i = 0; i < size; ++i)
-    {
-        glDetachShader(m_uShaderObject, shaders[i]);
-    }
-
-    glDeleteProgram(m_uShaderObject);
-#endif
+	m_bActive = false;
 }
 
 /**
- * @brief Pass::begin
+ * @brief Pass::BeginPass
+ * @param pass
+ * @return
  */
-bool Pass::Begin(void)
+bool Pass::BeginPass(const char * pass)
 {
-    unsigned int size = m_aDrawBuffers.size();
+	assert(m_bActive);
+	assert(nullptr == m_pCurrentPass);
 
-    if (size > 0)
-    {
-        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_uFramebufferObject);
-        glDrawBuffers(m_aDrawBuffers.size(), m_aDrawBuffers.data());
-    }
+	m_pCurrentPass = &(m_mapPass[pass]);
 
-    m_Pipeline->Bind();
+	m_pCurrentPass->Begin();
 
-    return(true);
+	return(true);
 }
 
 /**
- * @brief Pass::end
+ * @brief Pass::EndPass
  */
-void Pass::End(void)
+void Pass::EndPass(void)
 {
-    m_Pipeline->UnBind();
+	assert(m_bActive);
+	assert(nullptr != m_pCurrentPass);
 
-    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-    glDrawBuffer(GL_BACK);
+	m_pCurrentPass->End();
+
+	m_pCurrentPass = nullptr;
 }
 
 /**
@@ -152,13 +112,62 @@ void Pass::End(void)
  */
 bool Pass::ReadPixel(const ivec2 & pos, unsigned int & result)
 {
-    glBindFramebuffer(GL_READ_FRAMEBUFFER, m_uFramebufferObject);
-    glReadBuffer(GL_COLOR_ATTACHMENT0);
+	assert(m_bActive);
+	assert(nullptr != m_pCurrentPass);
 
-    glReadPixels(pos.x, pos.y, 1, 1, GL_RED_INTEGER, GL_UNSIGNED_INT, &result);
-
-    glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
-    glReadBuffer(GL_BACK);
-
-    return(true);
+	return(m_pCurrentPass->ReadPixel(pos, result));
 }
+
+/**
+ * @brief Pass::SetUniformBlockBinding
+ * @param name
+ * @param binding
+ */
+void Pass::SetUniformBlockBinding(const char *name, unsigned int binding) const
+{
+	for (const std::pair<std::string, Subpass> & p : m_mapPass)
+	{
+		p.second.SetUniformBlockBinding(name, binding);
+	}
+}
+
+/**
+ * @brief Pass::SetUniform
+ * @param name
+ * @param value
+ */
+template<typename T>
+void Pass::SetUniform(const char * name, const T & value)
+{
+	assert(m_bActive);
+	m_pCurrentPass->SetUniform(name, value);
+}
+
+template void Pass::SetUniform(const char * name, const mat2x2 & value);
+template void Pass::SetUniform(const char * name, const mat3x3 & value);
+template void Pass::SetUniform(const char * name, const mat4x4 & value);
+
+template void Pass::SetUniform(const char * name, const vec2 & value);
+template void Pass::SetUniform(const char * name, const vec3 & value);
+template void Pass::SetUniform(const char * name, const vec4 & value);
+
+template void Pass::SetUniform(const char * name, const int & value);
+template void Pass::SetUniform(const char * name, const unsigned int & value);
+template void Pass::SetUniform(const char * name, const float & value);
+
+/**
+ * @brief Pass::SetTexture
+ * @param name
+ * @param unit
+ * @param texture
+ */
+template<GLenum D>
+void Pass::SetTexture(const char * name, unsigned int unit, const GPU::Texture<D> & texture)
+{
+	assert(m_bActive);
+	m_pCurrentPass->SetTexture(name, unit, texture);
+}
+
+template void Pass::SetTexture(const char * name, unsigned int unit, const GPU::Texture<GL_TEXTURE_1D> & texture);
+template void Pass::SetTexture(const char * name, unsigned int unit, const GPU::Texture<GL_TEXTURE_2D> & texture);
+template void Pass::SetTexture(const char * name, unsigned int unit, const GPU::Texture<GL_TEXTURE_3D> & texture);

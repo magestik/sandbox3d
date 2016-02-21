@@ -10,7 +10,7 @@
  * @brief ShadowMap::ShadowMap
  */
 ShadowMap::ShadowMap(const Pipeline * pipeline)
-: Pass(pipeline)
+: Subpass(pipeline)
 , m_matProjection(1.0f)
 {
     // ...

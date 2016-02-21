@@ -26,7 +26,8 @@ std::map<std::string, Mesh> g_Meshes;
 const mat3x3 sRGB_to_XYZ = mat3x3(0.4124564, 0.3575761, 0.1804375, 0.2126729, 0.7151522, 0.0721750, 0.0193339, 0.1191920, 0.9503041);
 const mat3x3 XYZ_to_sRGB = mat3x3(3.2404542, -1.5371385, -0.4985314, -0.9692660, 1.8760108, 0.0415560, 0.0556434, -0.2040259, 1.0572252);
 
-static const char PIPELINE_STR []= "pipeline";
+static const char PIPELINE_STR []	= "pipeline";
+static const char PASS_STR []		= "pass";
 
 static inline unsigned int toPOT(unsigned int v)
 {
@@ -105,10 +106,10 @@ void Rendering::initializePipelineFromXML(const char * filename)
 
 	onResize(m_uWidth, m_uHeight);
 
-	const XMLElement * pipeline = root->FirstChildElement("techniques");
-	initializeTechniques(pipeline);
+	const XMLElement * passes = root->FirstChildElement("pass_list");
+	initializePasses(passes);
 
-	for (const std::pair<std::string, Technique> & p : m_mapTechnique)
+	for (const std::pair<std::string, Pass> & p : m_mapTechnique)
 	{
 		p.second.SetUniformBlockBinding("CameraBlock", BLOCK_BINDING_CAMERA);
 		p.second.SetUniformBlockBinding("ObjectBlock", BLOCK_BINDING_OBJECT);
@@ -143,7 +144,7 @@ void Rendering::initializeTargets(const XMLElement * targets)
 {
 	const XMLElement * texture = targets->FirstChildElement("texture");
 
-	while (NULL != texture)
+	while (nullptr != texture)
 	{
 		const char * name = texture->Attribute("name");
 
@@ -165,20 +166,20 @@ void Rendering::initializeTargets(const XMLElement * targets)
 }
 
 /**
- * @brief Rendering::initializePipeline
+ * @brief Rendering::initializePasses
  * @param pipeline
  */
-void Rendering::initializeTechniques(const XMLElement * pipeline)
+void Rendering::initializePasses(const XMLElement * passes)
 {
-	const XMLElement * pass = pipeline->FirstChildElement("technique");
+	const XMLElement * pass = passes->FirstChildElement(PASS_STR);
 
-	while (NULL != pass)
+	while (nullptr != pass)
 	{
 		const char * name = pass->Attribute("name");
 
-		m_mapTechnique[name] = Technique(pass, *this);
+		m_mapTechnique[name] = Pass(pass, *this);
 
-		pass = pass->NextSiblingElement("technique");
+		pass = pass->NextSiblingElement(PASS_STR);
 	}
 }
 
@@ -396,9 +397,9 @@ void Rendering::onUpdate(const mat4x4 & mView, const vec4 & clearColor, bool bWi
 
 	if (eRenderType == FINAL)
 	{
-		Technique & ToneMappingTechnique = m_mapTechnique["tonemapping"];
+		Pass & ToneMappingTechnique = m_mapTechnique["tonemapping"];
 
-		ToneMappingTechnique.Begin();
+		ToneMappingTechnique.BeginRenderPass();
 		{
 			glViewport(0, 0, m_uLuminanceSizePOT, m_uLuminanceSizePOT);
 
@@ -449,11 +450,11 @@ void Rendering::onUpdate(const mat4x4 & mView, const vec4 & clearColor, bool bWi
 			}
 			ToneMappingTechnique.EndPass();
 		}
-		ToneMappingTechnique.End();
+		ToneMappingTechnique.EndRenderPass();
 
-		Technique & AntiAliasingTechnique = m_mapTechnique["anti-aliasing"];
+		Pass & AntiAliasingTechnique = m_mapTechnique["anti-aliasing"];
 
-		AntiAliasingTechnique.Begin();
+		AntiAliasingTechnique.BeginRenderPass();
 		{
 			AntiAliasingTechnique.BeginPass("fxaa");
 			{
@@ -463,7 +464,7 @@ void Rendering::onUpdate(const mat4x4 & mView, const vec4 & clearColor, bool bWi
 			}
 			AntiAliasingTechnique.EndPass();
 		}
-		AntiAliasingTechnique.End();
+		AntiAliasingTechnique.EndRenderPass();
 
 		//
 		// post process
@@ -525,9 +526,9 @@ Mesh::Instance * Rendering::getObjectAtPos(const ivec2 & pos)
 
 	Mesh::Instance * object = nullptr;
 
-	Technique & PickBufferTechnique = m_mapTechnique["picking"];
+	Pass & PickBufferTechnique = m_mapTechnique["picking"];
 
-	PickBufferTechnique.Begin();
+	PickBufferTechnique.BeginRenderPass();
 	{
 		PickBufferTechnique.BeginPass("default");
 
@@ -542,7 +543,7 @@ Mesh::Instance * Rendering::getObjectAtPos(const ivec2 & pos)
 
 		PickBufferTechnique.EndPass();
 	}
-	PickBufferTechnique.End();
+	PickBufferTechnique.EndRenderPass();
 
 	return(object);
 }
@@ -593,11 +594,12 @@ void Rendering::renderSceneToShadowMap(void)
  */
 void Rendering::renderIntermediateToScreen(ERenderType eRenderType)
 {
+#if 0
 	glViewport(0, 0, m_uWidth, m_uHeight);
 
-	Technique & DebugTechnique = m_mapTechnique["debug"];
+	Pass & DebugTechnique = m_mapTechnique["debug"];
 
-	DebugTechnique.Begin();
+	DebugTechnique.BeginRenderPass();
 
 	switch (eRenderType)
 	{
@@ -701,7 +703,8 @@ void Rendering::renderIntermediateToScreen(ERenderType eRenderType)
 		break;
 	}
 
-	DebugTechnique.End();
+	DebugTechnique.EndRenderPass();
+#endif
 }
 
 /**
@@ -711,14 +714,14 @@ void Rendering::renderSceneToGBuffer(void)
 {
 	glViewport(0, 0, m_uWidth, m_uHeight);
 
-	Technique & GeometryTechnique = m_mapTechnique["geometry"];
+	Pass & GeometryPass = m_mapTechnique["geometry"];
 
-	GeometryTechnique.Begin();
+	GeometryPass.BeginRenderPass();
 
 	{
 		// OPTIMIZE THIS !!!!!
 
-		GeometryTechnique.BeginPass("simple");
+		GeometryPass.BeginPass("simple");
 		{
 			glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -737,7 +740,7 @@ void Rendering::renderSceneToGBuffer(void)
 
 					if (nullptr == pNormalMap)
 					{
-						GeometryTechnique.SetUniform("shininess", m->m_material.shininess);
+						GeometryPass.SetUniform("shininess", m->m_material.shininess);
 
 						m->draw();
 					}
@@ -748,9 +751,9 @@ void Rendering::renderSceneToGBuffer(void)
 				++offset;
 			}
 		}
-		GeometryTechnique.EndPass();
+		GeometryPass.EndPass();
 
-		GeometryTechnique.BeginPass("normal_map");
+		GeometryPass.BeginPass("normal_map");
 		{
 			unsigned int offset = 0;
 
@@ -766,8 +769,8 @@ void Rendering::renderSceneToGBuffer(void)
 
 					if (nullptr != pNormalMap)
 					{
-						GeometryTechnique.SetTexture("normalMap", 0, *pNormalMap);
-						GeometryTechnique.SetUniform("shininess", m->m_material.shininess);
+						GeometryPass.SetTexture("normalMap", 0, *pNormalMap);
+						GeometryPass.SetUniform("shininess", m->m_material.shininess);
 
 						m->draw();
 					}
@@ -778,10 +781,10 @@ void Rendering::renderSceneToGBuffer(void)
 				++offset;
 			}
 		}
-		GeometryTechnique.EndPass();
+		GeometryPass.EndPass();
 	}
 
-	GeometryTechnique.End();
+	GeometryPass.EndRenderPass();
 }
 
 /**
@@ -791,9 +794,9 @@ void Rendering::renderLightsToAccumBuffer(const mat4x4 & mView)
 {
 	glViewport(0, 0, m_uWidth, m_uHeight);
 
-	Technique & LightsTechnique = m_mapTechnique["lights"];
+	Pass & LightsTechnique = m_mapTechnique["lights"];
 
-	LightsTechnique.Begin();
+	LightsTechnique.BeginRenderPass();
 
 	{
 		LightsTechnique.BeginPass("directional");
@@ -818,7 +821,7 @@ void Rendering::renderLightsToAccumBuffer(const mat4x4 & mView)
 		LightsTechnique.EndPass();
 	}
 
-	LightsTechnique.End();
+	LightsTechnique.EndRenderPass();
 }
 
 /**
@@ -829,9 +832,9 @@ void Rendering::renderFinal(const mat4x4 & mView, const vec4 & clearColor)
 {
 	glViewport(0, 0, m_uWidth, m_uHeight);
 
-	Technique & ComposeTechnique = m_mapTechnique["compose"];
+	Pass & ComposeTechnique = m_mapTechnique["compose"];
 
-	ComposeTechnique.Begin();
+	ComposeTechnique.BeginRenderPass();
 
 	{
 		ComposeTechnique.BeginPass("default");
@@ -874,7 +877,7 @@ void Rendering::renderFinal(const mat4x4 & mView, const vec4 & clearColor)
 		ComposeTechnique.EndPass();
 	}
 
-	ComposeTechnique.End();
+	ComposeTechnique.EndRenderPass();
 }
 
 /**
@@ -885,9 +888,9 @@ void Rendering::renderFog(void)
 {
 	glViewport(0, 0, m_uWidth, m_uHeight);
 
-	Technique & ComposeTechnique = m_mapTechnique["fog"];
+	Pass & ComposeTechnique = m_mapTechnique["fog"];
 
-	ComposeTechnique.Begin();
+	ComposeTechnique.BeginRenderPass();
 
 	{
 		ComposeTechnique.BeginPass("simple");
@@ -908,7 +911,7 @@ void Rendering::renderFog(void)
 		ComposeTechnique.EndPass();
 	}
 
-	ComposeTechnique.End();
+	ComposeTechnique.EndRenderPass();
 }
 
 /**
@@ -918,9 +921,9 @@ void Rendering::renderBloom(void)
 {
 	glViewport(0, 0, m_uWidth/4, m_uHeight/4);
 
-	Technique & BloomTechnique = m_mapTechnique["bloom"];
+	Pass & BloomTechnique = m_mapTechnique["bloom"];
 
-	BloomTechnique.Begin();
+	BloomTechnique.BeginRenderPass();
 	{
 		BloomTechnique.BeginPass("bright");
 		{
@@ -946,7 +949,7 @@ void Rendering::renderBloom(void)
 		}
 		BloomTechnique.EndPass();
 	}
-	BloomTechnique.End();
+	BloomTechnique.EndRenderPass();
 }
 
 /**
@@ -956,9 +959,9 @@ void Rendering::renderPostProcessEffects()
 {
 	glViewport(0, 0, m_uWidth, m_uHeight);
 
-	Technique & BlendTechnique = m_mapTechnique["blend"];
+	Pass & BlendTechnique = m_mapTechnique["blend"];
 
-	BlendTechnique.Begin();
+	BlendTechnique.BeginRenderPass();
 	{
 		BlendTechnique.BeginPass("bloom");
 
@@ -968,7 +971,7 @@ void Rendering::renderPostProcessEffects()
 
 		BlendTechnique.EndPass();
 	}
-	BlendTechnique.End();
+	BlendTechnique.EndRenderPass();
 }
 
 /**
@@ -978,9 +981,9 @@ void Rendering::renderPickBuffer(void)
 {
 	glViewport(0, 0, m_uWidth, m_uHeight);
 
-	Technique & PickBufferTechnique = m_mapTechnique["picking"];
+	Pass & PickBufferTechnique = m_mapTechnique["picking"];
 
-	PickBufferTechnique.Begin();
+	PickBufferTechnique.BeginRenderPass();
 	{
 		PickBufferTechnique.BeginPass("default");
 
@@ -1009,7 +1012,7 @@ void Rendering::renderPickBuffer(void)
 
 		PickBufferTechnique.EndPass();
 	}
-	PickBufferTechnique.End();
+	PickBufferTechnique.EndRenderPass();
 }
 
 /**
@@ -1020,9 +1023,9 @@ void Rendering::renderBoundingBox(const Mesh::Instance * pSelectedObject)
 {
 	glViewport(0, 0, m_uWidth, m_uHeight);
 
-	Technique & BBoxTechnique = m_mapTechnique["bbox"];
+	Pass & BBoxTechnique = m_mapTechnique["bbox"];
 
-	BBoxTechnique.Begin();
+	BBoxTechnique.BeginRenderPass();
 	{
 		BBoxTechnique.BeginPass("default");
 
@@ -1036,5 +1039,5 @@ void Rendering::renderBoundingBox(const Mesh::Instance * pSelectedObject)
 
 		BBoxTechnique.EndPass();
 	}
-	BBoxTechnique.End();
+	BBoxTechnique.EndRenderPass();
 }

@@ -1,59 +1,51 @@
 #pragma once
 
+#include <map>
+#include <vector>
+#include <string>
+
 #include <GPU.h>
 
 #include <Vector.h>
 
-#include <vector>
-#include <map>
-
 #include "Pipeline.h"
+#include "Subpass.h"
 
 namespace tinyxml2
 {
-    class XMLElement;
+	class XMLElement;
 }
 
 class Rendering;
-class Shader;
 
 class Pass
 {
-
 public:
 
-    explicit	Pass			(void);
-    explicit	Pass			(const Pipeline * pipeline);
-    explicit	Pass			(const Pipeline * pipeline, const tinyxml2::XMLElement * element, const Rendering & rendering);
-    virtual		~Pass			(void);
+	Pass();
+	Pass(const tinyxml2::XMLElement * element, const Rendering & rendering);
 
-    bool		Begin			(void);
-    void		End				(void);
+	bool	BeginRenderPass		(void);
+	void	EndRenderPass		(void);
 
-    bool		ReadPixel		(const ivec2 & pos, unsigned int & result);
+	bool	BeginPass			(const char * pass);
+	void	EndPass				(void);
 
-    void SetUniformBlockBinding  (const char * name, unsigned int binding) const
-    {
-        m_Pipeline->SetUniformBlockBinding(name, binding);
-    }
+	bool	ReadPixel (const ivec2 & pos, unsigned int & result);
 
-    template<typename T>
-    void SetUniform (const char * name, const T & value) const
-    {
-        m_Pipeline->SetUniform(name, value);
-    }
+	void    SetUniformBlockBinding  (const char * name, unsigned int binding) const;
 
-    template<GLenum D>
-    void SetTexture (const char * name, unsigned int binding, const GPU::Texture<D> & texture) const
-    {
-        m_Pipeline->SetTexture(name, binding, texture);
-    }
+	template<typename T>
+	void SetUniform (const char * name, const T & value);
+
+	template<GLenum D>
+	void SetTexture (const char * name, unsigned int binding, const GPU::Texture<D> & texture);
 
 protected:
 
-    GLuint m_uFramebufferObject;
+	std::map<std::string, Subpass> m_mapPass;
 
-    const Pipeline * m_Pipeline;
+	Subpass * m_pCurrentPass;
 
-    std::vector<GLenum> m_aDrawBuffers;
+	bool m_bActive;
 };

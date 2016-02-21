@@ -36,10 +36,10 @@
 
 	<!-- list of techniques -->
 	<!ELEMENT techniques (technique*)>
-		<!ELEMENT technique (pass*)>
+		<!ELEMENT technique (subpass*)>
 		<!ATTLIST technique name CDATA #REQUIRED>
-			<!ELEMENT pass (output*)>
-			<!ATTLIST pass name CDATA #REQUIRED>
-			<!ATTLIST pass pipeline CDATA #REQUIRED>
+			<!ELEMENT subpass (output*)>
+			<!ATTLIST subpass name CDATA #REQUIRED>
+			<!ATTLIST subpass pipeline CDATA #REQUIRED>
 				<!ELEMENT output EMPTY>
 				<!ATTLIST output texture CDATA #REQUIRED>

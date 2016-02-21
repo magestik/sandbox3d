@@ -5,31 +5,31 @@
 #include <Vector.h>
 #include <Matrix.h>
 
-#include "../Pass.h"
+#include "../Subpass.h"
 
-class ShadowMap : public Pass
+class ShadowMap : public Subpass
 {
 public:
 
-    ShadowMap(const Pipeline * pipeline);
-    ~ShadowMap(void);
+	ShadowMap(const Pipeline * pipeline);
+	~ShadowMap(void);
 
-    bool	init	(unsigned int width, unsigned height);
-    void	free	(void);
+	bool	init	(unsigned int width, unsigned height);
+	void	free	(void);
 
-    GLuint	GetObject	(void) { return(m_uFramebufferObject); }
+	GLuint	GetObject	(void) { return(m_uFramebufferObject); }
 
-    const GPU::Texture<GL_TEXTURE_2D> &	GetTexture	(void) { return(m_texture); }
+	const GPU::Texture<GL_TEXTURE_2D> &	GetTexture	(void) { return(m_texture); }
 
-    const mat4x4 &	GetProjection (void) const { return(m_matProjection); }
+	const mat4x4 &	GetProjection (void) const { return(m_matProjection); }
 
 protected:
 
-    void updateProjection(void);
+	void updateProjection(void);
 
 private:
 
-    mat4x4 m_matProjection;
+	mat4x4 m_matProjection;
 
-    GPU::Texture<GL_TEXTURE_2D> m_texture;
+	GPU::Texture<GL_TEXTURE_2D> m_texture;
 };

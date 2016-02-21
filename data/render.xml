@@ -151,99 +151,110 @@
 		</pipeline>
 	</pipelines>
 
-	<techniques>
+	<pass_list>
 
-		<technique name="picking">
-			<pass name="default" pipeline="pickbuffer">
+		<pass name="picking">
+			<subpass name="default" pipeline="pickbuffer">
 				<output texture="depth" /> <!-- early z-cull -->
 				<output texture="pickbuffer" />
-			</pass>
-		</technique>
+			</subpass>
+		</pass>
 
-		<technique name="bbox">
-			<pass name="default" pipeline="bbox">
-			</pass>
-		</technique>
+		<pass name="bbox">
+			<subpass name="default" pipeline="bbox">
+			</subpass>
+		</pass>
 
-		<technique name="geometry">
-			<pass name="simple" pipeline="geometry_simple">
+		<pass name="geometry">
+			<subpass name="simple" pipeline="geometry_simple">
 				<output texture="depth" />
 				<output texture="normals" />
-			</pass>
-			<pass name="normal_map" pipeline="geometry_normalmap">
+			</subpass>
+			<subpass name="normal_map" pipeline="geometry_normalmap">
 				<output texture="depth" />
 				<output texture="normals" />
-			</pass>
-		</technique>
+			</subpass>
+		</pass>
 
-		<technique name="lights">
-			<pass name="directional" pipeline="lights_directional">
+		<pass name="lights">
+			<subpass name="directional" pipeline="lights_directional">
 				<output texture="lights_diffuse" />
 				<output texture="lights_specular" />
-			</pass>
-		</technique>
+			</subpass>
+		</pass>
 
-		<technique name="bloom">
-			<pass name="bright" pipeline="bloom_bright">
+		<pass name="bloom">
+			<subpass name="bright" pipeline="bloom_bright">
 				<output texture="bloom1" />
-			</pass>
-			<pass name="horizontal_blur" pipeline="bloom_horizontal_blur">
+			</subpass>
+			<subpass name="horizontal_blur" pipeline="bloom_horizontal_blur">
 				<output texture="bloom2" />
-			</pass>
-			<pass name="vertical_blur" pipeline="bloom_vertical_blur">
+			</subpass>
+			<subpass name="vertical_blur" pipeline="bloom_vertical_blur">
 				<output texture="bloom1" />
-			</pass>
-		</technique>
+			</subpass>
+		</pass>
 
-		<technique name="compose">
-			<pass name="default" pipeline="compose">
+		<pass name="compose">
+			<subpass name="default" pipeline="compose">
 				<output texture="depth" /> <!-- early z-cull -->
 				<output texture="HDR" />
-			</pass>
-		</technique>
+			</subpass>
+		</pass>
 
-		<technique name="fog">
-			<pass name="simple" pipeline="fog_simple">
+		<pass name="fog">
+			<subpass name="simple" pipeline="fog_simple">
 				<output texture="HDR" />
-			</pass>
-			<pass name="scattering" pipeline="fog_scattering">
+			</subpass>
+			<subpass name="scattering" pipeline="fog_scattering">
 				<output texture="HDR" />
-			</pass>
-			<pass name="godrays" pipeline="fog_godrays">
+			</subpass>
+			<subpass name="godrays" pipeline="fog_godrays">
 				<output texture="HDR" />
-			</pass>
-		</technique>
+			</subpass>
+		</pass>
 
-		<technique name="tonemapping">
-			<pass name="to_luminance" pipeline="luminance_conversion">
+		<pass name="tonemapping">
+			<subpass name="to_luminance" pipeline="luminance_conversion">
 				<output texture="luminance1" />
-			</pass>
-			<pass name="with_burnout" pipeline="tonemapping">
+			</subpass>
+			<subpass name="with_burnout" pipeline="tonemapping">
 				<output texture="LDR" />
-			</pass>
-		</technique>
+			</subpass>
+		</pass>
 
-		<technique name="anti-aliasing">
-			<pass name="fxaa" pipeline="fxaa">
-			</pass>
-		</technique>
+		<pass name="anti-aliasing">
+			<subpass name="fxaa" pipeline="fxaa">
+			</subpass>
+		</pass>
 
-		<technique name="blend">
-			<pass name="bloom" pipeline="bloom">
-			</pass>
-		</technique>
+		<pass name="blend">
+			<subpass name="bloom" pipeline="bloom">
+			</subpass>
+		</pass>
 
-		<technique name="debug">
-			<pass name="depth" pipeline="debug_depth">
-			</pass>
-			<pass name="normal" pipeline="debug_normal">
-			</pass>
-			<pass name="color" pipeline="debug_color">
-			</pass>
-			<pass name="luminance" pipeline="debug_luminance">
-			</pass>
-		</technique>
-
-	</techniques>
+		<pass name="debug">
+			<subpass name="depth" pipeline="debug_depth">
+			</subpass>
+			<subpass name="normal" pipeline="debug_normal">
+			</subpass>
+			<subpass name="color" pipeline="debug_color">
+			</subpass>
+			<subpass name="luminance" pipeline="debug_luminance">
+			</subpass>
+		</pass>
+<!--
+		<pass name="debug">
+			<subpass name="depth" pipeline="debug_depth">
+			</subpass>
+			<subpass name="normal" pipeline="debug_normal">
+			</subpass>
+			<subpass name="color" pipeline="debug_color">
+			</subpass>
+			<subpass name="luminance" pipeline="debug_luminance">
+			</subpass>
+		</pass>
+-->
+	</pass_list>
 
 </render>
