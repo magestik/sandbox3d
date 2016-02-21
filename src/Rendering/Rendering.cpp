@@ -403,12 +403,10 @@ void Rendering::onUpdate(const mat4x4 & mView, const vec4 & clearColor, bool bWi
 		{
 			glViewport(0, 0, m_uLuminanceSizePOT, m_uLuminanceSizePOT);
 
-			ToneMappingTechnique.BeginPass("to_luminance");
 			{
 				ToneMappingTechnique.SetTexture("texSampler", 0, *(m_mapTargets["HDR"].getTexture()));
 				m_pQuadMesh->draw();
 			}
-			ToneMappingTechnique.EndPass();
 
 			const GPU::Texture<GL_TEXTURE_2D> * textures [2] =
 			{
@@ -439,16 +437,17 @@ void Rendering::onUpdate(const mat4x4 & mView, const vec4 & clearColor, bool bWi
 			float avLum = m_AvLum->getAverage();
 			float white2 = m_AvLum->getMax2();
 
+
+			ToneMappingTechnique.NextSubpass();
+
 			glViewport(0, 0, m_uWidth, m_uHeight);
 
-			ToneMappingTechnique.BeginPass("with_burnout");
 			{
 				ToneMappingTechnique.SetTexture("texSampler", 0, *(m_mapTargets["HDR"].getTexture()));
 				ToneMappingTechnique.SetUniform("avLum", avLum);
 				ToneMappingTechnique.SetUniform("white2", white2);
 				m_pQuadMesh->draw();
 			}
-			ToneMappingTechnique.EndPass();
 		}
 		ToneMappingTechnique.EndRenderPass();
 
@@ -456,13 +455,9 @@ void Rendering::onUpdate(const mat4x4 & mView, const vec4 & clearColor, bool bWi
 
 		AntiAliasingTechnique.BeginRenderPass();
 		{
-			AntiAliasingTechnique.BeginPass("fxaa");
-			{
-				AntiAliasingTechnique.SetTexture("texSampler", 0, *(m_mapTargets["LDR"].getTexture()));
-				AntiAliasingTechnique.SetUniform("fxaaQualityRcpFrame", vec2(1.0/m_uWidth, 1.0/m_uHeight));
-				m_pQuadMesh->draw();
-			}
-			AntiAliasingTechnique.EndPass();
+			AntiAliasingTechnique.SetTexture("texSampler", 0, *(m_mapTargets["LDR"].getTexture()));
+			AntiAliasingTechnique.SetUniform("fxaaQualityRcpFrame", vec2(1.0/m_uWidth, 1.0/m_uHeight));
+			m_pQuadMesh->draw();
 		}
 		AntiAliasingTechnique.EndRenderPass();
 
@@ -530,8 +525,6 @@ Mesh::Instance * Rendering::getObjectAtPos(const ivec2 & pos)
 
 	PickBufferTechnique.BeginRenderPass();
 	{
-		PickBufferTechnique.BeginPass("default");
-
 		unsigned int id = UINT32_MAX;
 
 		PickBufferTechnique.ReadPixel(glPos, id);
@@ -540,8 +533,6 @@ Mesh::Instance * Rendering::getObjectAtPos(const ivec2 & pos)
 		{
 			object = &(m_aObjects[id]);
 		}
-
-		PickBufferTechnique.EndPass();
 	}
 	PickBufferTechnique.EndRenderPass();
 
@@ -720,8 +711,6 @@ void Rendering::renderSceneToGBuffer(void)
 
 	{
 		// OPTIMIZE THIS !!!!!
-
-		GeometryPass.BeginPass("simple");
 		{
 			glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -751,9 +740,9 @@ void Rendering::renderSceneToGBuffer(void)
 				++offset;
 			}
 		}
-		GeometryPass.EndPass();
 
-		GeometryPass.BeginPass("normal_map");
+		GeometryPass.NextSubpass();
+
 		{
 			unsigned int offset = 0;
 
@@ -781,7 +770,6 @@ void Rendering::renderSceneToGBuffer(void)
 				++offset;
 			}
 		}
-		GeometryPass.EndPass();
 	}
 
 	GeometryPass.EndRenderPass();
@@ -799,8 +787,6 @@ void Rendering::renderLightsToAccumBuffer(const mat4x4 & mView)
 	LightsTechnique.BeginRenderPass();
 
 	{
-		LightsTechnique.BeginPass("directional");
-
 		glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 
@@ -817,8 +803,6 @@ void Rendering::renderLightsToAccumBuffer(const mat4x4 & mView)
 		}
 
 		// TODO : render all lights
-
-		LightsTechnique.EndPass();
 	}
 
 	LightsTechnique.EndRenderPass();
@@ -837,8 +821,6 @@ void Rendering::renderFinal(const mat4x4 & mView, const vec4 & clearColor)
 	ComposeTechnique.BeginRenderPass();
 
 	{
-		ComposeTechnique.BeginPass("default");
-
 		glClearColor(clearColor.x, clearColor.y, clearColor.z, clearColor.w);
 		glClear(GL_COLOR_BUFFER_BIT);
 
@@ -873,8 +855,6 @@ void Rendering::renderFinal(const mat4x4 & mView, const vec4 & clearColor)
 
 			++offset;
 		}
-
-		ComposeTechnique.EndPass();
 	}
 
 	ComposeTechnique.EndRenderPass();
@@ -893,8 +873,6 @@ void Rendering::renderFog(void)
 	ComposeTechnique.BeginRenderPass();
 
 	{
-		ComposeTechnique.BeginPass("simple");
-
 		ComposeTechnique.SetTexture("depthMapSampler", 0, *(m_mapTargets["depth"].getTexture()));
 		ComposeTechnique.SetUniform("FogScattering", environment.fog.Scattering);
 		ComposeTechnique.SetUniform("FogExtinction", environment.fog.Extinction);
@@ -907,8 +885,6 @@ void Rendering::renderFog(void)
 		ComposeTechnique.SetUniform("near_plane_half_size", vec2(m_uHeight * (ratio), tanf(75.0f/2.0)));
 
 		m_pQuadMesh->draw();
-
-		ComposeTechnique.EndPass();
 	}
 
 	ComposeTechnique.EndRenderPass();
@@ -925,29 +901,27 @@ void Rendering::renderBloom(void)
 
 	BloomTechnique.BeginRenderPass();
 	{
-		BloomTechnique.BeginPass("bright");
 		{
 			BloomTechnique.SetTexture("texSampler", 0, *(m_mapTargets["HDR"].getTexture()));
 
 			m_pQuadMesh->draw();
 		}
-		BloomTechnique.EndPass();
 
-		BloomTechnique.BeginPass("horizontal_blur");
+		BloomTechnique.NextSubpass();
+
 		{
 			BloomTechnique.SetTexture("texSampler", 0, *(m_mapTargets["bloom1"].getTexture()));
 
 			m_pQuadMesh->draw();
 		}
-		BloomTechnique.EndPass();
 
-		BloomTechnique.BeginPass("vertical_blur");
+		BloomTechnique.NextSubpass();
+
 		{
 			BloomTechnique.SetTexture("texSampler", 0, *(m_mapTargets["bloom2"].getTexture()));
 
 			m_pQuadMesh->draw();
 		}
-		BloomTechnique.EndPass();
 	}
 	BloomTechnique.EndRenderPass();
 }
@@ -963,13 +937,9 @@ void Rendering::renderPostProcessEffects()
 
 	BlendTechnique.BeginRenderPass();
 	{
-		BlendTechnique.BeginPass("bloom");
-
 		BlendTechnique.SetTexture("texSampler", 0, *(m_mapTargets["bloom1"].getTexture()));
 
 		m_pQuadMesh->draw();
-
-		BlendTechnique.EndPass();
 	}
 	BlendTechnique.EndRenderPass();
 }
@@ -985,8 +955,6 @@ void Rendering::renderPickBuffer(void)
 
 	PickBufferTechnique.BeginRenderPass();
 	{
-		PickBufferTechnique.BeginPass("default");
-
 		glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 
@@ -1009,8 +977,6 @@ void Rendering::renderPickBuffer(void)
 
 			++i;
 		}
-
-		PickBufferTechnique.EndPass();
 	}
 	PickBufferTechnique.EndRenderPass();
 }
@@ -1027,8 +993,6 @@ void Rendering::renderBoundingBox(const Mesh::Instance * pSelectedObject)
 
 	BBoxTechnique.BeginRenderPass();
 	{
-		BBoxTechnique.BeginPass("default");
-
 		BBoxTechnique.SetUniform("Model", pSelectedObject->transformation);
 
 		BBoxTechnique.SetUniform("BBoxMin", pSelectedObject->mesh->m_BoundingBox.min);
@@ -1036,8 +1000,6 @@ void Rendering::renderBoundingBox(const Mesh::Instance * pSelectedObject)
 		BBoxTechnique.SetUniform("color", vec3(1.0, 1.0, 1.0));
 
 		m_pPointMesh->draw();
-
-		BBoxTechnique.EndPass();
 	}
 	BBoxTechnique.EndRenderPass();
 }

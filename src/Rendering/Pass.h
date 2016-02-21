@@ -33,8 +33,7 @@ public:
 	bool	BeginRenderPass		(void);
 	void	EndRenderPass		(void);
 
-	bool	BeginPass			(const char * pass);
-	void	EndPass				(void);
+	void	NextSubpass			(void);
 
 	bool	ReadPixel (const ivec2 & pos, unsigned int & result);
 
@@ -48,11 +47,9 @@ public:
 
 protected:
 
-	std::map<std::string, Subpass> m_mapPass;
+	std::vector<Subpass> m_aPass;
 
-	Subpass * m_pCurrentPass;
-
-	int m_iSubpassCount;
+	int m_iCurrentSubpass;
 
 	bool m_bActive; // just for debugging
 };

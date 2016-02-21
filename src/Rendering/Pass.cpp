@@ -12,8 +12,7 @@ using namespace tinyxml2;
  * @brief Pass::Pass
  */
 Pass::Pass(void)
-: m_pCurrentPass(nullptr)
-, m_iSubpassCount(0)
+: m_iCurrentSubpass(0)
 , m_bActive(false)
 {
 	// ...
@@ -24,12 +23,10 @@ Pass::Pass(void)
  * @param pass
  */
 Pass::Pass(Pass && pass)
-: m_pCurrentPass(pass.m_pCurrentPass)
-, m_iSubpassCount(pass.m_iSubpassCount)
+: m_iCurrentSubpass(pass.m_iCurrentSubpass)
 , m_bActive(pass.m_bActive)
 {
-	pass.m_pCurrentPass = nullptr;
-	pass.m_iSubpassCount = 0;
+	pass.m_iCurrentSubpass = 0;
 	pass.m_bActive = false;
 }
 
@@ -39,8 +36,7 @@ Pass::Pass(Pass && pass)
  * @param rendering
  */
 Pass::Pass(const XMLElement * root, const Rendering & rendering)
-: m_pCurrentPass(nullptr)
-, m_iSubpassCount(0)
+: m_iCurrentSubpass(0)
 , m_bActive(false)
 {
 	{
@@ -58,9 +54,7 @@ Pass::Pass(const XMLElement * root, const Rendering & rendering)
 
 			const Pipeline * pipeline = rendering.GetPipeline(pipeline_name);
 
-			m_mapPass[name] = Subpass(pipeline, elmt, rendering);
-
-			++m_iSubpassCount;
+			m_aPass.push_back(Subpass(pipeline, elmt, rendering));
 
 			elmt = elmt->NextSiblingElement("subpass");
 		}
@@ -82,16 +76,13 @@ Pass::~Pass(void)
  */
 Pass & Pass::operator=(Pass && pass)
 {
-	m_pCurrentPass = pass.m_pCurrentPass;
-	pass.m_pCurrentPass = nullptr;
-
-	m_iSubpassCount = pass.m_iSubpassCount;
-	pass.m_iSubpassCount = 0;
+	m_iCurrentSubpass = pass.m_iCurrentSubpass;
+	pass.m_iCurrentSubpass = 0;
 
 	m_bActive = pass.m_bActive;
 	pass.m_bActive = false;
 
-	m_mapPass = std::move(pass.m_mapPass);
+	m_aPass = std::move(pass.m_aPass);
 
 	return(*this);
 }
@@ -103,9 +94,11 @@ Pass & Pass::operator=(Pass && pass)
 bool Pass::BeginRenderPass(void)
 {
 	assert(!m_bActive);
-	assert(nullptr == m_pCurrentPass);
+	assert(m_iCurrentSubpass == 0);
 
 	m_bActive = true;
+
+	m_aPass.front().Begin();
 
 	return(true);
 }
@@ -116,39 +109,27 @@ bool Pass::BeginRenderPass(void)
 void Pass::EndRenderPass(void)
 {
 	assert(m_bActive);
-	assert(nullptr == m_pCurrentPass);
+	assert(m_iCurrentSubpass == (m_aPass.size() - 1));
+
+	m_aPass.back().End();
 
 	m_bActive = false;
+	m_iCurrentSubpass = 0;
 }
 
 /**
- * @brief Pass::BeginPass
- * @param pass
- * @return
+ * @brief Pass::NextSubpass
  */
-bool Pass::BeginPass(const char * pass)
+void Pass::NextSubpass(void)
 {
 	assert(m_bActive);
-	assert(nullptr == m_pCurrentPass);
+	assert(m_iCurrentSubpass < m_aPass.size());
 
-	m_pCurrentPass = &(m_mapPass[pass]);
+	m_aPass[m_iCurrentSubpass].End();
 
-	m_pCurrentPass->Begin();
+	++m_iCurrentSubpass;
 
-	return(true);
-}
-
-/**
- * @brief Pass::EndPass
- */
-void Pass::EndPass(void)
-{
-	assert(m_bActive);
-	assert(nullptr != m_pCurrentPass);
-
-	m_pCurrentPass->End();
-
-	m_pCurrentPass = nullptr;
+	m_aPass[m_iCurrentSubpass].Begin();
 }
 
 /**
@@ -160,9 +141,9 @@ void Pass::EndPass(void)
 bool Pass::ReadPixel(const ivec2 & pos, unsigned int & result)
 {
 	assert(m_bActive);
-	assert(nullptr != m_pCurrentPass);
+	assert(m_iCurrentSubpass >= 0 && m_iCurrentSubpass < m_aPass.size());
 
-	return(m_pCurrentPass->ReadPixel(pos, result));
+	return(m_aPass[m_iCurrentSubpass].ReadPixel(pos, result));
 }
 
 /**
@@ -172,9 +153,9 @@ bool Pass::ReadPixel(const ivec2 & pos, unsigned int & result)
  */
 void Pass::SetUniformBlockBinding(const char *name, unsigned int binding) const
 {
-	for (auto const & p : m_mapPass)
+	for (const Subpass & p : m_aPass)
 	{
-		p.second.SetUniformBlockBinding(name, binding);
+		p.SetUniformBlockBinding(name, binding);
 	}
 }
 
@@ -187,7 +168,9 @@ template<typename T>
 void Pass::SetUniform(const char * name, const T & value)
 {
 	assert(m_bActive);
-	m_pCurrentPass->SetUniform(name, value);
+	assert(m_iCurrentSubpass >= 0 && m_iCurrentSubpass < m_aPass.size());
+
+	m_aPass[m_iCurrentSubpass].SetUniform(name, value);
 }
 
 template void Pass::SetUniform(const char * name, const mat2x2 & value);
@@ -212,7 +195,9 @@ template<GLenum D>
 void Pass::SetTexture(const char * name, unsigned int unit, const GPU::Texture<D> & texture)
 {
 	assert(m_bActive);
-	m_pCurrentPass->SetTexture(name, unit, texture);
+	assert(m_iCurrentSubpass >= 0 && m_iCurrentSubpass < m_aPass.size());
+
+	m_aPass[m_iCurrentSubpass].SetTexture(name, unit, texture);
 }
 
 template void Pass::SetTexture(const char * name, unsigned int unit, const GPU::Texture<GL_TEXTURE_1D> & texture);
