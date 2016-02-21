@@ -11,10 +11,11 @@ DEST=data/shaders/
 
 for f in $FRAG $VERT $GEOM
 do
+	# TODO : use the shaderc instead
 	name=$(basename "$f")
 	cpp -P -x c++ -nostdinc -nostdinc++ $f | sed 's/^#pragma GLSL(\(.*\)) \(.*\)$/#\1 \2/' > $DEST/$name
 done
 
-cd build
+#cd build
 #ctest check_shaders -VV
 
