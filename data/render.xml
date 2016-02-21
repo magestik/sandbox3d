@@ -206,12 +206,14 @@
 			<subpass name="simple" pipeline="fog_simple">
 				<output texture="HDR" />
 			</subpass>
+<!--
 			<subpass name="scattering" pipeline="fog_scattering">
 				<output texture="HDR" />
 			</subpass>
 			<subpass name="godrays" pipeline="fog_godrays">
 				<output texture="HDR" />
 			</subpass>
+-->
 		</pass>
 
 		<pass name="tonemapping">
@@ -233,16 +235,6 @@
 			</subpass>
 		</pass>
 
-		<pass name="debug">
-			<subpass name="depth" pipeline="debug_depth">
-			</subpass>
-			<subpass name="normal" pipeline="debug_normal">
-			</subpass>
-			<subpass name="color" pipeline="debug_color">
-			</subpass>
-			<subpass name="luminance" pipeline="debug_luminance">
-			</subpass>
-		</pass>
 <!--
 		<pass name="debug">
 			<subpass name="depth" pipeline="debug_depth">
