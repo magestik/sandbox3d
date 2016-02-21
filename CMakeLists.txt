@@ -48,8 +48,23 @@ set(QT_USE_OPENGL TRUE)
 
 ADD_DEFINITIONS(${QT_DEFINITIONS})
 
-# OpenGL
-find_package(OpenGL REQUIRED)
+option(USE_VULKAN "Use the Vulkan API for rendering" OFF)
+
+if (USE_VULKAN)
+
+	# Vulkan
+	find_package(Vulkan REQUIRED)
+
+	add_definitions(-DHAVE_VULKAN=1 -DHAVE_OPENGL=0)
+
+else (USE_VULKAN)
+
+	# OpenGL
+	find_package(OpenGL REQUIRED)
+
+	add_definitions(-DHAVE_OPENGL=1 -DHAVE_VULKAN=0)
+
+endif (USE_VULKAN)
 
 # Assimp
 find_package(assimp REQUIRED)
@@ -62,7 +77,6 @@ add_executable(${PROJECT_NAME} ${SRC_FILES} ${UI_FILES} ${SHADERS_FILES})
 
 
 IF(CMAKE_BUILD_TYPE MATCHES Debug)
-	message("Debug build.")
 	target_link_libraries(${PROJECT_NAME} glBreak)
 ENDIF()
 

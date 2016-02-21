@@ -162,8 +162,8 @@ private:
 	GPU::Buffer<GL_UNIFORM_BUFFER> * m_pObjectsBuffer;
 
 	std::map<std::string, RenderTexture>	m_mapTargets;
-	std::map<std::string, Pass>		m_mapTechnique;
-	std::map<std::string, const Pipeline *>       m_mapPipeline;
+	std::map<std::string, Pass>				m_mapPass;
+	std::map<std::string, const Pipeline *>	m_mapPipeline;
 
 public:
 

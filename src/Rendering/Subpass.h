@@ -22,13 +22,17 @@ class Subpass
 
 public:
 
-				Subpass			(void);
-				Subpass			(const Subpass & subpass) = delete;
-				Subpass			(Subpass && subpass);
-	explicit	Subpass			(const Pipeline * pipeline);
-	explicit	Subpass			(const Pipeline * pipeline, const tinyxml2::XMLElement * element, const Rendering & rendering);
-	virtual		~Subpass		(void);
+	//
+	// Constructors / Destructor
+	Subpass		(void);
+	Subpass		(const Subpass & subpass) = delete;
+	Subpass		(Subpass && subpass);
+	Subpass		(const Pipeline * pipeline);
+	Subpass		(const Pipeline * pipeline, const tinyxml2::XMLElement * element, const Rendering & rendering);
+	~Subpass	(void);
 
+	//
+	// Operators
 	Subpass &	operator =		(Subpass && subpass);
 
 	bool		Begin			(void);

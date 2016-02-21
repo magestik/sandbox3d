@@ -88,17 +88,136 @@ Pass & Pass::operator=(Pass && pass)
 }
 
 /**
- * @brief Pass::Begin
+ * @brief Pass::BeginRenderPass
+ * @param offset
+ * @param extent
  * @return
  */
-bool Pass::BeginRenderPass(void)
+bool Pass::BeginRenderPass(const ivec2 & offset, const ivec2 & extent)
 {
 	assert(!m_bActive);
 	assert(m_iCurrentSubpass == 0);
 
-	m_bActive = true;
+#if HAVE_VULKAN
+	VkRenderPassBeginInfo renderPassBeginInfo		= {};
+	renderPassBeginInfo.sType						= VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+	renderPassBeginInfo.pNext						= NULL;
+	renderPassBeginInfo.renderPass					= m_renderPass;
+	renderPassBeginInfo.renderArea.offset.x			= offset.x;
+	renderPassBeginInfo.renderArea.offset.y			= offset.y;
+	renderPassBeginInfo.renderArea.extent.width		= extent.x;
+	renderPassBeginInfo.renderArea.extent.height	= extent.y;
+	renderPassBeginInfo.clearValueCount				= 0;
+	renderPassBeginInfo.pClearValues				= nullptr;
+
+	//vkCmdBeginRenderPass(commandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
+#endif // HAVE_VULKAN
+
+#if HAVE_OPENGL
+	glViewport(offset.x, offset.y, extent.x, extent.y);
+#endif // HAVE_OPENGL
 
 	m_aPass.front().Begin();
+
+	m_bActive = true;
+
+	return(true);
+}
+
+/**
+ * @brief Pass::BeginRenderPass
+ * @param offset
+ * @param extent
+ * @param color
+ * @return
+ */
+bool Pass::BeginRenderPass(const ivec2 & offset, const ivec2 & extent, const vec4 & color)
+{
+	assert(!m_bActive);
+	assert(m_iCurrentSubpass == 0);
+
+#if HAVE_VULKAN
+	VkClearValue clearValues[1];
+	clearValues[0].color.float32[0] = color.x;
+	clearValues[0].color.float32[1] = color.y;
+	clearValues[0].color.float32[2] = color.z;
+	clearValues[0].color.float32[3] = color.w;
+
+	VkRenderPassBeginInfo renderPassBeginInfo		= {};
+	renderPassBeginInfo.sType						= VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+	renderPassBeginInfo.pNext						= NULL;
+	renderPassBeginInfo.renderPass					= m_renderPass;
+	renderPassBeginInfo.renderArea.offset.x			= offset.x;
+	renderPassBeginInfo.renderArea.offset.y			= offset.y;
+	renderPassBeginInfo.renderArea.extent.width		= extent.x;
+	renderPassBeginInfo.renderArea.extent.height	= extent.y;
+	renderPassBeginInfo.clearValueCount				= 1;
+	renderPassBeginInfo.pClearValues				= clearValues;
+
+	//vkCmdBeginRenderPass(commandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
+#endif // HAVE_VULKAN
+
+	m_aPass.front().Begin();
+
+#if HAVE_OPENGL
+	glViewport(offset.x, offset.y, extent.x, extent.y);
+	glClearColor(color.x, color.y, color.z, color.w);
+	glClear(GL_COLOR_BUFFER_BIT);
+#endif // HAVE_OPENGL
+
+	m_bActive = true;
+
+	return(true);
+}
+
+/**
+ * @brief Pass::BeginRenderPass
+ * @param offset
+ * @param extent
+ * @param color
+ * @param depth
+ * @param stencil
+ * @return
+ */
+bool Pass::BeginRenderPass(const ivec2 & offset, const ivec2 & extent, const vec4 & color, float depth, unsigned int stencil)
+{
+	assert(!m_bActive);
+	assert(m_iCurrentSubpass == 0);
+
+#if HAVE_VULKAN
+	VkClearValue clearValues[2];
+	clearValues[0].color.float32[0]		= color.x;
+	clearValues[0].color.float32[1]		= color.y;
+	clearValues[0].color.float32[2]		= color.z;
+	clearValues[0].color.float32[3]		= color.w;
+	clearValues[1].depthStencil.depth	= depth;
+	clearValues[1].depthStencil.stencil = stencil;
+
+	VkRenderPassBeginInfo renderPassBeginInfo		= {};
+	renderPassBeginInfo.sType						= VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+	renderPassBeginInfo.pNext						= NULL;
+	renderPassBeginInfo.renderPass					= m_renderPass;
+	renderPassBeginInfo.renderArea.offset.x			= offset.x;
+	renderPassBeginInfo.renderArea.offset.y			= offset.y;
+	renderPassBeginInfo.renderArea.extent.width		= extent.x;
+	renderPassBeginInfo.renderArea.extent.height	= extent.y;
+	renderPassBeginInfo.clearValueCount				= 2;
+	renderPassBeginInfo.pClearValues				= clearValues;
+
+	//vkCmdBeginRenderPass(commandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
+#endif // HAVE_VULKAN
+
+	m_aPass.front().Begin();
+
+#if HAVE_OPENGL
+	glViewport(offset.x, offset.y, extent.x, extent.y);
+	glClearColor(color.x, color.y, color.z, color.w);
+	glClearDepthf(depth);
+	glClearStencil(stencil);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+#endif // HAVE_OPENGL
+
+	m_bActive = true;
 
 	return(true);
 }

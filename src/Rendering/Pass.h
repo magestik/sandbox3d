@@ -22,19 +22,29 @@ class Pass
 {
 public:
 
-				Pass			(void);
-				Pass			(const Pass & pass) = delete;
-				Pass			(Pass && pass);
-	explicit	Pass			(const tinyxml2::XMLElement * element, const Rendering & rendering);
-				~Pass			(void);
+	//
+	// Constructors / Destructor
+	Pass		(void);
+	Pass		(const Pass & pass) = delete;
+	Pass		(Pass && pass);
+	Pass		(const tinyxml2::XMLElement * element, const Rendering & rendering);
+	~Pass		(void);
 
+	//
+	// Operators
 	Pass &		operator =		(Pass && pass);
 
-	bool	BeginRenderPass		(void);
+	//
+	// Vulkan-like API
+	bool	BeginRenderPass		(const ivec2 & offset, const ivec2 & extent);
+	bool	BeginRenderPass		(const ivec2 & offset, const ivec2 & extent, const vec4 & color);
+	bool	BeginRenderPass		(const ivec2 & offset, const ivec2 & extent, const vec4 & color, float depth, unsigned int stencil);
 	void	EndRenderPass		(void);
 
 	void	NextSubpass			(void);
 
+	//
+	// Utils
 	bool	ReadPixel (const ivec2 & pos, unsigned int & result);
 
 	void    SetUniformBlockBinding  (const char * name, unsigned int binding) const;
@@ -52,4 +62,8 @@ protected:
 	int m_iCurrentSubpass;
 
 	bool m_bActive; // just for debugging
+
+#if HAVE_VULKAN
+	VkRenderPass m_renderPass;
+#endif // HAVE_VULKAN
 };

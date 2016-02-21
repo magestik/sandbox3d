@@ -52,7 +52,7 @@ Rendering::Rendering()
 , m_pCameraBuffer(nullptr)
 , m_pObjectsBuffer(nullptr)
 , m_mapTargets()
-, m_mapTechnique()
+, m_mapPass()
 , m_AvLum(nullptr)
 {
 	// ...
@@ -109,7 +109,7 @@ void Rendering::initializePipelineFromXML(const char * filename)
 	const XMLElement * passes = root->FirstChildElement("pass_list");
 	initializePasses(passes);
 
-	for (auto const & p : m_mapTechnique)
+	for (auto const & p : m_mapPass)
 	{
 		p.second.SetUniformBlockBinding("CameraBlock", BLOCK_BINDING_CAMERA);
 		p.second.SetUniformBlockBinding("ObjectBlock", BLOCK_BINDING_OBJECT);
@@ -177,7 +177,7 @@ void Rendering::initializePasses(const XMLElement * passes)
 	{
 		const char * name = pass->Attribute("name");
 
-		m_mapTechnique[name] = Pass(pass, *this);
+		m_mapPass[name] = Pass(pass, *this);
 
 		pass = pass->NextSiblingElement(PASS_STR);
 	}
@@ -397,12 +397,10 @@ void Rendering::onUpdate(const mat4x4 & mView, const vec4 & clearColor, bool bWi
 
 	if (eRenderType == FINAL)
 	{
-		Pass & ToneMappingTechnique = m_mapTechnique["tonemapping"];
+		Pass & ToneMappingTechnique = m_mapPass["tonemapping"];
 
-		ToneMappingTechnique.BeginRenderPass();
+		ToneMappingTechnique.BeginRenderPass(ivec2(0, 0), ivec2(m_uLuminanceSizePOT, m_uLuminanceSizePOT));
 		{
-			glViewport(0, 0, m_uLuminanceSizePOT, m_uLuminanceSizePOT);
-
 			{
 				ToneMappingTechnique.SetTexture("texSampler", 0, *(m_mapTargets["HDR"].getTexture()));
 				m_pQuadMesh->draw();
@@ -451,9 +449,9 @@ void Rendering::onUpdate(const mat4x4 & mView, const vec4 & clearColor, bool bWi
 		}
 		ToneMappingTechnique.EndRenderPass();
 
-		Pass & AntiAliasingTechnique = m_mapTechnique["anti-aliasing"];
+		Pass & AntiAliasingTechnique = m_mapPass["anti-aliasing"];
 
-		AntiAliasingTechnique.BeginRenderPass();
+		AntiAliasingTechnique.BeginRenderPass(ivec2(0, 0), ivec2(m_uWidth, m_uHeight));
 		{
 			AntiAliasingTechnique.SetTexture("texSampler", 0, *(m_mapTargets["LDR"].getTexture()));
 			AntiAliasingTechnique.SetUniform("fxaaQualityRcpFrame", vec2(1.0/m_uWidth, 1.0/m_uHeight));
@@ -521,9 +519,9 @@ Mesh::Instance * Rendering::getObjectAtPos(const ivec2 & pos)
 
 	Mesh::Instance * object = nullptr;
 
-	Pass & PickBufferTechnique = m_mapTechnique["picking"];
+	Pass & PickBufferTechnique = m_mapPass["picking"];
 
-	PickBufferTechnique.BeginRenderPass();
+	PickBufferTechnique.BeginRenderPass(ivec2(0, 0), ivec2(m_uWidth, m_uHeight));
 	{
 		unsigned int id = UINT32_MAX;
 
@@ -703,18 +701,13 @@ void Rendering::renderIntermediateToScreen(ERenderType eRenderType)
  */
 void Rendering::renderSceneToGBuffer(void)
 {
-	glViewport(0, 0, m_uWidth, m_uHeight);
+	Pass & GeometryPass = m_mapPass["geometry"];
 
-	Pass & GeometryPass = m_mapTechnique["geometry"];
-
-	GeometryPass.BeginRenderPass();
+	GeometryPass.BeginRenderPass(ivec2(0, 0), ivec2(m_uWidth, m_uHeight), vec4(0.0f ,0.0f, 0.0f, 0.0f), 1.0f, 0);
 
 	{
 		// OPTIMIZE THIS !!!!!
 		{
-			glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
 			unsigned int offset = 0;
 
 			for (Mesh::Instance & object : m_aObjects)
@@ -780,16 +773,11 @@ void Rendering::renderSceneToGBuffer(void)
  */
 void Rendering::renderLightsToAccumBuffer(const mat4x4 & mView)
 {
-	glViewport(0, 0, m_uWidth, m_uHeight);
+	Pass & LightsTechnique = m_mapPass["lights"];
 
-	Pass & LightsTechnique = m_mapTechnique["lights"];
-
-	LightsTechnique.BeginRenderPass();
+	LightsTechnique.BeginRenderPass(ivec2(0, 0), ivec2(m_uWidth, m_uHeight), vec4(0.0f, 0.0f, 0.0f, 0.0f));
 
 	{
-		glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-		glClear(GL_COLOR_BUFFER_BIT);
-
 		mat4x4 mCameraViewProjection = m_matProjection * mView;
 
 		{
@@ -814,16 +802,11 @@ void Rendering::renderLightsToAccumBuffer(const mat4x4 & mView)
  */
 void Rendering::renderFinal(const mat4x4 & mView, const vec4 & clearColor)
 {
-	glViewport(0, 0, m_uWidth, m_uHeight);
+	Pass & ComposeTechnique = m_mapPass["compose"];
 
-	Pass & ComposeTechnique = m_mapTechnique["compose"];
-
-	ComposeTechnique.BeginRenderPass();
+	ComposeTechnique.BeginRenderPass(ivec2(0, 0), ivec2(m_uWidth, m_uHeight), vec4(clearColor.x, clearColor.y, clearColor.z, clearColor.w));
 
 	{
-		glClearColor(clearColor.x, clearColor.y, clearColor.z, clearColor.w);
-		glClear(GL_COLOR_BUFFER_BIT);
-
 		mat4x4 mDepthView = _lookAt(vec3(0,0,0), m_pLight->GetDirection(), vec3(0.0f, -1.0f, 0.0f));
 		mat4x4 mDepthViewProjection = m_pShadowMap->GetProjection() * mDepthView;
 
@@ -866,11 +849,9 @@ void Rendering::renderFinal(const mat4x4 & mView, const vec4 & clearColor)
  */
 void Rendering::renderFog(void)
 {
-	glViewport(0, 0, m_uWidth, m_uHeight);
+	Pass & ComposeTechnique = m_mapPass["fog"];
 
-	Pass & ComposeTechnique = m_mapTechnique["fog"];
-
-	ComposeTechnique.BeginRenderPass();
+	ComposeTechnique.BeginRenderPass(ivec2(0, 0), ivec2(m_uWidth, m_uHeight));
 
 	{
 		ComposeTechnique.SetTexture("depthMapSampler", 0, *(m_mapTargets["depth"].getTexture()));
@@ -895,11 +876,9 @@ void Rendering::renderFog(void)
  */
 void Rendering::renderBloom(void)
 {
-	glViewport(0, 0, m_uWidth/4, m_uHeight/4);
+	Pass & BloomTechnique = m_mapPass["bloom"];
 
-	Pass & BloomTechnique = m_mapTechnique["bloom"];
-
-	BloomTechnique.BeginRenderPass();
+	BloomTechnique.BeginRenderPass(ivec2(0, 0), ivec2(m_uWidth/4, m_uHeight/4));
 	{
 		{
 			BloomTechnique.SetTexture("texSampler", 0, *(m_mapTargets["HDR"].getTexture()));
@@ -931,11 +910,9 @@ void Rendering::renderBloom(void)
  */
 void Rendering::renderPostProcessEffects()
 {
-	glViewport(0, 0, m_uWidth, m_uHeight);
+	Pass & BlendTechnique = m_mapPass["blend"];
 
-	Pass & BlendTechnique = m_mapTechnique["blend"];
-
-	BlendTechnique.BeginRenderPass();
+	BlendTechnique.BeginRenderPass(ivec2(0, 0), ivec2(m_uWidth, m_uHeight));
 	{
 		BlendTechnique.SetTexture("texSampler", 0, *(m_mapTargets["bloom1"].getTexture()));
 
@@ -949,15 +926,10 @@ void Rendering::renderPostProcessEffects()
  */
 void Rendering::renderPickBuffer(void)
 {
-	glViewport(0, 0, m_uWidth, m_uHeight);
+	Pass & PickBufferTechnique = m_mapPass["picking"];
 
-	Pass & PickBufferTechnique = m_mapTechnique["picking"];
-
-	PickBufferTechnique.BeginRenderPass();
+	PickBufferTechnique.BeginRenderPass(ivec2(0, 0), ivec2(m_uWidth, m_uHeight), vec4(1.0f, 1.0f, 1.0f, 1.0f));
 	{
-		glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT);
-
 		unsigned int i = 0;
 
 		for (Mesh::Instance & object : m_aObjects)
@@ -987,11 +959,9 @@ void Rendering::renderPickBuffer(void)
  */
 void Rendering::renderBoundingBox(const Mesh::Instance * pSelectedObject)
 {
-	glViewport(0, 0, m_uWidth, m_uHeight);
+	Pass & BBoxTechnique = m_mapPass["bbox"];
 
-	Pass & BBoxTechnique = m_mapTechnique["bbox"];
-
-	BBoxTechnique.BeginRenderPass();
+	BBoxTechnique.BeginRenderPass(ivec2(0, 0), ivec2(m_uWidth, m_uHeight));
 	{
 		BBoxTechnique.SetUniform("Model", pSelectedObject->transformation);
 
