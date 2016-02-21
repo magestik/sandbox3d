@@ -216,10 +216,14 @@
 -->
 		</pass>
 
-		<pass name="tonemapping">
+		<pass name="compute-tonemapping-params">
 			<subpass name="to_luminance" pipeline="luminance_conversion">
 				<output texture="luminance1" />
 			</subpass>
+			<!-- + reduction to compute mean luminance and white² -->
+		</pass>
+
+		<pass name="tonemapping">
 			<subpass name="with_burnout" pipeline="tonemapping">
 				<output texture="LDR" />
 			</subpass>

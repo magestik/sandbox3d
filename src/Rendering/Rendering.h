@@ -130,6 +130,8 @@ protected:
 
 	void	renderBoundingBox			(const Mesh::Instance * pSelected);
 
+	void	computeToneMappingParams	(float & avLum, float & white2);
+
 private:
 
 	struct CAMERA_BLOCK_DEFINITION(CameraBlock);

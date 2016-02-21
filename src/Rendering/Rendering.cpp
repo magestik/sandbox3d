@@ -85,7 +85,6 @@ void Rendering::onInitializeComplete()
 	glBindBufferRange(GL_UNIFORM_BUFFER, BLOCK_BINDING_CAMERA, m_pCameraBuffer->GetObject(), 0, sizeof(CameraBlock));
 }
 
-
 /**
  * @brief Rendering::initializeFromXML
  * @param filename
@@ -397,55 +396,19 @@ void Rendering::onUpdate(const mat4x4 & mView, const vec4 & clearColor, bool bWi
 
 	if (eRenderType == FINAL)
 	{
+		float avLum = 0.0f;
+		float white2 = 0.0f;
+
+		computeToneMappingParams(avLum, white2);
+
 		Pass & ToneMappingTechnique = m_mapPass["tonemapping"];
 
-		ToneMappingTechnique.BeginRenderPass(ivec2(0, 0), ivec2(m_uLuminanceSizePOT, m_uLuminanceSizePOT));
+		ToneMappingTechnique.BeginRenderPass(ivec2(0, 0), ivec2(m_uWidth, m_uHeight));
 		{
-			{
-				ToneMappingTechnique.SetTexture("texSampler", 0, *(m_mapTargets["HDR"].getTexture()));
-				m_pQuadMesh->draw();
-			}
-
-			const GPU::Texture<GL_TEXTURE_2D> * textures [2] =
-			{
-				m_mapTargets["luminance1"].getTexture(),
-				m_mapTargets["luminance2"].getTexture()
-			};
-
-			m_AvLum->begin();
-			{
-				vec2 texture_scale (1.0f, 1.0f);
-
-				for (int size = m_uLuminanceSizePOT >> 1; size > 1; size >>= 1)
-				{
-					glViewport(0, 0, size, size);
-
-					unsigned int tex = m_AvLum->next();
-
-					m_AvLum->SetTexture("texSampler", 0, *(textures[tex]));
-					m_AvLum->SetUniform("textureScale", texture_scale);
-
-					m_pQuadMesh->draw();
-
-					texture_scale = texture_scale * 0.5f;
-				}
-			}
-			m_AvLum->end();
-
-			float avLum = m_AvLum->getAverage();
-			float white2 = m_AvLum->getMax2();
-
-
-			ToneMappingTechnique.NextSubpass();
-
-			glViewport(0, 0, m_uWidth, m_uHeight);
-
-			{
-				ToneMappingTechnique.SetTexture("texSampler", 0, *(m_mapTargets["HDR"].getTexture()));
-				ToneMappingTechnique.SetUniform("avLum", avLum);
-				ToneMappingTechnique.SetUniform("white2", white2);
-				m_pQuadMesh->draw();
-			}
+			ToneMappingTechnique.SetTexture("texSampler", 0, *(m_mapTargets["HDR"].getTexture()));
+			ToneMappingTechnique.SetUniform("avLum", avLum);
+			ToneMappingTechnique.SetUniform("white2", white2);
+			m_pQuadMesh->draw();
 		}
 		ToneMappingTechnique.EndRenderPass();
 
@@ -584,11 +547,9 @@ void Rendering::renderSceneToShadowMap(void)
 void Rendering::renderIntermediateToScreen(ERenderType eRenderType)
 {
 #if 0
-	glViewport(0, 0, m_uWidth, m_uHeight);
-
 	Pass & DebugTechnique = m_mapTechnique["debug"];
 
-	DebugTechnique.BeginRenderPass();
+	DebugTechnique.BeginRenderPass(ivec2(0, 0), ivec2(m_uWidth, m_uHeight));
 
 	switch (eRenderType)
 	{
@@ -972,4 +933,53 @@ void Rendering::renderBoundingBox(const Mesh::Instance * pSelectedObject)
 		m_pPointMesh->draw();
 	}
 	BBoxTechnique.EndRenderPass();
+}
+
+/**
+ * @brief Rendering::computeLuminance
+ * @param avLum
+ * @param white²
+ */
+void Rendering::computeToneMappingParams(float & avLum, float & white2)
+{
+	Pass & ToneMappingComputePass = m_mapPass["compute-tonemapping-params"];
+
+	ToneMappingComputePass.BeginRenderPass(ivec2(0, 0), ivec2(m_uLuminanceSizePOT, m_uLuminanceSizePOT));
+	{
+		{
+			ToneMappingComputePass.SetTexture("texSampler", 0, *(m_mapTargets["HDR"].getTexture()));
+			m_pQuadMesh->draw();
+		}
+
+		const GPU::Texture<GL_TEXTURE_2D> * textures [2] =
+		{
+			m_mapTargets["luminance1"].getTexture(),
+			m_mapTargets["luminance2"].getTexture()
+		};
+
+		m_AvLum->begin();
+		{
+			vec2 texture_scale (1.0f, 1.0f);
+
+			for (int size = m_uLuminanceSizePOT >> 1; size > 1; size >>= 1)
+			{
+				glViewport(0, 0, size, size);
+
+				unsigned int tex = m_AvLum->next();
+
+				m_AvLum->SetTexture("texSampler", 0, *(textures[tex]));
+				m_AvLum->SetUniform("textureScale", texture_scale);
+
+				m_pQuadMesh->draw();
+
+				texture_scale = texture_scale * 0.5f;
+			}
+		}
+		m_AvLum->end();
+	}
+	ToneMappingComputePass.EndRenderPass();
+
+
+	avLum = m_AvLum->getAverage();
+	white2 = m_AvLum->getMax2();
 }
