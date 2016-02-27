@@ -13,7 +13,7 @@ for f in $FRAG $VERT $GEOM
 do
 	# TODO : use the shaderc instead
 	name=$(basename "$f")
-	cpp -P -x c++ -nostdinc -nostdinc++ $f | sed 's/^#pragma GLSL(\(.*\)) \(.*\)$/#\1 \2/' > $DEST/$name
+	glslc -std=330 -E $f -I src/Rendering/Shader/shaders/ | sed 's/^#extension GL_GOOGLE_include_directive : enable$/ /' | sed 's/^#line [0-9]* .*$/ /' > $DEST/$name
 done
 
 #cd build

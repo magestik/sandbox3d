@@ -1,4 +1,4 @@
-#pragma GLSL(version) 330
+#version 330 core
 
 #include "../Interface.h"
 
@@ -9,6 +9,8 @@
 #define FXAA_QUALITY__PRESET 12
 #define FXAA_GREEN_AS_LUMA 0
 #define FXAA_FAST_PIXEL_OFFSET 0
+#define FXAA_GATHER4_ALPHA 0
+
 #include "Fxaa3_11.h"
 
 uniform sampler2D texSampler;

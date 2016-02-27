@@ -1,4 +1,4 @@
-#pragma GLSL(version) 330
+#version 330 core
 
 #include "../Interface.h"
 

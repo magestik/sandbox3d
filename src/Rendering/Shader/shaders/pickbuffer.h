@@ -1,6 +1,6 @@
-#pragma once
+//#pragma once
 
 struct VS_OUTPUT
 {
-    uint color;
+	uint color;
 };

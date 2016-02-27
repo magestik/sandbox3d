@@ -1,4 +1,3 @@
-#pragma once
 
 #define POSITION 	0
 #define NORMAL 		1
@@ -9,11 +8,11 @@
 
 #define OBJECT_BLOCK_DEFINITION(name) name \
 { \
-    mat4x4 Model; \
+	mat4x4 Model; \
 }
 
 #define CAMERA_BLOCK_DEFINITION(name) name \
 { \
-    mat4x4 ViewProjection; \
-    mat4x4 View; \
+	mat4x4 ViewProjection; \
+	mat4x4 View; \
 }

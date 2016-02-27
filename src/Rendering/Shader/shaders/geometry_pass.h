@@ -1,6 +1,6 @@
-#pragma once
+//#pragma once
 
 struct VS_OUTPUT
 {
-    vec3 normal;
+	vec3 normal;
 };
