@@ -5,6 +5,7 @@
  */
 RHI::CommandBuffer::CommandBuffer(void)
 : m_pCurrentPass(nullptr)
+, m_pCurrentPipeline(nullptr)
 , m_bActive(false)
 {
 	// ...
@@ -130,6 +131,7 @@ bool RHI::CommandBuffer::BeginRenderPass(RenderPass & pass, Framebuffer & fb, co
 bool RHI::CommandBuffer::BeginRenderPass(RenderPass & pass, Framebuffer & fb, const ivec2 & offset, const ivec2 & extent, const vec4 & color, float depth, unsigned int stencil)
 {
 	assert(m_bActive);
+	assert(nullptr == m_pCurrentPass);
 
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fb.m_uFramebufferObject);
 
@@ -147,11 +149,23 @@ bool RHI::CommandBuffer::BeginRenderPass(RenderPass & pass, Framebuffer & fb, co
 }
 
 /**
+ * @brief RHI::CommandBuffer::NextSubpass
+ */
+void RHI::CommandBuffer::NextSubpass(void)
+{
+	assert(m_bActive);
+	assert(nullptr != m_pCurrentPass);
+
+	m_pCurrentPass->Next();
+}
+
+/**
  * @brief RHI::CommandBuffer::EndRenderPass
  */
 void RHI::CommandBuffer::EndRenderPass(void)
 {
 	assert(m_bActive);
+	assert(nullptr != m_pCurrentPass);
 
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 
@@ -160,12 +174,131 @@ void RHI::CommandBuffer::EndRenderPass(void)
 }
 
 /**
- * @brief RHI::CommandBuffer::NextSubpass
+ * @brief RHI::CommandBuffer::Bind
+ * @param pipeline
+ * @return
  */
-void RHI::CommandBuffer::NextSubpass(void)
+bool RHI::CommandBuffer::Bind(Pipeline & pipeline)
 {
 	assert(m_bActive);
 
-	m_pCurrentPass->Next();
+	m_pCurrentPipeline = &pipeline;
 
+	// TODO : apply pipeline states
+
+	return(true);
+}
+
+/**
+ * @brief RHI::CommandBuffer::Draw
+ * @param vertexCount
+ * @param firstVertex
+ * @return
+ */
+bool RHI::CommandBuffer::Draw(unsigned int vertexCount, unsigned int firstVertex)
+{
+	assert(m_bActive);
+	assert(nullptr != m_pCurrentPass);
+	assert(nullptr != m_pCurrentPipeline);
+
+	GLenum mode = GLenum(m_pCurrentPipeline->m_inputAssemblyState.topology);
+	glDrawArrays(mode, firstVertex, vertexCount);
+	return(true);
+}
+
+/**
+ * @brief RHI::CommandBuffer::Draw
+ * @param vertexCount
+ * @param firstVertex
+ * @param instanceCount
+ * @return
+ */
+bool RHI::CommandBuffer::Draw(unsigned int vertexCount, unsigned int firstVertex, unsigned int instanceCount)
+{
+	assert(m_bActive);
+	assert(nullptr != m_pCurrentPass);
+	assert(nullptr != m_pCurrentPipeline);
+
+	GLenum mode = GLenum(m_pCurrentPipeline->m_inputAssemblyState.topology);
+	glDrawArraysInstanced(mode, firstVertex, vertexCount, instanceCount);
+	return(true);
+}
+
+/**
+ * @brief RHI::CommandBuffer::Draw
+ * @param vertexCount
+ * @param firstVertex
+ * @param instanceCount
+ * @param firstInstance
+ * @return
+ */
+bool RHI::CommandBuffer::Draw(unsigned int vertexCount, unsigned int firstVertex, unsigned int instanceCount, unsigned int firstInstance)
+{
+	assert(m_bActive);
+	assert(nullptr != m_pCurrentPass);
+	assert(nullptr != m_pCurrentPipeline);
+
+	GLenum mode(m_pCurrentPipeline->m_inputAssemblyState.topology);
+	glDrawArraysInstancedBaseInstance(mode, firstVertex, vertexCount, instanceCount, firstInstance);
+	return(true);
+}
+
+/**
+ * @brief RHI::CommandBuffer::DrawIndexed
+ * @param indexCount
+ * @param firstIndex
+ * @param vertexOffset
+ * @return
+ */
+bool RHI::CommandBuffer::DrawIndexed(unsigned int indexCount, unsigned int firstIndex, unsigned int vertexOffset)
+{
+	assert(m_bActive);
+	assert(nullptr != m_pCurrentPass);
+	assert(nullptr != m_pCurrentPipeline);
+
+	GLenum mode(m_pCurrentPipeline->m_inputAssemblyState.topology);
+	GLenum type = GL_UNSIGNED_INT; // FIXME : this should not be hardcoded !
+	glDrawElementsBaseVertex(mode, indexCount, type, BUFFER_OFFSET(vertexOffset), firstIndex);
+	return(true);
+}
+
+/**
+ * @brief RHI::CommandBuffer::DrawIndexed
+ * @param indexCount
+ * @param firstIndex
+ * @param vertexOffset
+ * @param instanceCount
+ * @return
+ */
+bool RHI::CommandBuffer::DrawIndexed(unsigned int indexCount, unsigned int firstIndex, unsigned int vertexOffset, unsigned int instanceCount)
+{
+	assert(m_bActive);
+	assert(nullptr != m_pCurrentPass);
+	assert(nullptr != m_pCurrentPipeline);
+
+	GLenum mode(m_pCurrentPipeline->m_inputAssemblyState.topology);
+	GLenum type = GL_UNSIGNED_INT; // FIXME : this should not be hardcoded !
+	glDrawElementsInstancedBaseVertex(mode, indexCount, type, BUFFER_OFFSET(vertexOffset), instanceCount, firstIndex);
+	return(true);
+}
+
+/**
+ * @brief RHI::CommandBuffer::DrawIndexed
+ * @param indexCount
+ * @param firstIndex
+ * @param vertexOffset
+ * @param instanceCount
+ * @param firstInstance
+ * @return
+ */
+bool RHI::CommandBuffer::DrawIndexed(unsigned int indexCount, unsigned int firstIndex, unsigned int vertexOffset, unsigned int instanceCount, unsigned int firstInstance)
+{
+	assert(m_bActive);
+	assert(nullptr != m_pCurrentPass);
+	assert(nullptr != m_pCurrentPipeline);
+
+	GLenum mode(m_pCurrentPipeline->m_inputAssemblyState.topology);
+	GLenum type = GL_UNSIGNED_INT; // FIXME : this should not be hardcoded !
+	glDrawElementsInstancedBaseVertexBaseInstance(mode, indexCount, type, BUFFER_OFFSET(vertexOffset), instanceCount, firstIndex, firstInstance);
+	return(true);
 }

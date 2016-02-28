@@ -7,6 +7,8 @@
 
 #include <vector>
 
+#include "../RHI/RHI.h"
+
 class SubMesh;
 
 class Mesh
@@ -49,7 +51,7 @@ public:
 	void bind();
 	void unbind();
 
-	void draw();
+	void draw(RHI::CommandBuffer & commandBuffer);
 
 	Instance Instantiate() { return(Instance(this)); }
 

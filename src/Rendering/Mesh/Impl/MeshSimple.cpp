@@ -22,7 +22,8 @@ MeshSimple::~MeshSimple(void)
 /**
  * @brief MeshSimple::draw
  */
-void MeshSimple::draw(void) const
+void MeshSimple::draw(RHI::CommandBuffer & commandBuffer) const
 {
-	glDrawArrays(m_eMode, 0, m_iCount);
+	commandBuffer.m_pCurrentPipeline->m_inputAssemblyState.topology = RHI::PrimitiveType(m_eMode); // TODO : remove this (ugly !!!)
+	commandBuffer.Draw(m_iCount, 0);
 }

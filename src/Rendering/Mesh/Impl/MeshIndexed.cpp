@@ -14,7 +14,8 @@ MeshIndexed::MeshIndexed(GLsizei count, GLenum mode, unsigned int offset, GLenum
 , m_iOffset(offset)
 , m_iBaseVertex(baseVertex)
 {
-	// ...
+	assert(GL_TRIANGLES == mode);
+	assert(GL_UNSIGNED_INT == type);
 }
 
 /**
@@ -28,7 +29,8 @@ MeshIndexed::~MeshIndexed(void)
 /**
  * @brief Mesh::draw
  */
-void MeshIndexed::draw(void) const
+void MeshIndexed::draw(RHI::CommandBuffer & commandBuffer) const
 {
-	glDrawElementsBaseVertex(m_eMode, m_iCount, m_eType, BUFFER_OFFSET(m_iOffset), m_iBaseVertex);
+	commandBuffer.m_pCurrentPipeline->m_inputAssemblyState.topology = RHI::PrimitiveType(m_eMode); // TODO : remove this (ugly !!!)
+	commandBuffer.DrawIndexed(m_iCount, m_iBaseVertex, m_iOffset);
 }

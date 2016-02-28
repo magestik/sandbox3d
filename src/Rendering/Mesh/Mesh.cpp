@@ -124,13 +124,13 @@ void Mesh::unbind(void)
 /**
  * @brief Mesh::draw
  */
-void Mesh::draw(void)
+void Mesh::draw(RHI::CommandBuffer & commandBuffer)
 {
 	bind();
 
 	for (SubMesh * m : m_aSubMeshes)
 	{
-		m->draw();
+		m->draw(commandBuffer);
 	}
 
 	unbind();

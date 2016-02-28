@@ -10,12 +10,20 @@
 #endif // HAVE_VULKAN
 
 //
+// Enumerations
+#include "RHI_enums.h"
+
+//
+// Render Pass
+#include "Pass.h"
+
+//
 // Framebuffer
 #include "Framebuffer.h"
 
 //
 // Render Pass
-#include "Pass.h"
+#include "Pipeline.h"
 
 //
 // Command Buffer

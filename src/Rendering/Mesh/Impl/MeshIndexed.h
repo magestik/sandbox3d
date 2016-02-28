@@ -9,7 +9,7 @@ public:
 	explicit MeshIndexed(GLsizei count, GLenum mode, unsigned int offset, GLenum type, unsigned int baseVertex);
 	virtual ~MeshIndexed(void);
 
-	virtual void draw(void) const;
+	virtual void draw(RHI::CommandBuffer & commandBuffer) const;
 
 private:
 

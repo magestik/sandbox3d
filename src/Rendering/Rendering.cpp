@@ -328,18 +328,21 @@ void Rendering::onUpdate(const mat4x4 & mView, const vec4 & clearColor, bool bWi
 
 		commandBuffer.Begin();
 
+		RHI::Pipeline pipeline;
 		RHI::RenderPass & ToneMappingTechnique = m_mapPass["tonemapping"];
 		RHI::Framebuffer & ToneMappingFramebuffer = m_mapFramebuffer["LDR"];
 
 		commandBuffer.BeginRenderPass(ToneMappingTechnique, ToneMappingFramebuffer, ivec2(0, 0), ivec2(m_uWidth, m_uHeight));
 		{
+			commandBuffer.Bind(pipeline);
+
 			m_mapPipeline["tonemapping"]->Bind();
 
 			m_mapPipeline["tonemapping"]->SetTexture("texSampler", 0, *(m_mapTargets["HDR"].getTexture()));
 			m_mapPipeline["tonemapping"]->SetUniform("avLum", avLum);
 			m_mapPipeline["tonemapping"]->SetUniform("white2", white2);
 
-			m_pQuadMesh->draw();
+			m_pQuadMesh->draw(commandBuffer);
 
 			m_mapPipeline["tonemapping"]->UnBind();
 		}
@@ -350,12 +353,14 @@ void Rendering::onUpdate(const mat4x4 & mView, const vec4 & clearColor, bool bWi
 
 		commandBuffer.BeginRenderPass(AntiAliasingTechnique, AntiAliasingFramebuffer, ivec2(0, 0), ivec2(m_uWidth, m_uHeight));
 		{
+			commandBuffer.Bind(pipeline);
+
 			m_mapPipeline["fxaa"]->Bind();
 
 			m_mapPipeline["fxaa"]->SetTexture("texSampler", 0, *(m_mapTargets["LDR"].getTexture()));
 			m_mapPipeline["fxaa"]->SetUniform("fxaaQualityRcpFrame", vec2(1.0/m_uWidth, 1.0/m_uHeight));
 
-			m_pQuadMesh->draw();
+			m_pQuadMesh->draw(commandBuffer);
 
 			m_mapPipeline["fxaa"]->UnBind();
 		}
@@ -427,6 +432,7 @@ Mesh::Instance * Rendering::getObjectAtPos(const ivec2 & pos)
 
 	commandBuffer.Begin();
 
+	RHI::Pipeline pipeline;
 	RHI::RenderPass & PickBufferTechnique = m_mapPass["picking"];
 	RHI::Framebuffer & PickBufferFramebuffer = m_mapFramebuffer["pickbuffer-earlyZ"];
 
@@ -458,11 +464,14 @@ void Rendering::renderSceneToShadowMap(void)
 
 	commandBuffer.Begin();
 
+	RHI::Pipeline pipeline;
 	RHI::RenderPass & ShadowMapPass = m_mapPass["shadow_map"];
 	RHI::Framebuffer & ShadowMapFramebuffer = m_mapFramebuffer["shadow-map"];
 
 	commandBuffer.BeginRenderPass(ShadowMapPass, ShadowMapFramebuffer, ivec2(0, 0), ivec2(SHADOW_MAP_SIZE, SHADOW_MAP_SIZE), 1.0f, 0);
 	{
+		commandBuffer.Bind(pipeline);
+
 		m_mapPipeline["shadow_map"]->Bind();
 
 		glPolygonOffset(10.0f, 1.0f);
@@ -481,7 +490,7 @@ void Rendering::renderSceneToShadowMap(void)
 			// TODO : remove loop and directly use glDrawElements on the full buffer
 			for (SubMesh * m : object.getDrawCommands())
 			{
-				m->draw();
+				m->draw(commandBuffer);
 			}
 
 			object.mesh->unbind();
@@ -510,15 +519,19 @@ void Rendering::renderIntermediateToScreen(ERenderType eRenderType)
 	{
 		case FINAL:
 		{
+			RHI::Pipeline pipeline;
+
 			RHI::RenderPass & DebugPass = m_mapPass["debug_color"];
 
 			commandBuffer.BeginRenderPass(DebugPass, DefaultFramebuffer, ivec2(0, 0), ivec2(m_uWidth, m_uHeight));
 			{
+				commandBuffer.Bind(pipeline);
+
 				m_mapPipeline["debug_color"]->Bind();
 
 				m_mapPipeline["debug_color"]->SetTexture("texSampler", 0, *(m_mapTargets["HDR"].getTexture()));
 
-				m_pQuadMesh->draw();
+				m_pQuadMesh->draw(commandBuffer);
 
 				m_mapPipeline["debug_color"]->UnBind();
 			}
@@ -528,15 +541,19 @@ void Rendering::renderIntermediateToScreen(ERenderType eRenderType)
 
 		case DIFFUSE_LIGHTS:
 		{
+			RHI::Pipeline pipeline;
+
 			RHI::RenderPass & DebugPass = m_mapPass["debug_color"];
 
 			commandBuffer.BeginRenderPass(DebugPass, DefaultFramebuffer, ivec2(0, 0), ivec2(m_uWidth, m_uHeight));
 			{
+				commandBuffer.Bind(pipeline);
+
 				m_mapPipeline["debug_color"]->Bind();
 
 				m_mapPipeline["debug_color"]->SetTexture("texSampler", 0, *(m_mapTargets["lights_diffuse"].getTexture()));
 
-				m_pQuadMesh->draw();
+				m_pQuadMesh->draw(commandBuffer);
 
 				m_mapPipeline["debug_color"]->UnBind();
 			}
@@ -546,15 +563,19 @@ void Rendering::renderIntermediateToScreen(ERenderType eRenderType)
 
 		case SPECULAR_LIGHTS:
 		{
+			RHI::Pipeline pipeline;
+
 			RHI::RenderPass & DebugPass = m_mapPass["debug_color"];
 
 			commandBuffer.BeginRenderPass(DebugPass, DefaultFramebuffer, ivec2(0, 0), ivec2(m_uWidth, m_uHeight));
 			{
+				commandBuffer.Bind(pipeline);
+
 				m_mapPipeline["debug_color"]->Bind();
 
 				m_mapPipeline["debug_color"]->SetTexture("texSampler", 0, *(m_mapTargets["lights_specular"].getTexture()));
 
-				m_pQuadMesh->draw();
+				m_pQuadMesh->draw(commandBuffer);
 
 				m_mapPipeline["debug_color"]->UnBind();
 			}
@@ -564,15 +585,19 @@ void Rendering::renderIntermediateToScreen(ERenderType eRenderType)
 
 		case NORMAL_BUFFER:
 		{
+			RHI::Pipeline pipeline;
+
 			RHI::RenderPass & DebugPass = m_mapPass["debug_normals"];
 
 			commandBuffer.BeginRenderPass(DebugPass, DefaultFramebuffer, ivec2(0, 0), ivec2(m_uWidth, m_uHeight));
 			{
+				commandBuffer.Bind(pipeline);
+
 				m_mapPipeline["debug_normal"]->Bind();
 
 				m_mapPipeline["debug_normal"]->SetTexture("texSampler", 0, *(m_mapTargets["normals"].getTexture()));
 
-				m_pQuadMesh->draw();
+				m_pQuadMesh->draw(commandBuffer);
 
 				m_mapPipeline["debug_normal"]->UnBind();
 			}
@@ -582,15 +607,19 @@ void Rendering::renderIntermediateToScreen(ERenderType eRenderType)
 
 		case DEPTH:
 		{
+			RHI::Pipeline pipeline;
+
 			RHI::RenderPass & DebugPass = m_mapPass["debug_depth"];
 
 			commandBuffer.BeginRenderPass(DebugPass, DefaultFramebuffer, ivec2(0, 0), ivec2(m_uWidth, m_uHeight));
 			{
+				commandBuffer.Bind(pipeline);
+
 				m_mapPipeline["debug_depth"]->Bind();
 
 				m_mapPipeline["debug_depth"]->SetTexture("texSampler", 0, *(m_mapTargets["depth"].getTexture()));
 
-				m_pQuadMesh->draw();
+				m_pQuadMesh->draw(commandBuffer);
 
 				m_mapPipeline["debug_depth"]->UnBind();
 			}
@@ -600,15 +629,19 @@ void Rendering::renderIntermediateToScreen(ERenderType eRenderType)
 
 		case SHADOWS:
 		{
+			RHI::Pipeline pipeline;
+
 			RHI::RenderPass & DebugPass = m_mapPass["debug_depth"];
 
 			commandBuffer.BeginRenderPass(DebugPass, DefaultFramebuffer, ivec2(0, 0), ivec2(m_uWidth, m_uHeight));
 			{
+				commandBuffer.Bind(pipeline);
+
 				m_mapPipeline["debug_depth"]->Bind();
 
 				m_mapPipeline["debug_depth"]->SetTexture("texSampler", 0, *(m_mapTargets["shadow_map"].getTexture()));
 
-				m_pQuadMesh->draw();
+				m_pQuadMesh->draw(commandBuffer);
 
 				m_mapPipeline["debug_depth"]->UnBind();
 			}
@@ -663,12 +696,15 @@ void Rendering::renderSceneToGBuffer(void)
 
 	commandBuffer.Begin();
 
+	RHI::Pipeline pipeline;
 	RHI::RenderPass & GeometryPass = m_mapPass["geometry"];
 	RHI::Framebuffer & GeometryFramebuffer = m_mapFramebuffer["normals-earlyZ"];
 
 	commandBuffer.BeginRenderPass(GeometryPass, GeometryFramebuffer, ivec2(0, 0), ivec2(m_uWidth, m_uHeight), vec4(0.0f ,0.0f, 0.0f, 0.0f), 1.0f, 0);
 
 	{
+		commandBuffer.Bind(pipeline);
+
 		// OPTIMIZE THIS !!!!!
 		{
 			m_mapPipeline["geometry_simple"]->Bind();
@@ -689,7 +725,7 @@ void Rendering::renderSceneToGBuffer(void)
 					{
 						m_mapPipeline["geometry_simple"]->SetUniform("shininess", m->m_material.shininess);
 
-						m->draw();
+						m->draw(commandBuffer);
 					}
 				}
 
@@ -723,7 +759,7 @@ void Rendering::renderSceneToGBuffer(void)
 						m_mapPipeline["geometry_normalmap"]->SetTexture("normalMap", 0, *pNormalMap);
 						m_mapPipeline["geometry_normalmap"]->SetUniform("shininess", m->m_material.shininess);
 
-						m->draw();
+						m->draw(commandBuffer);
 					}
 				}
 
@@ -750,12 +786,15 @@ void Rendering::renderLightsToAccumBuffer(const mat4x4 & mView)
 
 	commandBuffer.Begin();
 
+	RHI::Pipeline pipeline;
 	RHI::RenderPass & LightsTechnique = m_mapPass["lights"];
 	RHI::Framebuffer & LightsFramebuffer = m_mapFramebuffer["lights"];
 
 	commandBuffer.BeginRenderPass(LightsTechnique, LightsFramebuffer, ivec2(0, 0), ivec2(m_uWidth, m_uHeight), vec4(0.0f, 0.0f, 0.0f, 0.0f));
 
 	{
+		commandBuffer.Bind(pipeline);
+
 		m_mapPipeline["lights_directional"]->Bind();
 
 		mat4x4 mCameraViewProjection = m_matProjection * mView;
@@ -767,7 +806,7 @@ void Rendering::renderLightsToAccumBuffer(const mat4x4 & mView)
 		m_mapPipeline["lights_directional"]->SetTexture("depthSampler", 0, *(m_mapTargets["depth"].getTexture()));
 		m_mapPipeline["lights_directional"]->SetTexture("normalSampler", 1, *(m_mapTargets["normals"].getTexture()));
 
-		m_pQuadMesh->draw();
+		m_pQuadMesh->draw(commandBuffer);
 
 		m_mapPipeline["lights_directional"]->UnBind();
 
@@ -789,12 +828,15 @@ void Rendering::renderFinal(const mat4x4 & mView, const vec4 & clearColor)
 
 	commandBuffer.Begin();
 
+	RHI::Pipeline pipeline;
 	RHI::RenderPass & ComposeTechnique = m_mapPass["compose"];
 	RHI::Framebuffer & ComposeFramebuffer = m_mapFramebuffer["HDR-earlyZ"];
 
 	commandBuffer.BeginRenderPass(ComposeTechnique, ComposeFramebuffer, ivec2(0, 0), ivec2(m_uWidth, m_uHeight), vec4(clearColor.x, clearColor.y, clearColor.z, clearColor.w));
 
 	{
+		commandBuffer.Bind(pipeline);
+
 		m_mapPipeline["compose"]->Bind();
 
 		mat4x4 mDepthView = _lookAt(vec3(0,0,0), m_pLight->GetDirection(), vec3(0.0f, -1.0f, 0.0f));
@@ -821,7 +863,7 @@ void Rendering::renderFinal(const mat4x4 & mView, const vec4 & clearColor)
 				m_mapPipeline["compose"]->SetTexture("diffuseSampler", 3, *(m->m_material.m_diffuse));
 				m_mapPipeline["compose"]->SetTexture("specularSampler", 4, *(m->m_material.m_specular));
 
-				m->draw();
+				m->draw(commandBuffer);
 			}
 
 			object.mesh->unbind();
@@ -847,12 +889,15 @@ void Rendering::renderFog(void)
 
 	commandBuffer.Begin();
 
+	RHI::Pipeline pipeline;
 	RHI::RenderPass & ComposeTechnique = m_mapPass["fog"];
 	RHI::Framebuffer & ComposeFramebuffer = m_mapFramebuffer["HDR"];
 
 	commandBuffer.BeginRenderPass(ComposeTechnique, ComposeFramebuffer, ivec2(0, 0), ivec2(m_uWidth, m_uHeight));
 
 	{
+		commandBuffer.Bind(pipeline);
+
 		m_mapPipeline["fog_simple"]->Bind();
 
 		m_mapPipeline["fog_simple"]->SetTexture("depthMapSampler", 0, *(m_mapTargets["depth"].getTexture()));
@@ -863,7 +908,7 @@ void Rendering::renderFog(void)
 		m_mapPipeline["fog_simple"]->SetUniform("camera_far", 1000.0f);
 		m_mapPipeline["fog_simple"]->SetUniform("near_plane_half_size", vec2(m_uHeight * float(m_uWidth/(float)m_uHeight), tanf(75.0f/2.0)));
 
-		m_pQuadMesh->draw();
+		m_pQuadMesh->draw(commandBuffer);
 
 		m_mapPipeline["fog_simple"]->UnBind();
 	}
@@ -882,17 +927,20 @@ void Rendering::renderBloom(void)
 
 	commandBuffer.Begin();
 
+	RHI::Pipeline pipeline;
 	RHI::RenderPass & BloomTechnique = m_mapPass["bloom"];
 	RHI::Framebuffer & BloomFramebuffer = m_mapFramebuffer["bloom"];
 
 	commandBuffer.BeginRenderPass(BloomTechnique, BloomFramebuffer, ivec2(0, 0), ivec2(m_uWidth/4, m_uHeight/4));
 	{
+		commandBuffer.Bind(pipeline);
+
 		{
 			m_mapPipeline["bloom_bright"]->Bind();
 
 			m_mapPipeline["bloom_bright"]->SetTexture("texSampler", 0, *(m_mapTargets["HDR"].getTexture()));
 
-			m_pQuadMesh->draw();
+			m_pQuadMesh->draw(commandBuffer);
 
 			m_mapPipeline["bloom_bright"]->UnBind();
 		}
@@ -904,7 +952,7 @@ void Rendering::renderBloom(void)
 
 			m_mapPipeline["bloom_horizontal_blur"]->SetTexture("texSampler", 0, *(m_mapTargets["bloom1"].getTexture()));
 
-			m_pQuadMesh->draw();
+			m_pQuadMesh->draw(commandBuffer);
 
 			m_mapPipeline["bloom_horizontal_blur"]->UnBind();
 		}
@@ -916,7 +964,7 @@ void Rendering::renderBloom(void)
 
 			m_mapPipeline["bloom_vertical_blur"]->SetTexture("texSampler", 0, *(m_mapTargets["bloom2"].getTexture()));
 
-			m_pQuadMesh->draw();
+			m_pQuadMesh->draw(commandBuffer);
 
 			m_mapPipeline["bloom_vertical_blur"]->UnBind();
 		}
@@ -935,16 +983,19 @@ void Rendering::renderPostProcessEffects()
 
 	commandBuffer.Begin();
 
+	RHI::Pipeline pipeline;
 	RHI::RenderPass & BlendTechnique = m_mapPass["blend"];
 	RHI::Framebuffer & BlendFramebuffer = m_mapFramebuffer["default"];
 
 	commandBuffer.BeginRenderPass(BlendTechnique, BlendFramebuffer, ivec2(0, 0), ivec2(m_uWidth, m_uHeight));
 	{
+		commandBuffer.Bind(pipeline);
+
 		m_mapPipeline["bloom"]->Bind();
 
 		m_mapPipeline["bloom"]->SetTexture("texSampler", 0, *(m_mapTargets["bloom1"].getTexture()));
 
-		m_pQuadMesh->draw();
+		m_pQuadMesh->draw(commandBuffer);
 
 		m_mapPipeline["bloom"]->UnBind();
 	}
@@ -962,11 +1013,14 @@ void Rendering::renderPickBuffer(void)
 
 	commandBuffer.Begin();
 
+	RHI::Pipeline pipeline;
 	RHI::RenderPass & PickBufferTechnique = m_mapPass["picking"];
 	RHI::Framebuffer & PickBufferFramebuffer = m_mapFramebuffer["pickbuffer-earlyZ"];
 
 	commandBuffer.BeginRenderPass(PickBufferTechnique, PickBufferFramebuffer, ivec2(0, 0), ivec2(m_uWidth, m_uHeight), vec4(1.0f, 1.0f, 1.0f, 1.0f));
 	{
+		commandBuffer.Bind(pipeline);
+
 		m_mapPipeline["pickbuffer"]->Bind();
 
 		unsigned int i = 0;
@@ -981,7 +1035,7 @@ void Rendering::renderPickBuffer(void)
 
 			for (SubMesh * m : object.getDrawCommands())
 			{
-				m->draw();
+				m->draw(commandBuffer);
 			}
 
 			object.mesh->unbind();
@@ -1006,11 +1060,14 @@ void Rendering::renderBoundingBox(const Mesh::Instance * pSelectedObject)
 
 	commandBuffer.Begin();
 
+	RHI::Pipeline pipeline;
 	RHI::RenderPass & BBoxTechnique = m_mapPass["bbox"];
 	RHI::Framebuffer & DefaultFramebuffer = m_mapFramebuffer["default"];
 
 	commandBuffer.BeginRenderPass(BBoxTechnique, DefaultFramebuffer, ivec2(0, 0), ivec2(m_uWidth, m_uHeight));
 	{
+		commandBuffer.Bind(pipeline);
+
 		m_mapPipeline["bbox"]->Bind();
 
 		m_mapPipeline["bbox"]->SetUniform("Model", pSelectedObject->transformation);
@@ -1019,7 +1076,7 @@ void Rendering::renderBoundingBox(const Mesh::Instance * pSelectedObject)
 		m_mapPipeline["bbox"]->SetUniform("BBoxMax", pSelectedObject->mesh->m_BoundingBox.max);
 		m_mapPipeline["bbox"]->SetUniform("color", vec3(1.0, 1.0, 1.0));
 
-		m_pPointMesh->draw();
+		m_pPointMesh->draw(commandBuffer);
 
 		m_mapPipeline["bbox"]->UnBind();
 	}

@@ -32,7 +32,7 @@ public:
 	explicit SubMesh(GLsizei iCount, GLenum eMode);
 	virtual ~SubMesh(void);
 
-	virtual void draw(void) const = 0;
+	virtual void draw(RHI::CommandBuffer & commandBuffer) const = 0;
 
 	const GPU::Texture<GL_TEXTURE_2D> * getNormalMap(void) { return(m_pNormalMap); }
 
