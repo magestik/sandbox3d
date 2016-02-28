@@ -1,7 +1,33 @@
 <?xml version="1.0"?>
 <!DOCTYPE render SYSTEM "render.dtd">
 <render>
+<!--
+	<attachment_descriptions>
 
+		<attachment name="test">
+			<format value="RG16F" />
+			<samples value="1" />
+			<loadOp value="VK_ATTACHMENT_LOAD_OP_CLEAR" />
+			<storeOp value="VK_ATTACHMENT_STORE_OP_STORE" />
+			<stencilLoadOp value="VK_ATTACHMENT_LOAD_OP_DONT_CARE" />
+			<stencilStoreOp value="VK_ATTACHMENT_STORE_OP_DONT_CARE" />
+			<initialLayout value="VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL" />
+			<initialLayout value="VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL" />
+		</attachment>
+
+		<attachment name="depth">
+			<format value="RG16F" />
+			<samples value="1" />
+			<loadOp value="VK_ATTACHMENT_LOAD_OP_CLEAR" />
+			<storeOp value="VK_ATTACHMENT_STORE_OP_STORE" />
+			<stencilLoadOp value="VK_ATTACHMENT_LOAD_OP_DONT_CARE" />
+			<stencilStoreOp value="VK_ATTACHMENT_STORE_OP_DONT_CARE" />
+			<initialLayout value="VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL" />
+			<initialLayout value="VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL" />
+		</attachment>
+
+	</attachment_descriptions>
+-->
 	<targets>
 		<texture name="depth" format="GL_DEPTH_COMPONENT32F" />
 		<texture name="normals" format="GL_RGBA16F" />
@@ -15,6 +41,40 @@
 		<texture name="luminance1" format="GL_RG16F" />
 		<texture name="luminance2" format="GL_RG16F" />
 	</targets>
+
+	<framebuffers>
+		<framebuffer name="default" />
+
+		<framebuffer name="pickbuffer-earlyZ">
+			<output texture="depth" /> <!-- early z-cull -->
+			<output texture="pickbuffer" />
+		</framebuffer>
+		<framebuffer name="normals-earlyZ">
+			<output texture="depth" /> <!-- early z-cull -->
+			<output texture="normals" />
+		</framebuffer>
+		<framebuffer name="lights">
+			<output texture="lights_diffuse" />
+			<output texture="lights_specular" />
+		</framebuffer>
+		<framebuffer name="bloom">
+			<output texture="bloom1" />
+			<output texture="bloom2" />
+		</framebuffer>
+		<framebuffer name="HDR-earlyZ">
+			<output texture="depth" /> <!-- early z-cull -->
+			<output texture="HDR" />
+		</framebuffer>
+		<framebuffer name="HDR">
+			<output texture="HDR" />
+		</framebuffer>
+		<framebuffer name="LDR">
+			<output texture="LDR" />
+		</framebuffer>
+		<framebuffer name="luminance">
+			<output texture="luminance1" />
+		</framebuffer>
+	</framebuffers>
 
 	<pipelines>
 		<pipeline name="pickbuffer">
@@ -153,58 +213,59 @@
 
 	<pass_list>
 
-		<pass name="picking">
+		<pass name="lights" fb="lights">
+			<subpass name="directional" pipeline="lights_directional">
+				<output color_buffer="0" />
+				<output color_buffer="1" />
+			</subpass>
+		</pass>
+
+		<pass name="picking" fb="pickbuffer-earlyZ">
 			<subpass name="default" pipeline="pickbuffer">
-				<output texture="depth" /> <!-- early z-cull -->
-				<output texture="pickbuffer" />
+				<output depth_buffer="0" /> <!-- early z-cull -->
+				<output color_buffer="0" />
 			</subpass>
 		</pass>
 
-		<pass name="bbox">
+		<pass name="bbox" fb="default">
 			<subpass name="default" pipeline="bbox">
+				<output color_buffer="0" />
 			</subpass>
 		</pass>
 
-		<pass name="geometry">
+		<pass name="geometry" fb="normals-earlyZ">
 			<subpass name="simple" pipeline="geometry_simple">
-				<output texture="depth" />
-				<output texture="normals" />
+				<output depth_buffer="0" />
+				<output color_buffer="0" />
 			</subpass>
 			<subpass name="normal_map" pipeline="geometry_normalmap">
-				<output texture="depth" />
-				<output texture="normals" />
+				<output depth_buffer="0" />
+				<output color_buffer="0" />
 			</subpass>
 		</pass>
 
-		<pass name="lights">
-			<subpass name="directional" pipeline="lights_directional">
-				<output texture="lights_diffuse" />
-				<output texture="lights_specular" />
-			</subpass>
-		</pass>
-
-		<pass name="bloom">
+		<pass name="bloom" fb="bloom">
 			<subpass name="bright" pipeline="bloom_bright">
-				<output texture="bloom1" />
+				<output color_buffer="0" />
 			</subpass>
 			<subpass name="horizontal_blur" pipeline="bloom_horizontal_blur">
-				<output texture="bloom2" />
+				<output color_buffer="1" />
 			</subpass>
 			<subpass name="vertical_blur" pipeline="bloom_vertical_blur">
-				<output texture="bloom1" />
+				<output color_buffer="0" />
 			</subpass>
 		</pass>
 
-		<pass name="compose">
+		<pass name="compose" fb="HDR-earlyZ">
 			<subpass name="default" pipeline="compose">
-				<output texture="depth" /> <!-- early z-cull -->
-				<output texture="HDR" />
+				<output depth_buffer="0" /> <!-- early z-cull -->
+				<output color_buffer="0" />
 			</subpass>
 		</pass>
 
-		<pass name="fog">
+		<pass name="fog" fb="HDR">
 			<subpass name="simple" pipeline="fog_simple">
-				<output texture="HDR" />
+				<output color_buffer="0" />
 			</subpass>
 <!--
 			<subpass name="scattering" pipeline="fog_scattering">
@@ -216,29 +277,48 @@
 -->
 		</pass>
 
-		<pass name="compute-tonemapping-params">
+		<pass name="compute-tonemapping-params" fb="luminance">
 			<subpass name="to_luminance" pipeline="luminance_conversion">
-				<output texture="luminance1" />
+				<output color_buffer="0" />
 			</subpass>
 			<!-- + reduction to compute mean luminance and white² -->
 		</pass>
 
-		<pass name="tonemapping">
+		<pass name="tonemapping" fb="LDR">
 			<subpass name="with_burnout" pipeline="tonemapping">
-				<output texture="LDR" />
+				<output color_buffer="0" />
 			</subpass>
 		</pass>
 
-		<pass name="anti-aliasing">
+		<pass name="anti-aliasing" fb="default">
 			<subpass name="fxaa" pipeline="fxaa">
+				<output color_buffer="0" />
 			</subpass>
 		</pass>
 
-		<pass name="blend">
+		<pass name="blend" fb="default">
 			<subpass name="bloom" pipeline="bloom">
+				<output color_buffer="0" />
 			</subpass>
 		</pass>
 
+		<pass name="debug_color" fb="default">
+			<subpass name="default" pipeline="debug_color">
+				<output color_buffer="0" />
+			</subpass>
+		</pass>
+
+		<pass name="debug_normals" fb="default">
+			<subpass name="default" pipeline="debug_normal">
+				<output color_buffer="0" />
+			</subpass>
+		</pass>
+
+		<pass name="debug_depth" fb="default">
+			<subpass name="default" pipeline="debug_depth">
+				<output color_buffer="0" />
+			</subpass>
+		</pass>
 <!--
 		<pass name="debug">
 			<subpass name="depth" pipeline="debug_depth">

@@ -8,7 +8,7 @@
  * @brief AverageLuminance::AverageLuminance
  */
 AverageLuminance::AverageLuminance(const Pipeline * pipeline)
-: Subpass(pipeline)
+: Subpass()
 , m_uCurrentObject(0)
 , m_fSumLog(0.0f)
 , m_fMax(0.0f)
@@ -64,7 +64,8 @@ void AverageLuminance::free(void)
  */
 bool AverageLuminance::begin(void)
 {
-	Subpass::Begin();
+///	Subpass::Begin();
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_uFramebufferObject);
 
 	m_uCurrentObject = 0;
 
@@ -77,7 +78,8 @@ bool AverageLuminance::begin(void)
  */
 bool AverageLuminance::end(void)
 {
-	Subpass::End();
+///	Subpass::End();
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 
 	float v [2];
 

@@ -10,10 +10,10 @@
  * @brief ShadowMap::ShadowMap
  */
 ShadowMap::ShadowMap(const Pipeline * pipeline)
-: Subpass(pipeline)
+: Subpass()
 , m_matProjection(1.0f)
 {
-    // ...
+	// ...
 }
 
 /**
@@ -21,7 +21,7 @@ ShadowMap::ShadowMap(const Pipeline * pipeline)
  */
 ShadowMap::~ShadowMap(void)
 {
-    // ...
+	// ...
 }
 
 /**
@@ -32,24 +32,24 @@ ShadowMap::~ShadowMap(void)
  */
 bool ShadowMap::init(unsigned int width, unsigned height)
 {
-    glGenFramebuffers(1, &m_uFramebufferObject);
+	glGenFramebuffers(1, &m_uFramebufferObject);
 
-    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_uFramebufferObject);
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_uFramebufferObject);
 
-    m_texture.init<GL_DEPTH_COMPONENT32F>(width, height);
+	m_texture.init<GL_DEPTH_COMPONENT32F>(width, height);
 
-    glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, m_texture.GetObject(), 0);
+	glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, m_texture.GetObject(), 0);
 
-    //m_matProjection = _perspective(45.0f, 1.0f, 1.0f, 100.0f); // FIXME : spot light 45° hardcoded
-    m_matProjection = _ortho(-20.0f, 20.0f, -20.0f, 20.0f, -10.0f, 100.0f);
+	//m_matProjection = _perspective(45.0f, 1.0f, 1.0f, 100.0f); // FIXME : spot light 45° hardcoded
+	m_matProjection = _ortho(-20.0f, 20.0f, -20.0f, 20.0f, -10.0f, 100.0f);
 
-    GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+	GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
 
-    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 
-    m_aDrawBuffers.push_back(GL_NONE);
+	m_aDrawBuffers.push_back(GL_NONE);
 
-    return (status == GL_FRAMEBUFFER_COMPLETE);
+	return (status == GL_FRAMEBUFFER_COMPLETE);
 }
 
 /**
@@ -57,6 +57,6 @@ bool ShadowMap::init(unsigned int width, unsigned height)
  */
 void ShadowMap::free(void)
 {
-    glDeleteFramebuffers(1, &m_uFramebufferObject);
-    m_uFramebufferObject = 0;
+	glDeleteFramebuffers(1, &m_uFramebufferObject);
+	m_uFramebufferObject = 0;
 }

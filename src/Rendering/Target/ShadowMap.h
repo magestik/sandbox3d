@@ -5,7 +5,9 @@
 #include <Vector.h>
 #include <Matrix.h>
 
-#include "../Subpass.h"
+#include "../RHI/RHI.h"
+
+#include "../Pipeline.h"
 
 class ShadowMap : public Subpass
 {
@@ -28,6 +30,8 @@ protected:
 	void updateProjection(void);
 
 private:
+
+	GLuint m_uFramebufferObject;
 
 	mat4x4 m_matProjection;
 

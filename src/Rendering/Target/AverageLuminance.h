@@ -5,7 +5,9 @@
 #include <Vector.h>
 #include <Matrix.h>
 
-#include "../Subpass.h"
+#include "../RHI/RHI.h"
+
+#include "../Pipeline.h"
 
 class AverageLuminance : public Subpass
 {
@@ -26,6 +28,8 @@ public:
 	float getMax2(void);
 
 private:
+
+	GLuint m_uFramebufferObject;
 
 	unsigned int m_uCurrentObject;
 

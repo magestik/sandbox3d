@@ -9,6 +9,9 @@
 #include <vector>
 #include <string>
 
+// Rendering Hardware Interface
+#include "RHI/RHI.h"
+
 // class definitions
 #include "Light/Light.h"
 #include "Mesh/Mesh.h"
@@ -17,7 +20,6 @@
 #include "Target/ShadowMap.h"
 #include "Target/AverageLuminance.h"
 
-#include "Pass.h"
 #include "RenderTexture.h"
 #include "Pipeline.h"
 
@@ -34,13 +36,10 @@ extern std::map<std::string, GPU::Texture<GL_TEXTURE_2D> *> g_Textures;
 
 extern std::map<std::string, Mesh>			g_Meshes;
 
-namespace tinyxml2
-{
-	class XMLElement;
-}
-
 class Rendering
 {
+
+	friend class RenderXML;
 
 public:
 
@@ -97,11 +96,6 @@ public:
 	}
 
 protected:
-
-	void	initializePipelineFromXML	(const char * filename);
-	void	initializePipelines     	(const tinyxml2::XMLElement * pipelines);
-	void	initializeTargets			(const tinyxml2::XMLElement * targets);
-	void	initializePasses			(const tinyxml2::XMLElement * passes);
 
 	void	generateMeshes				(void);
 
@@ -164,8 +158,10 @@ private:
 	GPU::Buffer<GL_UNIFORM_BUFFER> * m_pObjectsBuffer;
 
 	std::map<std::string, RenderTexture>	m_mapTargets;
-	std::map<std::string, Pass>				m_mapPass;
 	std::map<std::string, const Pipeline *>	m_mapPipeline;
+
+	std::map<std::string, RHI::RenderPass>	m_mapPass;
+	std::map<std::string, RHI::Framebuffer>	m_mapFramebuffer;
 
 public:
 

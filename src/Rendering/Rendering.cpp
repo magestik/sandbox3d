@@ -4,12 +4,9 @@
 
 #include "utils.inl"
 
-#include <tinyxml2.h>
-#include "StrToGL.h"
-
 #include "Pipeline.h"
 
-using namespace tinyxml2;
+#include "RenderXML.h"
 
 std::map<std::string, GPU::Shader<GL_FRAGMENT_SHADER> *> g_FragmentShaders;
 
@@ -63,14 +60,18 @@ Rendering::Rendering()
  */
 void Rendering::onInitializeComplete()
 {
-	m_pCameraBuffer = new GPU::Buffer<GL_UNIFORM_BUFFER>();
-	GPU::realloc(*m_pCameraBuffer, sizeof(CameraBlock), GL_STREAM_DRAW);
+	RenderXML renderXML("data/render.xml");
 
-	m_pObjectsBuffer = new GPU::Buffer<GL_UNIFORM_BUFFER>();
-	GPU::realloc(*m_pObjectsBuffer, sizeof(ObjectBlock)*m_aObjects.size(), GL_STREAM_DRAW);
+	renderXML.initializePipelines(*this);
+	renderXML.initializeTargets(*this);
 
-	initializePipelineFromXML("data/render.xml");
+	onResize(m_uWidth, m_uHeight);
 
+	renderXML.initializeFramebuffers(*this);
+	renderXML.initializePasses(*this);
+
+	//
+	// Initialize hardcoded passes
 	m_AvLum = new AverageLuminance(m_mapPipeline["average_luminance"]);
 	m_AvLum->init(m_mapTargets["luminance1"].getTexture(), m_mapTargets["luminance2"].getTexture());
 
@@ -80,106 +81,25 @@ void Rendering::onInitializeComplete()
 		m_pShadowMap->init(SHADOW_MAP_SIZE, SHADOW_MAP_SIZE);
 	}
 
+	//
+	// Generate Meshes
 	generateMeshes();
 
+	//
+	// Initialize Uniform blocks
+	m_pCameraBuffer = new GPU::Buffer<GL_UNIFORM_BUFFER>();
+	GPU::realloc(*m_pCameraBuffer, sizeof(CameraBlock), GL_STREAM_DRAW);
+
+	m_pObjectsBuffer = new GPU::Buffer<GL_UNIFORM_BUFFER>();
+	GPU::realloc(*m_pObjectsBuffer, sizeof(ObjectBlock)*m_aObjects.size(), GL_STREAM_DRAW);
+
+	for (auto const & p : m_mapPipeline)
+	{
+		p.second->SetUniformBlockBinding("CameraBlock", BLOCK_BINDING_CAMERA);
+		p.second->SetUniformBlockBinding("ObjectBlock", BLOCK_BINDING_OBJECT);
+	}
+
 	glBindBufferRange(GL_UNIFORM_BUFFER, BLOCK_BINDING_CAMERA, m_pCameraBuffer->GetObject(), 0, sizeof(CameraBlock));
-}
-
-/**
- * @brief Rendering::initializeFromXML
- * @param filename
- */
-void Rendering::initializePipelineFromXML(const char * filename)
-{
-	XMLDocument doc;
-
-	doc.LoadFile(filename);
-
-	const XMLElement * root = doc.RootElement();
-
-	const XMLElement * pipelines = root->FirstChildElement("pipelines");
-	initializePipelines(pipelines);
-
-	const XMLElement * targets = root->FirstChildElement("targets");
-	initializeTargets(targets);
-
-	onResize(m_uWidth, m_uHeight);
-
-	const XMLElement * passes = root->FirstChildElement("pass_list");
-	initializePasses(passes);
-
-	for (auto const & p : m_mapPass)
-	{
-		p.second.SetUniformBlockBinding("CameraBlock", BLOCK_BINDING_CAMERA);
-		p.second.SetUniformBlockBinding("ObjectBlock", BLOCK_BINDING_OBJECT);
-	}
-}
-
-/**
- * @brief Rendering::initializePipelines
- * @param pipelines
- */
-void Rendering::initializePipelines(const XMLElement * root)
-{
-	const XMLElement * elmt = root->FirstChildElement(PIPELINE_STR);
-
-	while (nullptr != elmt)
-	{
-		const char * name = elmt->Attribute("name");
-
-		assert(nullptr != name);
-
-		m_mapPipeline[name] = new Pipeline(elmt, *this);
-
-		elmt = elmt->NextSiblingElement(PIPELINE_STR);
-	}
-}
-
-/**
- * @brief Rendering::initializeTargets
- * @param targets
- */
-void Rendering::initializeTargets(const XMLElement * targets)
-{
-	const XMLElement * texture = targets->FirstChildElement("texture");
-
-	while (nullptr != texture)
-	{
-		const char * name = texture->Attribute("name");
-
-		const char * format = texture->Attribute("format");
-
-		unsigned int size_divisor = texture->UnsignedAttribute("size_divisor");
-
-		if (0 == size_divisor)
-		{
-			size_divisor = 1;
-		}
-
-		RenderTexture RT(strToFormat(format), size_divisor);
-
-		m_mapTargets.insert(std::pair<std::string, RenderTexture>(name, RT));
-
-		texture = texture->NextSiblingElement("texture");
-	}
-}
-
-/**
- * @brief Rendering::initializePasses
- * @param pipeline
- */
-void Rendering::initializePasses(const XMLElement * passes)
-{
-	const XMLElement * pass = passes->FirstChildElement(PASS_STR);
-
-	while (nullptr != pass)
-	{
-		const char * name = pass->Attribute("name");
-
-		m_mapPass[name] = Pass(pass, *this);
-
-		pass = pass->NextSiblingElement(PASS_STR);
-	}
 }
 
 /**
@@ -363,6 +283,7 @@ void Rendering::onUpdate(const mat4x4 & mView, const vec4 & clearColor, bool bWi
 
 	renderSceneToShadowMap();
 
+
 	//
 	// Render Lights to Accumulation Buffer
 	//
@@ -401,24 +322,36 @@ void Rendering::onUpdate(const mat4x4 & mView, const vec4 & clearColor, bool bWi
 
 		computeToneMappingParams(avLum, white2);
 
-		Pass & ToneMappingTechnique = m_mapPass["tonemapping"];
+		RHI::RenderPass & ToneMappingTechnique = m_mapPass["tonemapping"];
+		RHI::Framebuffer & ToneMappingFramebuffer = m_mapFramebuffer["LDR"];
 
-		ToneMappingTechnique.BeginRenderPass(ivec2(0, 0), ivec2(m_uWidth, m_uHeight));
+		ToneMappingTechnique.BeginRenderPass(ToneMappingFramebuffer, ivec2(0, 0), ivec2(m_uWidth, m_uHeight));
 		{
-			ToneMappingTechnique.SetTexture("texSampler", 0, *(m_mapTargets["HDR"].getTexture()));
-			ToneMappingTechnique.SetUniform("avLum", avLum);
-			ToneMappingTechnique.SetUniform("white2", white2);
+			m_mapPipeline["tonemapping"]->Bind();
+
+			m_mapPipeline["tonemapping"]->SetTexture("texSampler", 0, *(m_mapTargets["HDR"].getTexture()));
+			m_mapPipeline["tonemapping"]->SetUniform("avLum", avLum);
+			m_mapPipeline["tonemapping"]->SetUniform("white2", white2);
+
 			m_pQuadMesh->draw();
+
+			m_mapPipeline["tonemapping"]->UnBind();
 		}
 		ToneMappingTechnique.EndRenderPass();
 
-		Pass & AntiAliasingTechnique = m_mapPass["anti-aliasing"];
+		RHI::RenderPass & AntiAliasingTechnique = m_mapPass["anti-aliasing"];
+		RHI::Framebuffer & AntiAliasingFramebuffer = m_mapFramebuffer["default"];
 
-		AntiAliasingTechnique.BeginRenderPass(ivec2(0, 0), ivec2(m_uWidth, m_uHeight));
+		AntiAliasingTechnique.BeginRenderPass(AntiAliasingFramebuffer, ivec2(0, 0), ivec2(m_uWidth, m_uHeight));
 		{
-			AntiAliasingTechnique.SetTexture("texSampler", 0, *(m_mapTargets["LDR"].getTexture()));
-			AntiAliasingTechnique.SetUniform("fxaaQualityRcpFrame", vec2(1.0/m_uWidth, 1.0/m_uHeight));
+			m_mapPipeline["fxaa"]->Bind();
+
+			m_mapPipeline["fxaa"]->SetTexture("texSampler", 0, *(m_mapTargets["LDR"].getTexture()));
+			m_mapPipeline["fxaa"]->SetUniform("fxaaQualityRcpFrame", vec2(1.0/m_uWidth, 1.0/m_uHeight));
+
 			m_pQuadMesh->draw();
+
+			m_mapPipeline["fxaa"]->UnBind();
 		}
 		AntiAliasingTechnique.EndRenderPass();
 
@@ -482,14 +415,15 @@ Mesh::Instance * Rendering::getObjectAtPos(const ivec2 & pos)
 
 	Mesh::Instance * object = nullptr;
 
-	Pass & PickBufferTechnique = m_mapPass["picking"];
+	RHI::RenderPass & PickBufferTechnique = m_mapPass["picking"];
+	RHI::Framebuffer & PickBufferFramebuffer = m_mapFramebuffer["pickbuffer-earlyZ"];
 
-	PickBufferTechnique.BeginRenderPass(ivec2(0, 0), ivec2(m_uWidth, m_uHeight));
+	PickBufferTechnique.BeginRenderPass(PickBufferFramebuffer, ivec2(0, 0), ivec2(m_uWidth, m_uHeight));
 	{
 		unsigned int id = UINT32_MAX;
-
+#if 0
 		PickBufferTechnique.ReadPixel(glPos, id);
-
+#endif
 		if (id < m_aObjects.size())
 		{
 			object = &(m_aObjects[id]);
@@ -508,6 +442,16 @@ void Rendering::renderSceneToShadowMap(void)
 {
 	glViewport(0, 0, SHADOW_MAP_SIZE, SHADOW_MAP_SIZE);
 
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_pShadowMap->GetObject());
+
+	glDrawBuffer(GL_NONE);
+
+	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+	glClearDepthf(1.0f);
+	glClearStencil(0);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+
+#if 0 // tmp
 	m_pShadowMap->Begin();
 
 	glClear(GL_DEPTH_BUFFER_BIT);
@@ -536,8 +480,10 @@ void Rendering::renderSceneToShadowMap(void)
 
 		glUseProgram(0);
 	}
-
 	m_pShadowMap->End();
+#endif
+
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 }
 
 /**
@@ -546,79 +492,118 @@ void Rendering::renderSceneToShadowMap(void)
  */
 void Rendering::renderIntermediateToScreen(ERenderType eRenderType)
 {
-#if 0
-	Pass & DebugTechnique = m_mapTechnique["debug"];
-
-	DebugTechnique.BeginRenderPass(ivec2(0, 0), ivec2(m_uWidth, m_uHeight));
+	RHI::Framebuffer & DefaultFramebuffer = m_mapFramebuffer["default"];
 
 	switch (eRenderType)
 	{
 		case FINAL:
 		{
-			DebugTechnique.BeginPass("color");
+			RHI::RenderPass & DebugPass = m_mapPass["debug_color"];
+
+			DebugPass.BeginRenderPass(DefaultFramebuffer, ivec2(0, 0), ivec2(m_uWidth, m_uHeight));
 			{
-				DebugTechnique.SetTexture("texSampler", 0, *(m_mapTargets["HDR"].getTexture()));
+				m_mapPipeline["debug_color"]->Bind();
+
+				m_mapPipeline["debug_color"]->SetTexture("texSampler", 0, *(m_mapTargets["HDR"].getTexture()));
+
 				m_pQuadMesh->draw();
+
+				m_mapPipeline["debug_color"]->UnBind();
 			}
-			DebugTechnique.EndPass();
+			DebugPass.EndRenderPass();
 		}
 		break;
 
 		case DIFFUSE_LIGHTS:
 		{
-			DebugTechnique.BeginPass("color");
+			RHI::RenderPass & DebugPass = m_mapPass["debug_color"];
+
+			DebugPass.BeginRenderPass(DefaultFramebuffer, ivec2(0, 0), ivec2(m_uWidth, m_uHeight));
 			{
-				DebugTechnique.SetTexture("texSampler", 0, *(m_mapTargets["lights_diffuse"].getTexture()));
+				m_mapPipeline["debug_color"]->Bind();
+
+				m_mapPipeline["debug_color"]->SetTexture("texSampler", 0, *(m_mapTargets["lights_diffuse"].getTexture()));
+
 				m_pQuadMesh->draw();
+
+				m_mapPipeline["debug_color"]->UnBind();
 			}
-			DebugTechnique.EndPass();
+			DebugPass.EndRenderPass();
 		}
 		break;
 
 		case SPECULAR_LIGHTS:
 		{
-			DebugTechnique.BeginPass("color");
+			RHI::RenderPass & DebugPass = m_mapPass["debug_color"];
+
+			DebugPass.BeginRenderPass(DefaultFramebuffer, ivec2(0, 0), ivec2(m_uWidth, m_uHeight));
 			{
-				DebugTechnique.SetTexture("texSampler", 0, *(m_mapTargets["lights_specular"].getTexture()));
+				m_mapPipeline["debug_color"]->Bind();
+
+				m_mapPipeline["debug_color"]->SetTexture("texSampler", 0, *(m_mapTargets["lights_specular"].getTexture()));
+
 				m_pQuadMesh->draw();
+
+				m_mapPipeline["debug_color"]->UnBind();
 			}
-			DebugTechnique.EndPass();
+			DebugPass.EndRenderPass();
 		}
 		break;
 
 		case NORMAL_BUFFER:
 		{
-			DebugTechnique.BeginPass("normal");
+			RHI::RenderPass & DebugPass = m_mapPass["debug_normals"];
+
+			DebugPass.BeginRenderPass(DefaultFramebuffer, ivec2(0, 0), ivec2(m_uWidth, m_uHeight));
 			{
-				DebugTechnique.SetTexture("texSampler", 0, *(m_mapTargets["normals"].getTexture()));
+				m_mapPipeline["debug_normal"]->Bind();
+
+				m_mapPipeline["debug_normal"]->SetTexture("texSampler", 0, *(m_mapTargets["normals"].getTexture()));
+
 				m_pQuadMesh->draw();
+
+				m_mapPipeline["debug_normal"]->UnBind();
 			}
-			DebugTechnique.EndPass();
+			DebugPass.EndRenderPass();
 		}
 		break;
 
 		case DEPTH:
 		{
-			DebugTechnique.BeginPass("depth");
+			RHI::RenderPass & DebugPass = m_mapPass["debug_depth"];
+
+			DebugPass.BeginRenderPass(DefaultFramebuffer, ivec2(0, 0), ivec2(m_uWidth, m_uHeight));
 			{
-				DebugTechnique.SetTexture("texSampler", 0, *(m_mapTargets["depth"].getTexture()));
+				m_mapPipeline["debug_depth"]->Bind();
+
+				m_mapPipeline["debug_depth"]->SetTexture("texSampler", 0, *(m_mapTargets["depth"].getTexture()));
+
 				m_pQuadMesh->draw();
+
+				m_mapPipeline["debug_depth"]->UnBind();
 			}
-			DebugTechnique.EndPass();
+			DebugPass.EndRenderPass();
 		}
 		break;
 
 		case SHADOWS:
 		{
-			DebugTechnique.BeginPass("depth");
+			RHI::RenderPass & DebugPass = m_mapPass["debug_depth"];
+
+			DebugPass.BeginRenderPass(DefaultFramebuffer, ivec2(0, 0), ivec2(m_uWidth, m_uHeight));
 			{
-				DebugTechnique.SetTexture("texSampler", 0, m_pShadowMap->GetTexture());
+				m_mapPipeline["debug_depth"]->Bind();
+
+				m_mapPipeline["debug_depth"]->SetTexture("texSampler", 0, m_pShadowMap->GetTexture());
+
 				m_pQuadMesh->draw();
+
+				m_mapPipeline["debug_depth"]->UnBind();
 			}
-			DebugTechnique.EndPass();
+			DebugPass.EndRenderPass();
 		}
 		break;
-
+/*
 		case LUMINANCE1:
 		{
 			DebugTechnique.BeginPass("luminance");
@@ -651,10 +636,8 @@ void Rendering::renderIntermediateToScreen(ERenderType eRenderType)
 			DebugTechnique.EndPass();
 		}
 		break;
+*/
 	}
-
-	DebugTechnique.EndRenderPass();
-#endif
 }
 
 /**
@@ -662,13 +645,16 @@ void Rendering::renderIntermediateToScreen(ERenderType eRenderType)
  */
 void Rendering::renderSceneToGBuffer(void)
 {
-	Pass & GeometryPass = m_mapPass["geometry"];
+	RHI::RenderPass & GeometryPass = m_mapPass["geometry"];
+	RHI::Framebuffer & GeometryFramebuffer = m_mapFramebuffer["normals-earlyZ"];
 
-	GeometryPass.BeginRenderPass(ivec2(0, 0), ivec2(m_uWidth, m_uHeight), vec4(0.0f ,0.0f, 0.0f, 0.0f), 1.0f, 0);
+	GeometryPass.BeginRenderPass(GeometryFramebuffer, ivec2(0, 0), ivec2(m_uWidth, m_uHeight), vec4(0.0f ,0.0f, 0.0f, 0.0f), 1.0f, 0);
 
 	{
 		// OPTIMIZE THIS !!!!!
 		{
+			m_mapPipeline["geometry_simple"]->Bind();
+
 			unsigned int offset = 0;
 
 			for (Mesh::Instance & object : m_aObjects)
@@ -683,7 +669,7 @@ void Rendering::renderSceneToGBuffer(void)
 
 					if (nullptr == pNormalMap)
 					{
-						GeometryPass.SetUniform("shininess", m->m_material.shininess);
+						m_mapPipeline["geometry_simple"]->SetUniform("shininess", m->m_material.shininess);
 
 						m->draw();
 					}
@@ -693,11 +679,15 @@ void Rendering::renderSceneToGBuffer(void)
 
 				++offset;
 			}
+
+			m_mapPipeline["geometry_simple"]->UnBind();
 		}
 
 		GeometryPass.NextSubpass();
 
 		{
+			m_mapPipeline["geometry_normalmap"]->Bind();
+
 			unsigned int offset = 0;
 
 			for (Mesh::Instance & object : m_aObjects)
@@ -712,8 +702,8 @@ void Rendering::renderSceneToGBuffer(void)
 
 					if (nullptr != pNormalMap)
 					{
-						GeometryPass.SetTexture("normalMap", 0, *pNormalMap);
-						GeometryPass.SetUniform("shininess", m->m_material.shininess);
+						m_mapPipeline["geometry_normalmap"]->SetTexture("normalMap", 0, *pNormalMap);
+						m_mapPipeline["geometry_normalmap"]->SetUniform("shininess", m->m_material.shininess);
 
 						m->draw();
 					}
@@ -723,6 +713,8 @@ void Rendering::renderSceneToGBuffer(void)
 
 				++offset;
 			}
+
+			m_mapPipeline["geometry_normalmap"]->UnBind();
 		}
 	}
 
@@ -734,22 +726,26 @@ void Rendering::renderSceneToGBuffer(void)
  */
 void Rendering::renderLightsToAccumBuffer(const mat4x4 & mView)
 {
-	Pass & LightsTechnique = m_mapPass["lights"];
+	RHI::RenderPass & LightsTechnique = m_mapPass["lights"];
+	RHI::Framebuffer & LightsFramebuffer = m_mapFramebuffer["lights"];
 
-	LightsTechnique.BeginRenderPass(ivec2(0, 0), ivec2(m_uWidth, m_uHeight), vec4(0.0f, 0.0f, 0.0f, 0.0f));
+	LightsTechnique.BeginRenderPass(LightsFramebuffer, ivec2(0, 0), ivec2(m_uWidth, m_uHeight), vec4(0.0f, 0.0f, 0.0f, 0.0f));
 
 	{
+		m_mapPipeline["lights_directional"]->Bind();
+
 		mat4x4 mCameraViewProjection = m_matProjection * mView;
 
-		{
-			LightsTechnique.SetUniform("viewPos", (inverse(mView) * vec4(0.0, 0.0, 0.0, 1.0)).xyz);
-			LightsTechnique.SetUniform("InverseViewProjection", inverse(mCameraViewProjection));
-			LightsTechnique.SetUniform("lightDir", - normalize(m_pLight->GetDirection()));
-			LightsTechnique.SetUniform("lightColor", sRGB_to_XYZ * m_pLight->GetColor());
-			LightsTechnique.SetTexture("depthSampler", 0, *(m_mapTargets["depth"].getTexture()));
-			LightsTechnique.SetTexture("normalSampler", 1, *(m_mapTargets["normals"].getTexture()));
-			m_pQuadMesh->draw();
-		}
+		m_mapPipeline["lights_directional"]->SetUniform("viewPos", (inverse(mView) * vec4(0.0, 0.0, 0.0, 1.0)).xyz);
+		m_mapPipeline["lights_directional"]->SetUniform("InverseViewProjection", inverse(mCameraViewProjection));
+		m_mapPipeline["lights_directional"]->SetUniform("lightDir", - normalize(m_pLight->GetDirection()));
+		m_mapPipeline["lights_directional"]->SetUniform("lightColor", sRGB_to_XYZ * m_pLight->GetColor());
+		m_mapPipeline["lights_directional"]->SetTexture("depthSampler", 0, *(m_mapTargets["depth"].getTexture()));
+		m_mapPipeline["lights_directional"]->SetTexture("normalSampler", 1, *(m_mapTargets["normals"].getTexture()));
+
+		m_pQuadMesh->draw();
+
+		m_mapPipeline["lights_directional"]->UnBind();
 
 		// TODO : render all lights
 	}
@@ -763,21 +759,24 @@ void Rendering::renderLightsToAccumBuffer(const mat4x4 & mView)
  */
 void Rendering::renderFinal(const mat4x4 & mView, const vec4 & clearColor)
 {
-	Pass & ComposeTechnique = m_mapPass["compose"];
+	RHI::RenderPass & ComposeTechnique = m_mapPass["compose"];
+	RHI::Framebuffer & ComposeFramebuffer = m_mapFramebuffer["HDR-earlyZ"];
 
-	ComposeTechnique.BeginRenderPass(ivec2(0, 0), ivec2(m_uWidth, m_uHeight), vec4(clearColor.x, clearColor.y, clearColor.z, clearColor.w));
+	ComposeTechnique.BeginRenderPass(ComposeFramebuffer, ivec2(0, 0), ivec2(m_uWidth, m_uHeight), vec4(clearColor.x, clearColor.y, clearColor.z, clearColor.w));
 
 	{
+		m_mapPipeline["compose"]->Bind();
+
 		mat4x4 mDepthView = _lookAt(vec3(0,0,0), m_pLight->GetDirection(), vec3(0.0f, -1.0f, 0.0f));
 		mat4x4 mDepthViewProjection = m_pShadowMap->GetProjection() * mDepthView;
 
-		ComposeTechnique.SetTexture("diffuseLightSampler", 0, *(m_mapTargets["lights_diffuse"].getTexture()));
-		ComposeTechnique.SetTexture("specularLightSampler", 1, *(m_mapTargets["lights_specular"].getTexture()));
-		ComposeTechnique.SetTexture("shadowMap", 2, m_pShadowMap->GetTexture());
+		m_mapPipeline["compose"]->SetTexture("diffuseLightSampler", 0, *(m_mapTargets["lights_diffuse"].getTexture()));
+		m_mapPipeline["compose"]->SetTexture("specularLightSampler", 1, *(m_mapTargets["lights_specular"].getTexture()));
+		m_mapPipeline["compose"]->SetTexture("shadowMap", 2, m_pShadowMap->GetTexture());
 
-		ComposeTechnique.SetUniform("ambientColor", sRGB_to_XYZ * environment.ambient.Color);
-		ComposeTechnique.SetUniform("DepthTransformation", mDepthViewProjection);
-		ComposeTechnique.SetUniform("View", mView);
+		m_mapPipeline["compose"]->SetUniform("ambientColor", sRGB_to_XYZ * environment.ambient.Color);
+		m_mapPipeline["compose"]->SetUniform("DepthTransformation", mDepthViewProjection);
+		m_mapPipeline["compose"]->SetUniform("View", mView);
 
 		unsigned int offset = 0;
 
@@ -789,8 +788,8 @@ void Rendering::renderFinal(const mat4x4 & mView, const vec4 & clearColor)
 
 			for (SubMesh * m : object.getDrawCommands())
 			{
-				ComposeTechnique.SetTexture("diffuseSampler", 3, *(m->m_material.m_diffuse));
-				ComposeTechnique.SetTexture("specularSampler", 4, *(m->m_material.m_specular));
+				m_mapPipeline["compose"]->SetTexture("diffuseSampler", 3, *(m->m_material.m_diffuse));
+				m_mapPipeline["compose"]->SetTexture("specularSampler", 4, *(m->m_material.m_specular));
 
 				m->draw();
 			}
@@ -799,6 +798,8 @@ void Rendering::renderFinal(const mat4x4 & mView, const vec4 & clearColor)
 
 			++offset;
 		}
+
+		m_mapPipeline["compose"]->UnBind();
 	}
 
 	ComposeTechnique.EndRenderPass();
@@ -810,23 +811,25 @@ void Rendering::renderFinal(const mat4x4 & mView, const vec4 & clearColor)
  */
 void Rendering::renderFog(void)
 {
-	Pass & ComposeTechnique = m_mapPass["fog"];
+	RHI::RenderPass & ComposeTechnique = m_mapPass["fog"];
+	RHI::Framebuffer & ComposeFramebuffer = m_mapFramebuffer["HDR"];
 
-	ComposeTechnique.BeginRenderPass(ivec2(0, 0), ivec2(m_uWidth, m_uHeight));
+	ComposeTechnique.BeginRenderPass(ComposeFramebuffer, ivec2(0, 0), ivec2(m_uWidth, m_uHeight));
 
 	{
-		ComposeTechnique.SetTexture("depthMapSampler", 0, *(m_mapTargets["depth"].getTexture()));
-		ComposeTechnique.SetUniform("FogScattering", environment.fog.Scattering);
-		ComposeTechnique.SetUniform("FogExtinction", environment.fog.Extinction);
-		ComposeTechnique.SetUniform("FogColor", environment.fog.Color);
+		m_mapPipeline["fog_simple"]->Bind();
 
-		float ratio = m_uWidth/(float)m_uHeight;
-
-		ComposeTechnique.SetUniform("camera_near", 1.0f);
-		ComposeTechnique.SetUniform("camera_far", 1000.0f);
-		ComposeTechnique.SetUniform("near_plane_half_size", vec2(m_uHeight * (ratio), tanf(75.0f/2.0)));
+		m_mapPipeline["fog_simple"]->SetTexture("depthMapSampler", 0, *(m_mapTargets["depth"].getTexture()));
+		m_mapPipeline["fog_simple"]->SetUniform("FogScattering", environment.fog.Scattering);
+		m_mapPipeline["fog_simple"]->SetUniform("FogExtinction", environment.fog.Extinction);
+		m_mapPipeline["fog_simple"]->SetUniform("FogColor", environment.fog.Color);
+		m_mapPipeline["fog_simple"]->SetUniform("camera_near", 1.0f);
+		m_mapPipeline["fog_simple"]->SetUniform("camera_far", 1000.0f);
+		m_mapPipeline["fog_simple"]->SetUniform("near_plane_half_size", vec2(m_uHeight * float(m_uWidth/(float)m_uHeight), tanf(75.0f/2.0)));
 
 		m_pQuadMesh->draw();
+
+		m_mapPipeline["fog_simple"]->UnBind();
 	}
 
 	ComposeTechnique.EndRenderPass();
@@ -837,30 +840,43 @@ void Rendering::renderFog(void)
  */
 void Rendering::renderBloom(void)
 {
-	Pass & BloomTechnique = m_mapPass["bloom"];
+	RHI::RenderPass & BloomTechnique = m_mapPass["bloom"];
+	RHI::Framebuffer & BloomFramebuffer = m_mapFramebuffer["bloom"];
 
-	BloomTechnique.BeginRenderPass(ivec2(0, 0), ivec2(m_uWidth/4, m_uHeight/4));
+	BloomTechnique.BeginRenderPass(BloomFramebuffer, ivec2(0, 0), ivec2(m_uWidth/4, m_uHeight/4));
 	{
 		{
-			BloomTechnique.SetTexture("texSampler", 0, *(m_mapTargets["HDR"].getTexture()));
+			m_mapPipeline["bloom_bright"]->Bind();
+
+			m_mapPipeline["bloom_bright"]->SetTexture("texSampler", 0, *(m_mapTargets["HDR"].getTexture()));
 
 			m_pQuadMesh->draw();
+
+			m_mapPipeline["bloom_bright"]->UnBind();
 		}
 
 		BloomTechnique.NextSubpass();
 
 		{
-			BloomTechnique.SetTexture("texSampler", 0, *(m_mapTargets["bloom1"].getTexture()));
+			m_mapPipeline["bloom_horizontal_blur"]->Bind();
+
+			m_mapPipeline["bloom_horizontal_blur"]->SetTexture("texSampler", 0, *(m_mapTargets["bloom1"].getTexture()));
 
 			m_pQuadMesh->draw();
+
+			m_mapPipeline["bloom_horizontal_blur"]->UnBind();
 		}
 
 		BloomTechnique.NextSubpass();
 
 		{
-			BloomTechnique.SetTexture("texSampler", 0, *(m_mapTargets["bloom2"].getTexture()));
+			m_mapPipeline["bloom_vertical_blur"]->Bind();
+
+			m_mapPipeline["bloom_vertical_blur"]->SetTexture("texSampler", 0, *(m_mapTargets["bloom2"].getTexture()));
 
 			m_pQuadMesh->draw();
+
+			m_mapPipeline["bloom_vertical_blur"]->UnBind();
 		}
 	}
 	BloomTechnique.EndRenderPass();
@@ -871,13 +887,18 @@ void Rendering::renderBloom(void)
  */
 void Rendering::renderPostProcessEffects()
 {
-	Pass & BlendTechnique = m_mapPass["blend"];
+	RHI::RenderPass & BlendTechnique = m_mapPass["blend"];
+	RHI::Framebuffer & BlendFramebuffer = m_mapFramebuffer["default"];
 
-	BlendTechnique.BeginRenderPass(ivec2(0, 0), ivec2(m_uWidth, m_uHeight));
+	BlendTechnique.BeginRenderPass(BlendFramebuffer, ivec2(0, 0), ivec2(m_uWidth, m_uHeight));
 	{
-		BlendTechnique.SetTexture("texSampler", 0, *(m_mapTargets["bloom1"].getTexture()));
+		m_mapPipeline["bloom"]->Bind();
+
+		m_mapPipeline["bloom"]->SetTexture("texSampler", 0, *(m_mapTargets["bloom1"].getTexture()));
 
 		m_pQuadMesh->draw();
+
+		m_mapPipeline["bloom"]->UnBind();
 	}
 	BlendTechnique.EndRenderPass();
 }
@@ -887,17 +908,20 @@ void Rendering::renderPostProcessEffects()
  */
 void Rendering::renderPickBuffer(void)
 {
-	Pass & PickBufferTechnique = m_mapPass["picking"];
+	RHI::RenderPass & PickBufferTechnique = m_mapPass["picking"];
+	RHI::Framebuffer & PickBufferFramebuffer = m_mapFramebuffer["pickbuffer-earlyZ"];
 
-	PickBufferTechnique.BeginRenderPass(ivec2(0, 0), ivec2(m_uWidth, m_uHeight), vec4(1.0f, 1.0f, 1.0f, 1.0f));
+	PickBufferTechnique.BeginRenderPass(PickBufferFramebuffer, ivec2(0, 0), ivec2(m_uWidth, m_uHeight), vec4(1.0f, 1.0f, 1.0f, 1.0f));
 	{
+		m_mapPipeline["pickbuffer"]->Bind();
+
 		unsigned int i = 0;
 
 		for (Mesh::Instance & object : m_aObjects)
 		{
 			object.mesh->bind();
 
-			PickBufferTechnique.SetUniform("Model", object.transformation);
+			m_mapPipeline["pickbuffer"]->SetUniform("Model", object.transformation);
 
 			glVertexAttribI1ui(5, i);
 
@@ -910,6 +934,8 @@ void Rendering::renderPickBuffer(void)
 
 			++i;
 		}
+
+		m_mapPipeline["pickbuffer"]->UnBind();
 	}
 	PickBufferTechnique.EndRenderPass();
 }
@@ -920,17 +946,22 @@ void Rendering::renderPickBuffer(void)
  */
 void Rendering::renderBoundingBox(const Mesh::Instance * pSelectedObject)
 {
-	Pass & BBoxTechnique = m_mapPass["bbox"];
+	RHI::RenderPass & BBoxTechnique = m_mapPass["bbox"];
+	RHI::Framebuffer & DefaultFramebuffer = m_mapFramebuffer["default"];
 
-	BBoxTechnique.BeginRenderPass(ivec2(0, 0), ivec2(m_uWidth, m_uHeight));
+	BBoxTechnique.BeginRenderPass(DefaultFramebuffer, ivec2(0, 0), ivec2(m_uWidth, m_uHeight));
 	{
-		BBoxTechnique.SetUniform("Model", pSelectedObject->transformation);
+		m_mapPipeline["bbox"]->Bind();
 
-		BBoxTechnique.SetUniform("BBoxMin", pSelectedObject->mesh->m_BoundingBox.min);
-		BBoxTechnique.SetUniform("BBoxMax", pSelectedObject->mesh->m_BoundingBox.max);
-		BBoxTechnique.SetUniform("color", vec3(1.0, 1.0, 1.0));
+		m_mapPipeline["bbox"]->SetUniform("Model", pSelectedObject->transformation);
+
+		m_mapPipeline["bbox"]->SetUniform("BBoxMin", pSelectedObject->mesh->m_BoundingBox.min);
+		m_mapPipeline["bbox"]->SetUniform("BBoxMax", pSelectedObject->mesh->m_BoundingBox.max);
+		m_mapPipeline["bbox"]->SetUniform("color", vec3(1.0, 1.0, 1.0));
 
 		m_pPointMesh->draw();
+
+		m_mapPipeline["bbox"]->UnBind();
 	}
 	BBoxTechnique.EndRenderPass();
 }
@@ -942,13 +973,20 @@ void Rendering::renderBoundingBox(const Mesh::Instance * pSelectedObject)
  */
 void Rendering::computeToneMappingParams(float & avLum, float & white2)
 {
-	Pass & ToneMappingComputePass = m_mapPass["compute-tonemapping-params"];
+#if 0
+	RHI::RenderPass & ToneMappingComputePass = m_mapPass["compute-tonemapping-params"];
+	RHI::Framebuffer & LuminanceFramebuffer = m_mapFramebuffer["luminance"];
 
-	ToneMappingComputePass.BeginRenderPass(ivec2(0, 0), ivec2(m_uLuminanceSizePOT, m_uLuminanceSizePOT));
+	ToneMappingComputePass.BeginRenderPass(LuminanceFramebuffer, ivec2(0, 0), ivec2(m_uLuminanceSizePOT, m_uLuminanceSizePOT));
 	{
 		{
-			ToneMappingComputePass.SetTexture("texSampler", 0, *(m_mapTargets["HDR"].getTexture()));
+			m_mapPipeline["luminance_conversion"]->Bind();
+
+			m_mapPipeline["luminance_conversion"]->SetTexture("texSampler", 0, *(m_mapTargets["HDR"].getTexture()));
+
 			m_pQuadMesh->draw();
+
+			m_mapPipeline["luminance_conversion"]->UnBind();
 		}
 
 		const GPU::Texture<GL_TEXTURE_2D> * textures [2] =
@@ -976,10 +1014,15 @@ void Rendering::computeToneMappingParams(float & avLum, float & white2)
 			}
 		}
 		m_AvLum->end();
+
 	}
 	ToneMappingComputePass.EndRenderPass();
 
 
 	avLum = m_AvLum->getAverage();
 	white2 = m_AvLum->getMax2();
+#else
+	avLum = 0.5f;
+	white2 = 0.5f;
+#endif
 }
