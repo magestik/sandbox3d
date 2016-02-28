@@ -21,8 +21,6 @@ TODO :
 - Depth of Field,
 - PBR.
 
-Render.xml is great but it should be improved to reduce state change (FBO per Technique instead of per Pass, Avoid sampler duplicate) and to be API independant !
-
 ### Build
 
 Compile C++ code, and preprocess shaders :
@@ -39,10 +37,10 @@ This project is designed to run on GNU/Linux and does not support Windows (maybe
 
 Libraries needed :
 - Qt 5
-- OpenGL 3.3
+- OpenGL 3.3 / Vulkan 1.0.4
 - Assimp
 - TinyXML2
 
 Other requierements :
-- cpp (to preprocess shaders)
+- glslc (to preprocess shaders)
 - xmllint (to check render.xml)
