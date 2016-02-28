@@ -184,6 +184,40 @@ bool RHI::CommandBuffer::Bind(Pipeline & pipeline)
 
 	m_pCurrentPipeline = &pipeline;
 
+	//
+	// Input Assembly State
+	{
+		const Pipeline::InputAssemblyState & state = pipeline.m_inputAssemblyState;
+
+		if (state.enableRestartPrimitive)
+		{
+			glEnable(GL_PRIMITIVE_RESTART);
+		}
+		else
+		{
+			glDisable(GL_PRIMITIVE_RESTART);
+		}
+	}
+
+	//
+	// Blend State
+	{
+		const Pipeline::BlendState & state = pipeline.m_blendState;
+
+		if (state.enable)
+		{
+			glEnable(GL_BLEND);
+			glBlendEquationSeparate(state.colorEquation, state.alphaEquation);
+			glBlendFuncSeparate(state.srcColorFactor, state.dstColorFactor, state.srcAlphaFactor, state.dstAlphaFactor);
+		}
+		else
+		{
+			glDisable(GL_BLEND);
+		}
+
+		glColorMask(state.writeMask & COLOR_MASK_R, state.writeMask & COLOR_MASK_G, state.writeMask & COLOR_MASK_B, state.writeMask & COLOR_MASK_A);
+	}
+
 	// TODO : apply pipeline states
 
 	return(true);

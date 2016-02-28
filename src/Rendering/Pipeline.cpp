@@ -24,6 +24,10 @@ Pipeline::Pipeline()
 Pipeline::Pipeline(const XMLElement * root, const Rendering & rendering)
 : m_uShaderObject(0)
 {
+	RHI::Pipeline::InputAssemblyState inputAssemblyState;
+	RHI::Pipeline::BlendState blendState;
+	RHI::Pipeline::DepthStencilState depthStencilState;
+
 	// misc glEnable(...)
 	{
 		const XMLElement * enable = root->FirstChildElement("enable");
@@ -94,27 +98,27 @@ Pipeline::Pipeline(const XMLElement * root, const Rendering & rendering)
 
 		if (nullptr != blend)
 		{
-			m_sBlendControl.enable = true;
+			blendState.enable = true;
 
 			const char * equation = blend->Attribute("equation");
 
 			if (nullptr != equation)
 			{
-				m_sBlendControl.equation = strToBlendEquation(equation);
+				blendState.colorEquation = blendState.alphaEquation = RHI::BlendOp(strToBlendEquation(equation));
 			}
 
 			const char * sfactor = blend->Attribute("sfactor");
 
 			if (nullptr != sfactor)
 			{
-				m_sBlendControl.sfactor = strToBlendFunc(sfactor);
+				blendState.srcColorFactor = blendState.srcAlphaFactor = RHI::BlendFactor(strToBlendFunc(sfactor));
 			}
 
 			const char * dfactor = blend->Attribute("dfactor");
 
 			if (nullptr != dfactor)
 			{
-				m_sBlendControl.dfactor = strToBlendFunc(dfactor);
+				blendState.dstColorFactor = blendState.dstAlphaFactor = RHI::BlendFactor(strToBlendFunc(dfactor));
 			}
 		}
 	}
@@ -233,6 +237,8 @@ Pipeline::Pipeline(const XMLElement * root, const Rendering & rendering)
 			elmt = elmt->NextSiblingElement("sampler");
 		}
 	}
+
+	m_pipeline = RHI::Pipeline(inputAssemblyState, depthStencilState, blendState);
 }
 
 /**
@@ -259,14 +265,14 @@ bool Pipeline::Bind(void) const
 		glStencilFunc(m_sStencilControl.func, 0, UINT32_MAX);
 		glStencilMask(m_sStencilControl.mask);
 	}
-
+#if 0
 	if (m_sBlendControl.enable)
 	{
 		glEnable(GL_BLEND);
 		glBlendEquation(m_sBlendControl.equation);
 		glBlendFunc(m_sBlendControl.sfactor, m_sBlendControl.dfactor);
 	}
-
+#endif
 	glUseProgram(m_uShaderObject);
 
 	return(true);
@@ -278,13 +284,6 @@ bool Pipeline::Bind(void) const
 void Pipeline::UnBind(void) const
 {
 	glUseProgram(0);
-
-	if (m_sBlendControl.enable)
-	{
-		glDisable(GL_BLEND);
-		glBlendEquation(GL_FUNC_ADD);
-		glBlendFunc(GL_ONE, GL_ZERO);
-	}
 
 	if (m_sStencilControl.enable)
 	{

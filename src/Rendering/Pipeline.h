@@ -9,9 +9,11 @@
 #include <string>
 #include <map>
 
+#include "RHI/RHI.h"
+
 namespace tinyxml2
 {
-    class XMLElement;
+	class XMLElement;
 }
 
 class Rendering;
@@ -20,89 +22,73 @@ class Pipeline
 {
 public:
 
-    struct DepthControl
-    {
-        DepthControl(void)
-        {
-            enable	= false;
-            mask	= GL_TRUE;
-            func	= GL_LESS;
-        }
+	struct DepthControl
+	{
+		DepthControl(void)
+		{
+			enable	= false;
+			mask	= GL_TRUE;
+			func	= GL_LESS;
+		}
 
-        bool enable;
+		bool enable;
 
-        GLboolean mask;
-        GLenum func;
-    };
+		GLboolean mask;
+		GLenum func;
+	};
 
-    struct StencilControl
-    {
-        StencilControl(void)
-        {
-            enable	= false;
-            mask	= UINT32_MAX;
-            func	= GL_ALWAYS;
-        }
+	struct StencilControl
+	{
+		StencilControl(void)
+		{
+			enable	= false;
+			mask	= UINT32_MAX;
+			func	= GL_ALWAYS;
+		}
 
-        bool enable;
+		bool enable;
 
-        GLuint mask;
-        GLenum func;
-    };
+		GLuint mask;
+		GLenum func;
+	};
 
-    struct BlendControl
-    {
-        BlendControl(void)
-        {
-            enable		= false;
-            sfactor		= GL_ONE;
-            sfactor		= GL_ZERO;
-            equation	= GL_FUNC_ADD;
-        }
+	typedef GLuint Sampler;
 
-        bool enable;
+	typedef GLuint Shader;
 
-        GLenum sfactor;
-        GLenum dfactor;
-        GLenum equation;
-    };
+	Pipeline();
+	Pipeline(const tinyxml2::XMLElement * element, const Rendering & rendering);
 
-    typedef GLuint Sampler;
+	bool        Bind            (void) const;
+	void        UnBind          (void) const;
 
-    typedef GLuint Shader;
+	void		SetUniform		(const char * name, const mat4x4 & m) const;
+	void		SetUniform		(const char * name, const mat3x3 & m) const;
+	void		SetUniform		(const char * name, const mat2x2 & m) const ;
 
-    Pipeline();
-    Pipeline(const tinyxml2::XMLElement * element, const Rendering & rendering);
+	void		SetUniform		(const char * name, const vec4 & v) const;
+	void		SetUniform		(const char * name, const vec3 & v) const;
+	void		SetUniform		(const char * name, const vec2 & v) const;
 
-    bool        Bind            (void) const;
-    void        UnBind          (void) const;
+	void		SetUniform		(const char * name, int n) const;
+	void		SetUniform		(const char * name, unsigned int n) const;
+	void		SetUniform		(const char * name, float n) const;
 
-    void		SetUniform		(const char * name, const mat4x4 & m) const;
-    void		SetUniform		(const char * name, const mat3x3 & m) const;
-    void		SetUniform		(const char * name, const mat2x2 & m) const ;
+	void        SetUniformBlockBinding  (const char * name, unsigned int binding) const;
 
-    void		SetUniform		(const char * name, const vec4 & v) const;
-    void		SetUniform		(const char * name, const vec3 & v) const;
-    void		SetUniform		(const char * name, const vec2 & v) const;
+	template<GLenum D>
+	void		SetTexture		(const char * name, int unit, const GPU::Texture<D> & texture) const;
 
-    void		SetUniform		(const char * name, int n) const;
-    void		SetUniform		(const char * name, unsigned int n) const;
-    void		SetUniform		(const char * name, float n) const;
-
-    void        SetUniformBlockBinding  (const char * name, unsigned int binding) const;
-
-    template<GLenum D>
-    void		SetTexture		(const char * name, int unit, const GPU::Texture<D> & texture) const;
+	RHI::Pipeline		m_pipeline;
 
 protected:
 
-    std::vector<GLenum> m_aEnable;
+	std::vector<GLenum> m_aEnable;
 
-    DepthControl        m_sDepthControl;
-    StencilControl      m_sStencilControl;
-    BlendControl        m_sBlendControl;
+	DepthControl        m_sDepthControl;
+	StencilControl      m_sStencilControl;
 
-    std::map<std::string, Sampler> m_mapSamplers;
+	std::map<std::string, Sampler> m_mapSamplers;
 
-    Shader m_uShaderObject;
+	Shader m_uShaderObject;
 };

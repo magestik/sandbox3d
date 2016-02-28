@@ -328,13 +328,13 @@ void Rendering::onUpdate(const mat4x4 & mView, const vec4 & clearColor, bool bWi
 
 		commandBuffer.Begin();
 
-		RHI::Pipeline pipeline;
+		RHI::Pipeline ToneMappingPipeline(m_mapPipeline["tonemapping"]->m_pipeline);
 		RHI::RenderPass & ToneMappingTechnique = m_mapPass["tonemapping"];
 		RHI::Framebuffer & ToneMappingFramebuffer = m_mapFramebuffer["LDR"];
 
 		commandBuffer.BeginRenderPass(ToneMappingTechnique, ToneMappingFramebuffer, ivec2(0, 0), ivec2(m_uWidth, m_uHeight));
 		{
-			commandBuffer.Bind(pipeline);
+			commandBuffer.Bind(ToneMappingPipeline);
 
 			m_mapPipeline["tonemapping"]->Bind();
 
@@ -348,12 +348,13 @@ void Rendering::onUpdate(const mat4x4 & mView, const vec4 & clearColor, bool bWi
 		}
 		commandBuffer.EndRenderPass();
 
+		RHI::Pipeline AntiAliasingPipeline(m_mapPipeline["fxaa"]->m_pipeline);
 		RHI::RenderPass & AntiAliasingTechnique = m_mapPass["anti-aliasing"];
 		RHI::Framebuffer & AntiAliasingFramebuffer = m_mapFramebuffer["default"];
 
 		commandBuffer.BeginRenderPass(AntiAliasingTechnique, AntiAliasingFramebuffer, ivec2(0, 0), ivec2(m_uWidth, m_uHeight));
 		{
-			commandBuffer.Bind(pipeline);
+			commandBuffer.Bind(AntiAliasingPipeline);
 
 			m_mapPipeline["fxaa"]->Bind();
 
@@ -464,7 +465,7 @@ void Rendering::renderSceneToShadowMap(void)
 
 	commandBuffer.Begin();
 
-	RHI::Pipeline pipeline;
+	RHI::Pipeline pipeline(m_mapPipeline["shadow_map"]->m_pipeline);
 	RHI::RenderPass & ShadowMapPass = m_mapPass["shadow_map"];
 	RHI::Framebuffer & ShadowMapFramebuffer = m_mapFramebuffer["shadow-map"];
 
@@ -519,7 +520,7 @@ void Rendering::renderIntermediateToScreen(ERenderType eRenderType)
 	{
 		case FINAL:
 		{
-			RHI::Pipeline pipeline;
+			RHI::Pipeline pipeline(m_mapPipeline["debug_color"]->m_pipeline);
 
 			RHI::RenderPass & DebugPass = m_mapPass["debug_color"];
 
@@ -541,7 +542,7 @@ void Rendering::renderIntermediateToScreen(ERenderType eRenderType)
 
 		case DIFFUSE_LIGHTS:
 		{
-			RHI::Pipeline pipeline;
+			RHI::Pipeline pipeline(m_mapPipeline["debug_color"]->m_pipeline);
 
 			RHI::RenderPass & DebugPass = m_mapPass["debug_color"];
 
@@ -563,7 +564,7 @@ void Rendering::renderIntermediateToScreen(ERenderType eRenderType)
 
 		case SPECULAR_LIGHTS:
 		{
-			RHI::Pipeline pipeline;
+			RHI::Pipeline pipeline(m_mapPipeline["debug_color"]->m_pipeline);
 
 			RHI::RenderPass & DebugPass = m_mapPass["debug_color"];
 
@@ -585,7 +586,7 @@ void Rendering::renderIntermediateToScreen(ERenderType eRenderType)
 
 		case NORMAL_BUFFER:
 		{
-			RHI::Pipeline pipeline;
+			RHI::Pipeline pipeline(m_mapPipeline["debug_normal"]->m_pipeline);
 
 			RHI::RenderPass & DebugPass = m_mapPass["debug_normals"];
 
@@ -607,7 +608,7 @@ void Rendering::renderIntermediateToScreen(ERenderType eRenderType)
 
 		case DEPTH:
 		{
-			RHI::Pipeline pipeline;
+			RHI::Pipeline pipeline(m_mapPipeline["debug_depth"]->m_pipeline);
 
 			RHI::RenderPass & DebugPass = m_mapPass["debug_depth"];
 
@@ -629,7 +630,7 @@ void Rendering::renderIntermediateToScreen(ERenderType eRenderType)
 
 		case SHADOWS:
 		{
-			RHI::Pipeline pipeline;
+			RHI::Pipeline pipeline(m_mapPipeline["debug_depth"]->m_pipeline);
 
 			RHI::RenderPass & DebugPass = m_mapPass["debug_depth"];
 
@@ -696,7 +697,7 @@ void Rendering::renderSceneToGBuffer(void)
 
 	commandBuffer.Begin();
 
-	RHI::Pipeline pipeline;
+	RHI::Pipeline pipeline(m_mapPipeline["geometry_simple"]->m_pipeline);
 	RHI::RenderPass & GeometryPass = m_mapPass["geometry"];
 	RHI::Framebuffer & GeometryFramebuffer = m_mapFramebuffer["normals-earlyZ"];
 
@@ -786,7 +787,7 @@ void Rendering::renderLightsToAccumBuffer(const mat4x4 & mView)
 
 	commandBuffer.Begin();
 
-	RHI::Pipeline pipeline;
+	RHI::Pipeline pipeline(m_mapPipeline["lights_directional"]->m_pipeline);
 	RHI::RenderPass & LightsTechnique = m_mapPass["lights"];
 	RHI::Framebuffer & LightsFramebuffer = m_mapFramebuffer["lights"];
 
@@ -828,7 +829,7 @@ void Rendering::renderFinal(const mat4x4 & mView, const vec4 & clearColor)
 
 	commandBuffer.Begin();
 
-	RHI::Pipeline pipeline;
+	RHI::Pipeline pipeline(m_mapPipeline["compose"]->m_pipeline);
 	RHI::RenderPass & ComposeTechnique = m_mapPass["compose"];
 	RHI::Framebuffer & ComposeFramebuffer = m_mapFramebuffer["HDR-earlyZ"];
 
@@ -889,7 +890,7 @@ void Rendering::renderFog(void)
 
 	commandBuffer.Begin();
 
-	RHI::Pipeline pipeline;
+	RHI::Pipeline pipeline(m_mapPipeline["fog_simple"]->m_pipeline);
 	RHI::RenderPass & ComposeTechnique = m_mapPass["fog"];
 	RHI::Framebuffer & ComposeFramebuffer = m_mapFramebuffer["HDR"];
 
@@ -927,7 +928,7 @@ void Rendering::renderBloom(void)
 
 	commandBuffer.Begin();
 
-	RHI::Pipeline pipeline;
+	RHI::Pipeline pipeline(m_mapPipeline["bloom_bright"]->m_pipeline);
 	RHI::RenderPass & BloomTechnique = m_mapPass["bloom"];
 	RHI::Framebuffer & BloomFramebuffer = m_mapFramebuffer["bloom"];
 
@@ -983,7 +984,7 @@ void Rendering::renderPostProcessEffects()
 
 	commandBuffer.Begin();
 
-	RHI::Pipeline pipeline;
+	RHI::Pipeline pipeline(m_mapPipeline["bloom"]->m_pipeline);
 	RHI::RenderPass & BlendTechnique = m_mapPass["blend"];
 	RHI::Framebuffer & BlendFramebuffer = m_mapFramebuffer["default"];
 
@@ -1013,7 +1014,7 @@ void Rendering::renderPickBuffer(void)
 
 	commandBuffer.Begin();
 
-	RHI::Pipeline pipeline;
+	RHI::Pipeline pipeline(m_mapPipeline["pickbuffer"]->m_pipeline);
 	RHI::RenderPass & PickBufferTechnique = m_mapPass["picking"];
 	RHI::Framebuffer & PickBufferFramebuffer = m_mapFramebuffer["pickbuffer-earlyZ"];
 
@@ -1060,7 +1061,7 @@ void Rendering::renderBoundingBox(const Mesh::Instance * pSelectedObject)
 
 	commandBuffer.Begin();
 
-	RHI::Pipeline pipeline;
+	RHI::Pipeline pipeline(m_mapPipeline["bbox"]->m_pipeline);
 	RHI::RenderPass & BBoxTechnique = m_mapPass["bbox"];
 	RHI::Framebuffer & DefaultFramebuffer = m_mapFramebuffer["default"];
 

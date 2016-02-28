@@ -44,22 +44,22 @@ public:
 		{
 			enable = false;
 
-			//srcColorFactor	= srcAlphaFactor = GL_ONE;
-			//dstColorFactor	= dstAlphaFactor = GL_ZERO;
-			//colorEquation	= alphaEquation  = GL_FUNC_ADD;
+			srcColorFactor	= srcAlphaFactor = BLEND_FACTOR_ONE;
+			dstColorFactor	= dstAlphaFactor = BLEND_FACTOR_ZERO;
+			colorEquation	= alphaEquation  = BLEND_OP_ADD;
 
-			writeMask = 0b1111;
+			writeMask = COLOR_MASK_R | COLOR_MASK_G | COLOR_MASK_B | COLOR_MASK_A;
 		}
 
 		bool enable;
 
-		//GLenum srcColorFactor;
-		//GLenum dstColorFactor;
-		//GLenum colorEquation;
+		BlendFactor srcColorFactor;
+		BlendFactor dstColorFactor;
+		BlendOp colorEquation;
 
-		//GLenum srcAlphaFactor;
-		//GLenum dstAlphaFactor;
-		//GLenum alphaEquation;
+		BlendFactor srcAlphaFactor;
+		BlendFactor dstAlphaFactor;
+		BlendOp alphaEquation;
 
 		unsigned int writeMask;
 	};
