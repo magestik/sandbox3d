@@ -17,7 +17,6 @@
 #include "Mesh/Mesh.h"
 #include "Mesh/SubMesh.h"
 
-#include "Target/ShadowMap.h"
 #include "Target/AverageLuminance.h"
 
 #include "RenderTexture.h"
@@ -137,12 +136,12 @@ private:
 	unsigned int m_uLuminanceSizePOT;
 
 	mat4x4 m_matProjection;
+	mat4x4 m_matShadowMapProjection;
 
 	AverageLuminance * m_AvLum;
 
 	std::vector<Mesh::Instance> m_aObjects;
 
-	ShadowMap * m_pShadowMap;
 	Light::Directionnal * m_pLight;
 
 	Mesh *	m_pQuadMesh;

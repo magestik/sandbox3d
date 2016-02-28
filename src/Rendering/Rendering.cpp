@@ -44,7 +44,6 @@ static inline unsigned int toPOT(unsigned int v)
 Rendering::Rendering()
 : m_uWidth(1280)
 , m_uHeight(720)
-, m_pShadowMap(nullptr)
 , m_pQuadMesh(nullptr)
 , m_pCameraBuffer(nullptr)
 , m_pObjectsBuffer(nullptr)
@@ -75,11 +74,7 @@ void Rendering::onInitializeComplete()
 	m_AvLum = new AverageLuminance(m_mapPipeline["average_luminance"]);
 	m_AvLum->init(m_mapTargets["luminance1"].getTexture(), m_mapTargets["luminance2"].getTexture());
 
-	{
-		m_pLight = new Light::Directionnal(vec3(-20.0f, -20.0f, -20.0f));
-		m_pShadowMap = new ShadowMap(m_mapPipeline["shadow_map"]);
-		m_pShadowMap->init(SHADOW_MAP_SIZE, SHADOW_MAP_SIZE);
-	}
+	m_pLight = new Light::Directionnal(vec3(-20.0f, -20.0f, -20.0f));
 
 	//
 	// Generate Meshes
@@ -225,11 +220,18 @@ void Rendering::onResize(int width, int height)
 	float ratio = m_uWidth/(float)m_uHeight;
 	m_matProjection = _perspective(75.0f, ratio, 1.0f, 1000.0f);
 
+	//m_matShadowMapProjection = _perspective(45.0f, 1.0f, 1.0f, 100.0f); // FIXME : spot light 45° hardcoded
+	m_matShadowMapProjection = _ortho(-20.0f, 20.0f, -20.0f, 20.0f, -10.0f, 100.0f);
+
 	for (std::map<std::string, RenderTexture>::iterator it = m_mapTargets.begin(); it != m_mapTargets.end(); ++it)
 	{
 		if (it->first == "luminance1" || it->first == "luminance2")
 		{
 			it->second.resize(m_uLuminanceSizePOT, m_uLuminanceSizePOT);
+		}
+		else if (it->first == "shadow_map")
+		{
+			it->second.resize(SHADOW_MAP_SIZE, SHADOW_MAP_SIZE);
 		}
 		else
 		{
@@ -440,6 +442,40 @@ Mesh::Instance * Rendering::getObjectAtPos(const ivec2 & pos)
  */
 void Rendering::renderSceneToShadowMap(void)
 {
+	RHI::RenderPass & ShadowMapPass = m_mapPass["shadow_map"];
+	RHI::Framebuffer & ShadowMapFramebuffer = m_mapFramebuffer["shadow-map"];
+
+	ShadowMapPass.BeginRenderPass(ShadowMapFramebuffer, ivec2(0, 0), ivec2(SHADOW_MAP_SIZE, SHADOW_MAP_SIZE), 1.0f, 0);
+	{
+		m_mapPipeline["shadow_map"]->Bind();
+
+		glPolygonOffset(10.0f, 1.0f);
+
+		mat4x4 mDepthView = _lookAt(vec3(0,0,0), m_pLight->GetDirection(), vec3(0.0f, -1.0f, 0.0f));
+		mat4x4 mDepthViewProjection = m_matShadowMapProjection * mDepthView;
+
+		m_mapPipeline["shadow_map"]->SetUniform("LightViewProjection", mDepthViewProjection);
+
+		for (Mesh::Instance & object : m_aObjects)
+		{
+			m_mapPipeline["shadow_map"]->SetUniform("Model", object.transformation);
+
+			object.mesh->bind();
+
+			// TODO : remove loop and directly use glDrawElements on the full buffer
+			for (SubMesh * m : object.getDrawCommands())
+			{
+				m->draw();
+			}
+
+			object.mesh->unbind();
+		}
+
+		m_mapPipeline["shadow_map"]->UnBind();
+	}
+	ShadowMapPass.EndRenderPass();
+
+#if 0
 	glViewport(0, 0, SHADOW_MAP_SIZE, SHADOW_MAP_SIZE);
 
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_pShadowMap->GetObject());
@@ -451,7 +487,6 @@ void Rendering::renderSceneToShadowMap(void)
 	glClearStencil(0);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
-#if 0 // tmp
 	m_pShadowMap->Begin();
 
 	glClear(GL_DEPTH_BUFFER_BIT);
@@ -481,9 +516,9 @@ void Rendering::renderSceneToShadowMap(void)
 		glUseProgram(0);
 	}
 	m_pShadowMap->End();
-#endif
 
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+#endif
 }
 
 /**
@@ -594,7 +629,7 @@ void Rendering::renderIntermediateToScreen(ERenderType eRenderType)
 			{
 				m_mapPipeline["debug_depth"]->Bind();
 
-				m_mapPipeline["debug_depth"]->SetTexture("texSampler", 0, m_pShadowMap->GetTexture());
+				m_mapPipeline["debug_depth"]->SetTexture("texSampler", 0, *(m_mapTargets["shadow_map"].getTexture()));
 
 				m_pQuadMesh->draw();
 
@@ -768,11 +803,11 @@ void Rendering::renderFinal(const mat4x4 & mView, const vec4 & clearColor)
 		m_mapPipeline["compose"]->Bind();
 
 		mat4x4 mDepthView = _lookAt(vec3(0,0,0), m_pLight->GetDirection(), vec3(0.0f, -1.0f, 0.0f));
-		mat4x4 mDepthViewProjection = m_pShadowMap->GetProjection() * mDepthView;
+		mat4x4 mDepthViewProjection = m_matShadowMapProjection * mDepthView;
 
 		m_mapPipeline["compose"]->SetTexture("diffuseLightSampler", 0, *(m_mapTargets["lights_diffuse"].getTexture()));
 		m_mapPipeline["compose"]->SetTexture("specularLightSampler", 1, *(m_mapTargets["lights_specular"].getTexture()));
-		m_mapPipeline["compose"]->SetTexture("shadowMap", 2, m_pShadowMap->GetTexture());
+		m_mapPipeline["compose"]->SetTexture("shadowMap", 2, *(m_mapTargets["shadow_map"].getTexture()));
 
 		m_mapPipeline["compose"]->SetUniform("ambientColor", sRGB_to_XYZ * environment.ambient.Color);
 		m_mapPipeline["compose"]->SetUniform("DepthTransformation", mDepthViewProjection);

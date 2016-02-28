@@ -42,6 +42,7 @@ public:
 	// Vulkan-like API
 	bool	BeginRenderPass		(Framebuffer & fb, const ivec2 & offset, const ivec2 & extent);
 	bool	BeginRenderPass		(Framebuffer & fb, const ivec2 & offset, const ivec2 & extent, const vec4 & color);
+	bool	BeginRenderPass		(Framebuffer & fb, const ivec2 & offset, const ivec2 & extent, float depth, unsigned int stencil);
 	bool	BeginRenderPass		(Framebuffer & fb, const ivec2 & offset, const ivec2 & extent, const vec4 & color, float depth, unsigned int stencil);
 	void	EndRenderPass		(void);
 

@@ -30,6 +30,7 @@
 -->
 	<targets>
 		<texture name="depth" format="GL_DEPTH_COMPONENT32F" />
+		<texture name="shadow_map" format="GL_DEPTH_COMPONENT32F" />
 		<texture name="normals" format="GL_RGBA16F" />
 		<texture name="lights_diffuse" format="GL_R11F_G11F_B10F" />
 		<texture name="lights_specular" format="GL_R11F_G11F_B10F" />
@@ -44,7 +45,9 @@
 
 	<framebuffers>
 		<framebuffer name="default" />
-
+		<framebuffer name="shadow-map">
+			<output texture="shadow_map" />
+		</framebuffer>
 		<framebuffer name="pickbuffer-earlyZ">
 			<output texture="depth" /> <!-- early z-cull -->
 			<output texture="pickbuffer" />
@@ -212,6 +215,12 @@
 	</pipelines>
 
 	<pass_list>
+
+		<pass name="shadow_map" fb="shadow-map">
+			<subpass name="default" pipeline="shadow_map">
+				<output depth_buffer="0" />
+			</subpass>
+		</pass>
 
 		<pass name="lights" fb="lights">
 			<subpass name="directional" pipeline="lights_directional">

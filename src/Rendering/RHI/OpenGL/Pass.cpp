@@ -134,6 +134,44 @@ bool RHI::RenderPass::BeginRenderPass(Framebuffer & fb, const ivec2 & offset, co
 }
 
 /**
+ * @brief RHI::RenderPass::BeginRenderPass
+ * @param fb
+ * @param offset
+ * @param extent
+ * @param depth
+ * @param stencil
+ * @return
+ */
+bool RHI::RenderPass::BeginRenderPass(Framebuffer & fb, const ivec2 & offset, const ivec2 & extent, float depth, unsigned int stencil)
+{
+	assert(!m_bActive);
+	assert(m_iCurrentSubpass == 0);
+
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fb.m_uFramebufferObject);
+
+	if (0 != fb.m_uFramebufferObject)
+	{
+		Subpass & subpass = m_aPass.front();
+
+		unsigned int size = subpass.m_aDrawBuffers.size();
+
+		if (size > 0)
+		{
+			glDrawBuffers(size, subpass.m_aDrawBuffers.data());
+		}
+	}
+
+	glViewport(offset.x, offset.y, extent.x, extent.y);
+	glClearDepthf(depth);
+	glClearStencil(stencil);
+	glClear(GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+
+	m_bActive = true;
+
+	return(true);
+}
+
+/**
  * @brief Pass::BeginRenderPass
  * @param offset
  * @param extent
