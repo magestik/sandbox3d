@@ -830,7 +830,8 @@ void DrawableSurface::importScene(const QString & filename)
 				{
 					(unsigned char)(color.r * 255),
 					(unsigned char)(color.g * 255),
-					(unsigned char)(color.b * 255)
+					(unsigned char)(color.b * 255),
+					(unsigned char)255
 				};
 
 				glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, texels);
@@ -863,7 +864,8 @@ void DrawableSurface::importScene(const QString & filename)
 				{
 					(unsigned char)(color.r * 255),
 					(unsigned char)(color.g * 255),
-					(unsigned char)(color.b * 255)
+					(unsigned char)(color.b * 255),
+					(unsigned char)255
 				};
 
 				glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, texels);
