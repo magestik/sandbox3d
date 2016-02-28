@@ -11,7 +11,7 @@ class Framebuffer
 {
 public:
 
-	friend class RenderPass;
+	friend class CommandBuffer;
 
 	//
 	// Constructors / Destructor

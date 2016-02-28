@@ -19,6 +19,8 @@ class RenderPass
 {
 public:
 
+	friend class CommandBuffer;
+
 	struct SubpassDescription
 	{
 		std::vector<int> aColorAttachments;
@@ -38,21 +40,18 @@ public:
 	RenderPass &	operator =		(const RenderPass & pass) = delete;
 	RenderPass &	operator =		(RenderPass && pass);
 
-	//
-	// Vulkan-like API
-	bool	BeginRenderPass		(Framebuffer & fb, const ivec2 & offset, const ivec2 & extent);
-	bool	BeginRenderPass		(Framebuffer & fb, const ivec2 & offset, const ivec2 & extent, const vec4 & color);
-	bool	BeginRenderPass		(Framebuffer & fb, const ivec2 & offset, const ivec2 & extent, float depth, unsigned int stencil);
-	bool	BeginRenderPass		(Framebuffer & fb, const ivec2 & offset, const ivec2 & extent, const vec4 & color, float depth, unsigned int stencil);
-	void	EndRenderPass		(void);
-
-	void	NextSubpass			(void);
-
 protected:
 
 #if HAVE_OPENGL
+	bool	Begin		(bool defaultFramebuffer);
+	void	Next		(void);
+	void	End			(void);
+
+	void	SetCurrent	(unsigned int current);
+
 	std::vector<Subpass> m_aPass;
-	int m_iCurrentSubpass;
+	unsigned int m_uCurrentSubpass;
+	bool m_bDefaultFramebuffer;
 	bool m_bActive; // just for debugging
 #endif // HAVE_OPENGL
 

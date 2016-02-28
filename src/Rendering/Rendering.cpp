@@ -324,10 +324,14 @@ void Rendering::onUpdate(const mat4x4 & mView, const vec4 & clearColor, bool bWi
 
 		computeToneMappingParams(avLum, white2);
 
+		RHI::CommandBuffer commandBuffer;
+
+		commandBuffer.Begin();
+
 		RHI::RenderPass & ToneMappingTechnique = m_mapPass["tonemapping"];
 		RHI::Framebuffer & ToneMappingFramebuffer = m_mapFramebuffer["LDR"];
 
-		ToneMappingTechnique.BeginRenderPass(ToneMappingFramebuffer, ivec2(0, 0), ivec2(m_uWidth, m_uHeight));
+		commandBuffer.BeginRenderPass(ToneMappingTechnique, ToneMappingFramebuffer, ivec2(0, 0), ivec2(m_uWidth, m_uHeight));
 		{
 			m_mapPipeline["tonemapping"]->Bind();
 
@@ -339,12 +343,12 @@ void Rendering::onUpdate(const mat4x4 & mView, const vec4 & clearColor, bool bWi
 
 			m_mapPipeline["tonemapping"]->UnBind();
 		}
-		ToneMappingTechnique.EndRenderPass();
+		commandBuffer.EndRenderPass();
 
 		RHI::RenderPass & AntiAliasingTechnique = m_mapPass["anti-aliasing"];
 		RHI::Framebuffer & AntiAliasingFramebuffer = m_mapFramebuffer["default"];
 
-		AntiAliasingTechnique.BeginRenderPass(AntiAliasingFramebuffer, ivec2(0, 0), ivec2(m_uWidth, m_uHeight));
+		commandBuffer.BeginRenderPass(AntiAliasingTechnique, AntiAliasingFramebuffer, ivec2(0, 0), ivec2(m_uWidth, m_uHeight));
 		{
 			m_mapPipeline["fxaa"]->Bind();
 
@@ -355,7 +359,9 @@ void Rendering::onUpdate(const mat4x4 & mView, const vec4 & clearColor, bool bWi
 
 			m_mapPipeline["fxaa"]->UnBind();
 		}
-		AntiAliasingTechnique.EndRenderPass();
+		commandBuffer.EndRenderPass();
+
+		commandBuffer.End();
 
 		//
 		// post process
@@ -417,10 +423,14 @@ Mesh::Instance * Rendering::getObjectAtPos(const ivec2 & pos)
 
 	Mesh::Instance * object = nullptr;
 
+	RHI::CommandBuffer commandBuffer;
+
+	commandBuffer.Begin();
+
 	RHI::RenderPass & PickBufferTechnique = m_mapPass["picking"];
 	RHI::Framebuffer & PickBufferFramebuffer = m_mapFramebuffer["pickbuffer-earlyZ"];
 
-	PickBufferTechnique.BeginRenderPass(PickBufferFramebuffer, ivec2(0, 0), ivec2(m_uWidth, m_uHeight));
+	commandBuffer.BeginRenderPass(PickBufferTechnique, PickBufferFramebuffer, ivec2(0, 0), ivec2(m_uWidth, m_uHeight));
 	{
 		unsigned int id = UINT32_MAX;
 #if 0
@@ -431,7 +441,9 @@ Mesh::Instance * Rendering::getObjectAtPos(const ivec2 & pos)
 			object = &(m_aObjects[id]);
 		}
 	}
-	PickBufferTechnique.EndRenderPass();
+	commandBuffer.EndRenderPass();
+
+	commandBuffer.End();
 
 	return(object);
 }
@@ -442,10 +454,14 @@ Mesh::Instance * Rendering::getObjectAtPos(const ivec2 & pos)
  */
 void Rendering::renderSceneToShadowMap(void)
 {
+	RHI::CommandBuffer commandBuffer;
+
+	commandBuffer.Begin();
+
 	RHI::RenderPass & ShadowMapPass = m_mapPass["shadow_map"];
 	RHI::Framebuffer & ShadowMapFramebuffer = m_mapFramebuffer["shadow-map"];
 
-	ShadowMapPass.BeginRenderPass(ShadowMapFramebuffer, ivec2(0, 0), ivec2(SHADOW_MAP_SIZE, SHADOW_MAP_SIZE), 1.0f, 0);
+	commandBuffer.BeginRenderPass(ShadowMapPass, ShadowMapFramebuffer, ivec2(0, 0), ivec2(SHADOW_MAP_SIZE, SHADOW_MAP_SIZE), 1.0f, 0);
 	{
 		m_mapPipeline["shadow_map"]->Bind();
 
@@ -473,52 +489,9 @@ void Rendering::renderSceneToShadowMap(void)
 
 		m_mapPipeline["shadow_map"]->UnBind();
 	}
-	ShadowMapPass.EndRenderPass();
+	commandBuffer.EndRenderPass();
 
-#if 0
-	glViewport(0, 0, SHADOW_MAP_SIZE, SHADOW_MAP_SIZE);
-
-	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_pShadowMap->GetObject());
-
-	glDrawBuffer(GL_NONE);
-
-	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-	glClearDepthf(1.0f);
-	glClearStencil(0);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-
-	m_pShadowMap->Begin();
-
-	glClear(GL_DEPTH_BUFFER_BIT);
-	glPolygonOffset(10.0f, 1.0f);
-
-	{
-		mat4x4 mDepthView = _lookAt(vec3(0,0,0), m_pLight->GetDirection(), vec3(0.0f, -1.0f, 0.0f));
-		mat4x4 mDepthViewProjection = m_pShadowMap->GetProjection() * mDepthView;
-
-		m_pShadowMap->SetUniform("LightViewProjection", mDepthViewProjection);
-
-		for (Mesh::Instance & object : m_aObjects)
-		{
-			m_pShadowMap->SetUniform("Model", object.transformation);
-
-			object.mesh->bind();
-
-			// TODO : remove loop and directly use glDrawElements on the full buffer
-			for (SubMesh * m : object.getDrawCommands())
-			{
-				m->draw();
-			}
-
-			object.mesh->unbind();
-		}
-
-		glUseProgram(0);
-	}
-	m_pShadowMap->End();
-
-	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-#endif
+	commandBuffer.End();
 }
 
 /**
@@ -527,6 +500,10 @@ void Rendering::renderSceneToShadowMap(void)
  */
 void Rendering::renderIntermediateToScreen(ERenderType eRenderType)
 {
+	RHI::CommandBuffer commandBuffer;
+
+	commandBuffer.Begin();
+
 	RHI::Framebuffer & DefaultFramebuffer = m_mapFramebuffer["default"];
 
 	switch (eRenderType)
@@ -535,7 +512,7 @@ void Rendering::renderIntermediateToScreen(ERenderType eRenderType)
 		{
 			RHI::RenderPass & DebugPass = m_mapPass["debug_color"];
 
-			DebugPass.BeginRenderPass(DefaultFramebuffer, ivec2(0, 0), ivec2(m_uWidth, m_uHeight));
+			commandBuffer.BeginRenderPass(DebugPass, DefaultFramebuffer, ivec2(0, 0), ivec2(m_uWidth, m_uHeight));
 			{
 				m_mapPipeline["debug_color"]->Bind();
 
@@ -545,7 +522,7 @@ void Rendering::renderIntermediateToScreen(ERenderType eRenderType)
 
 				m_mapPipeline["debug_color"]->UnBind();
 			}
-			DebugPass.EndRenderPass();
+			commandBuffer.EndRenderPass();
 		}
 		break;
 
@@ -553,7 +530,7 @@ void Rendering::renderIntermediateToScreen(ERenderType eRenderType)
 		{
 			RHI::RenderPass & DebugPass = m_mapPass["debug_color"];
 
-			DebugPass.BeginRenderPass(DefaultFramebuffer, ivec2(0, 0), ivec2(m_uWidth, m_uHeight));
+			commandBuffer.BeginRenderPass(DebugPass, DefaultFramebuffer, ivec2(0, 0), ivec2(m_uWidth, m_uHeight));
 			{
 				m_mapPipeline["debug_color"]->Bind();
 
@@ -563,7 +540,7 @@ void Rendering::renderIntermediateToScreen(ERenderType eRenderType)
 
 				m_mapPipeline["debug_color"]->UnBind();
 			}
-			DebugPass.EndRenderPass();
+			commandBuffer.EndRenderPass();
 		}
 		break;
 
@@ -571,7 +548,7 @@ void Rendering::renderIntermediateToScreen(ERenderType eRenderType)
 		{
 			RHI::RenderPass & DebugPass = m_mapPass["debug_color"];
 
-			DebugPass.BeginRenderPass(DefaultFramebuffer, ivec2(0, 0), ivec2(m_uWidth, m_uHeight));
+			commandBuffer.BeginRenderPass(DebugPass, DefaultFramebuffer, ivec2(0, 0), ivec2(m_uWidth, m_uHeight));
 			{
 				m_mapPipeline["debug_color"]->Bind();
 
@@ -581,7 +558,7 @@ void Rendering::renderIntermediateToScreen(ERenderType eRenderType)
 
 				m_mapPipeline["debug_color"]->UnBind();
 			}
-			DebugPass.EndRenderPass();
+			commandBuffer.EndRenderPass();
 		}
 		break;
 
@@ -589,7 +566,7 @@ void Rendering::renderIntermediateToScreen(ERenderType eRenderType)
 		{
 			RHI::RenderPass & DebugPass = m_mapPass["debug_normals"];
 
-			DebugPass.BeginRenderPass(DefaultFramebuffer, ivec2(0, 0), ivec2(m_uWidth, m_uHeight));
+			commandBuffer.BeginRenderPass(DebugPass, DefaultFramebuffer, ivec2(0, 0), ivec2(m_uWidth, m_uHeight));
 			{
 				m_mapPipeline["debug_normal"]->Bind();
 
@@ -599,7 +576,7 @@ void Rendering::renderIntermediateToScreen(ERenderType eRenderType)
 
 				m_mapPipeline["debug_normal"]->UnBind();
 			}
-			DebugPass.EndRenderPass();
+			commandBuffer.EndRenderPass();
 		}
 		break;
 
@@ -607,7 +584,7 @@ void Rendering::renderIntermediateToScreen(ERenderType eRenderType)
 		{
 			RHI::RenderPass & DebugPass = m_mapPass["debug_depth"];
 
-			DebugPass.BeginRenderPass(DefaultFramebuffer, ivec2(0, 0), ivec2(m_uWidth, m_uHeight));
+			commandBuffer.BeginRenderPass(DebugPass, DefaultFramebuffer, ivec2(0, 0), ivec2(m_uWidth, m_uHeight));
 			{
 				m_mapPipeline["debug_depth"]->Bind();
 
@@ -617,7 +594,7 @@ void Rendering::renderIntermediateToScreen(ERenderType eRenderType)
 
 				m_mapPipeline["debug_depth"]->UnBind();
 			}
-			DebugPass.EndRenderPass();
+			commandBuffer.EndRenderPass();
 		}
 		break;
 
@@ -625,7 +602,7 @@ void Rendering::renderIntermediateToScreen(ERenderType eRenderType)
 		{
 			RHI::RenderPass & DebugPass = m_mapPass["debug_depth"];
 
-			DebugPass.BeginRenderPass(DefaultFramebuffer, ivec2(0, 0), ivec2(m_uWidth, m_uHeight));
+			commandBuffer.BeginRenderPass(DebugPass, DefaultFramebuffer, ivec2(0, 0), ivec2(m_uWidth, m_uHeight));
 			{
 				m_mapPipeline["debug_depth"]->Bind();
 
@@ -635,7 +612,7 @@ void Rendering::renderIntermediateToScreen(ERenderType eRenderType)
 
 				m_mapPipeline["debug_depth"]->UnBind();
 			}
-			DebugPass.EndRenderPass();
+			commandBuffer.EndRenderPass();
 		}
 		break;
 /*
@@ -673,6 +650,8 @@ void Rendering::renderIntermediateToScreen(ERenderType eRenderType)
 		break;
 */
 	}
+
+	commandBuffer.End();
 }
 
 /**
@@ -680,10 +659,14 @@ void Rendering::renderIntermediateToScreen(ERenderType eRenderType)
  */
 void Rendering::renderSceneToGBuffer(void)
 {
+	RHI::CommandBuffer commandBuffer;
+
+	commandBuffer.Begin();
+
 	RHI::RenderPass & GeometryPass = m_mapPass["geometry"];
 	RHI::Framebuffer & GeometryFramebuffer = m_mapFramebuffer["normals-earlyZ"];
 
-	GeometryPass.BeginRenderPass(GeometryFramebuffer, ivec2(0, 0), ivec2(m_uWidth, m_uHeight), vec4(0.0f ,0.0f, 0.0f, 0.0f), 1.0f, 0);
+	commandBuffer.BeginRenderPass(GeometryPass, GeometryFramebuffer, ivec2(0, 0), ivec2(m_uWidth, m_uHeight), vec4(0.0f ,0.0f, 0.0f, 0.0f), 1.0f, 0);
 
 	{
 		// OPTIMIZE THIS !!!!!
@@ -718,7 +701,7 @@ void Rendering::renderSceneToGBuffer(void)
 			m_mapPipeline["geometry_simple"]->UnBind();
 		}
 
-		GeometryPass.NextSubpass();
+		commandBuffer.NextSubpass();
 
 		{
 			m_mapPipeline["geometry_normalmap"]->Bind();
@@ -753,7 +736,9 @@ void Rendering::renderSceneToGBuffer(void)
 		}
 	}
 
-	GeometryPass.EndRenderPass();
+	commandBuffer.EndRenderPass();
+
+	commandBuffer.End();
 }
 
 /**
@@ -761,10 +746,14 @@ void Rendering::renderSceneToGBuffer(void)
  */
 void Rendering::renderLightsToAccumBuffer(const mat4x4 & mView)
 {
+	RHI::CommandBuffer commandBuffer;
+
+	commandBuffer.Begin();
+
 	RHI::RenderPass & LightsTechnique = m_mapPass["lights"];
 	RHI::Framebuffer & LightsFramebuffer = m_mapFramebuffer["lights"];
 
-	LightsTechnique.BeginRenderPass(LightsFramebuffer, ivec2(0, 0), ivec2(m_uWidth, m_uHeight), vec4(0.0f, 0.0f, 0.0f, 0.0f));
+	commandBuffer.BeginRenderPass(LightsTechnique, LightsFramebuffer, ivec2(0, 0), ivec2(m_uWidth, m_uHeight), vec4(0.0f, 0.0f, 0.0f, 0.0f));
 
 	{
 		m_mapPipeline["lights_directional"]->Bind();
@@ -785,7 +774,9 @@ void Rendering::renderLightsToAccumBuffer(const mat4x4 & mView)
 		// TODO : render all lights
 	}
 
-	LightsTechnique.EndRenderPass();
+	commandBuffer.EndRenderPass();
+
+	commandBuffer.End();
 }
 
 /**
@@ -794,10 +785,14 @@ void Rendering::renderLightsToAccumBuffer(const mat4x4 & mView)
  */
 void Rendering::renderFinal(const mat4x4 & mView, const vec4 & clearColor)
 {
+	RHI::CommandBuffer commandBuffer;
+
+	commandBuffer.Begin();
+
 	RHI::RenderPass & ComposeTechnique = m_mapPass["compose"];
 	RHI::Framebuffer & ComposeFramebuffer = m_mapFramebuffer["HDR-earlyZ"];
 
-	ComposeTechnique.BeginRenderPass(ComposeFramebuffer, ivec2(0, 0), ivec2(m_uWidth, m_uHeight), vec4(clearColor.x, clearColor.y, clearColor.z, clearColor.w));
+	commandBuffer.BeginRenderPass(ComposeTechnique, ComposeFramebuffer, ivec2(0, 0), ivec2(m_uWidth, m_uHeight), vec4(clearColor.x, clearColor.y, clearColor.z, clearColor.w));
 
 	{
 		m_mapPipeline["compose"]->Bind();
@@ -837,7 +832,9 @@ void Rendering::renderFinal(const mat4x4 & mView, const vec4 & clearColor)
 		m_mapPipeline["compose"]->UnBind();
 	}
 
-	ComposeTechnique.EndRenderPass();
+	commandBuffer.EndRenderPass();
+
+	commandBuffer.End();
 }
 
 /**
@@ -846,10 +843,14 @@ void Rendering::renderFinal(const mat4x4 & mView, const vec4 & clearColor)
  */
 void Rendering::renderFog(void)
 {
+	RHI::CommandBuffer commandBuffer;
+
+	commandBuffer.Begin();
+
 	RHI::RenderPass & ComposeTechnique = m_mapPass["fog"];
 	RHI::Framebuffer & ComposeFramebuffer = m_mapFramebuffer["HDR"];
 
-	ComposeTechnique.BeginRenderPass(ComposeFramebuffer, ivec2(0, 0), ivec2(m_uWidth, m_uHeight));
+	commandBuffer.BeginRenderPass(ComposeTechnique, ComposeFramebuffer, ivec2(0, 0), ivec2(m_uWidth, m_uHeight));
 
 	{
 		m_mapPipeline["fog_simple"]->Bind();
@@ -867,7 +868,9 @@ void Rendering::renderFog(void)
 		m_mapPipeline["fog_simple"]->UnBind();
 	}
 
-	ComposeTechnique.EndRenderPass();
+	commandBuffer.EndRenderPass();
+
+	commandBuffer.End();
 }
 
 /**
@@ -875,10 +878,14 @@ void Rendering::renderFog(void)
  */
 void Rendering::renderBloom(void)
 {
+	RHI::CommandBuffer commandBuffer;
+
+	commandBuffer.Begin();
+
 	RHI::RenderPass & BloomTechnique = m_mapPass["bloom"];
 	RHI::Framebuffer & BloomFramebuffer = m_mapFramebuffer["bloom"];
 
-	BloomTechnique.BeginRenderPass(BloomFramebuffer, ivec2(0, 0), ivec2(m_uWidth/4, m_uHeight/4));
+	commandBuffer.BeginRenderPass(BloomTechnique, BloomFramebuffer, ivec2(0, 0), ivec2(m_uWidth/4, m_uHeight/4));
 	{
 		{
 			m_mapPipeline["bloom_bright"]->Bind();
@@ -890,7 +897,7 @@ void Rendering::renderBloom(void)
 			m_mapPipeline["bloom_bright"]->UnBind();
 		}
 
-		BloomTechnique.NextSubpass();
+		commandBuffer.NextSubpass();
 
 		{
 			m_mapPipeline["bloom_horizontal_blur"]->Bind();
@@ -902,7 +909,7 @@ void Rendering::renderBloom(void)
 			m_mapPipeline["bloom_horizontal_blur"]->UnBind();
 		}
 
-		BloomTechnique.NextSubpass();
+		commandBuffer.NextSubpass();
 
 		{
 			m_mapPipeline["bloom_vertical_blur"]->Bind();
@@ -914,7 +921,9 @@ void Rendering::renderBloom(void)
 			m_mapPipeline["bloom_vertical_blur"]->UnBind();
 		}
 	}
-	BloomTechnique.EndRenderPass();
+	commandBuffer.EndRenderPass();
+
+	commandBuffer.End();
 }
 
 /**
@@ -922,10 +931,14 @@ void Rendering::renderBloom(void)
  */
 void Rendering::renderPostProcessEffects()
 {
+	RHI::CommandBuffer commandBuffer;
+
+	commandBuffer.Begin();
+
 	RHI::RenderPass & BlendTechnique = m_mapPass["blend"];
 	RHI::Framebuffer & BlendFramebuffer = m_mapFramebuffer["default"];
 
-	BlendTechnique.BeginRenderPass(BlendFramebuffer, ivec2(0, 0), ivec2(m_uWidth, m_uHeight));
+	commandBuffer.BeginRenderPass(BlendTechnique, BlendFramebuffer, ivec2(0, 0), ivec2(m_uWidth, m_uHeight));
 	{
 		m_mapPipeline["bloom"]->Bind();
 
@@ -935,7 +948,9 @@ void Rendering::renderPostProcessEffects()
 
 		m_mapPipeline["bloom"]->UnBind();
 	}
-	BlendTechnique.EndRenderPass();
+	commandBuffer.EndRenderPass();
+
+	commandBuffer.End();
 }
 
 /**
@@ -943,10 +958,14 @@ void Rendering::renderPostProcessEffects()
  */
 void Rendering::renderPickBuffer(void)
 {
+	RHI::CommandBuffer commandBuffer;
+
+	commandBuffer.Begin();
+
 	RHI::RenderPass & PickBufferTechnique = m_mapPass["picking"];
 	RHI::Framebuffer & PickBufferFramebuffer = m_mapFramebuffer["pickbuffer-earlyZ"];
 
-	PickBufferTechnique.BeginRenderPass(PickBufferFramebuffer, ivec2(0, 0), ivec2(m_uWidth, m_uHeight), vec4(1.0f, 1.0f, 1.0f, 1.0f));
+	commandBuffer.BeginRenderPass(PickBufferTechnique, PickBufferFramebuffer, ivec2(0, 0), ivec2(m_uWidth, m_uHeight), vec4(1.0f, 1.0f, 1.0f, 1.0f));
 	{
 		m_mapPipeline["pickbuffer"]->Bind();
 
@@ -972,7 +991,9 @@ void Rendering::renderPickBuffer(void)
 
 		m_mapPipeline["pickbuffer"]->UnBind();
 	}
-	PickBufferTechnique.EndRenderPass();
+	commandBuffer.EndRenderPass();
+
+	commandBuffer.End();
 }
 
 /**
@@ -981,10 +1002,14 @@ void Rendering::renderPickBuffer(void)
  */
 void Rendering::renderBoundingBox(const Mesh::Instance * pSelectedObject)
 {
+	RHI::CommandBuffer commandBuffer;
+
+	commandBuffer.Begin();
+
 	RHI::RenderPass & BBoxTechnique = m_mapPass["bbox"];
 	RHI::Framebuffer & DefaultFramebuffer = m_mapFramebuffer["default"];
 
-	BBoxTechnique.BeginRenderPass(DefaultFramebuffer, ivec2(0, 0), ivec2(m_uWidth, m_uHeight));
+	commandBuffer.BeginRenderPass(BBoxTechnique, DefaultFramebuffer, ivec2(0, 0), ivec2(m_uWidth, m_uHeight));
 	{
 		m_mapPipeline["bbox"]->Bind();
 
@@ -998,7 +1023,9 @@ void Rendering::renderBoundingBox(const Mesh::Instance * pSelectedObject)
 
 		m_mapPipeline["bbox"]->UnBind();
 	}
-	BBoxTechnique.EndRenderPass();
+	commandBuffer.EndRenderPass();
+
+	commandBuffer.End();
 }
 
 /**
