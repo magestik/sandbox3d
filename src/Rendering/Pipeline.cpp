@@ -50,20 +50,20 @@ Pipeline::Pipeline(const XMLElement * root, const Rendering & rendering)
 
 		if (nullptr != depth)
 		{
-			m_sDepthControl.enable = true;
+			depthStencilState.enableDepthTest = true;
 
 			const char * func = depth->Attribute("func");
 
 			if (nullptr != func)
 			{
-				m_sDepthControl.func = strToDepthFunc(func);
+				depthStencilState.depthCompareOp = RHI::CompareOp(strToDepthFunc(func));
 			}
 
 			const char * mask = depth->Attribute("mask");
 
 			if (nullptr != mask)
 			{
-				m_sDepthControl.mask = strToDepthMask(mask);
+				depthStencilState.enableDepthWrite = bool(strToDepthMask(mask));
 			}
 		}
 	}
@@ -74,20 +74,20 @@ Pipeline::Pipeline(const XMLElement * root, const Rendering & rendering)
 
 		if (nullptr != stencil)
 		{
-			m_sDepthControl.enable = true;
+			m_sStencilControl.enable = true;
 
 			const char * func = stencil->Attribute("func");
 
 			if (nullptr != func)
 			{
-				m_sDepthControl.func = strToStencilFunc(func);
+				m_sStencilControl.func = strToStencilFunc(func);
 			}
 
 			const char * mask = stencil->Attribute("mask");
 
 			if (nullptr != mask)
 			{
-				m_sDepthControl.mask = strToStencilMask(mask);
+				m_sStencilControl.mask = strToStencilMask(mask);
 			}
 		}
 	}
@@ -252,27 +252,13 @@ bool Pipeline::Bind(void) const
 		glEnable(cap);
 	}
 
-	if (m_sDepthControl.enable)
-	{
-		glEnable(GL_DEPTH_TEST);
-		glDepthFunc(m_sDepthControl.func);
-		glDepthMask(m_sDepthControl.mask);
-	}
-
 	if (m_sStencilControl.enable)
 	{
 		glEnable(GL_STENCIL_TEST);
 		glStencilFunc(m_sStencilControl.func, 0, UINT32_MAX);
 		glStencilMask(m_sStencilControl.mask);
 	}
-#if 0
-	if (m_sBlendControl.enable)
-	{
-		glEnable(GL_BLEND);
-		glBlendEquation(m_sBlendControl.equation);
-		glBlendFunc(m_sBlendControl.sfactor, m_sBlendControl.dfactor);
-	}
-#endif
+
 	glUseProgram(m_uShaderObject);
 
 	return(true);
@@ -290,13 +276,6 @@ void Pipeline::UnBind(void) const
 		glDisable(GL_STENCIL_TEST);
 		glStencilFunc(GL_ALWAYS, 0, UINT32_MAX);
 		glStencilMask(UINT32_MAX);
-	}
-
-	if (m_sDepthControl.enable)
-	{
-		glDisable(GL_DEPTH_TEST);
-		glDepthFunc(GL_LESS);
-		glDepthMask(GL_TRUE);
 	}
 
 	for (GLenum cap : m_aEnable)

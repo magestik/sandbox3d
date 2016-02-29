@@ -21,8 +21,8 @@ public:
 		DepthStencilState(void)
 		{
 			enableDepthTest = false;
-			enableDepthWrite = false;
-			depthCompareOp = COMPARE_OP_NEVER;
+			enableDepthWrite = true;
+			depthCompareOp = COMPARE_OP_LESS;
 
 			enableStencilTest = false;
 			//mask	= UINT32_MAX;

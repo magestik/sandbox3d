@@ -697,17 +697,19 @@ void Rendering::renderSceneToGBuffer(void)
 
 	commandBuffer.Begin();
 
-	RHI::Pipeline pipeline(m_mapPipeline["geometry_simple"]->m_pipeline);
+	RHI::Pipeline GeometrySimplePipeline(m_mapPipeline["geometry_simple"]->m_pipeline);
+	RHI::Pipeline GeometryNormalMApPipeline(m_mapPipeline["geometry_normalmap"]->m_pipeline);
+
 	RHI::RenderPass & GeometryPass = m_mapPass["geometry"];
 	RHI::Framebuffer & GeometryFramebuffer = m_mapFramebuffer["normals-earlyZ"];
 
-	commandBuffer.BeginRenderPass(GeometryPass, GeometryFramebuffer, ivec2(0, 0), ivec2(m_uWidth, m_uHeight), vec4(0.0f ,0.0f, 0.0f, 0.0f), 1.0f, 0);
+	commandBuffer.BeginRenderPass(GeometryPass, GeometryFramebuffer, ivec2(0, 0), ivec2(m_uWidth, m_uHeight), vec4(0.0f, 0.0f, 0.0f, 0.0f), 1.0f, 0);
 
 	{
-		commandBuffer.Bind(pipeline);
 
 		// OPTIMIZE THIS !!!!!
 		{
+			commandBuffer.Bind(GeometrySimplePipeline);
 			m_mapPipeline["geometry_simple"]->Bind();
 
 			unsigned int offset = 0;
@@ -741,6 +743,7 @@ void Rendering::renderSceneToGBuffer(void)
 		commandBuffer.NextSubpass();
 
 		{
+			commandBuffer.Bind(GeometryNormalMApPipeline);
 			m_mapPipeline["geometry_normalmap"]->Bind();
 
 			unsigned int offset = 0;

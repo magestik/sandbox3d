@@ -83,6 +83,8 @@ bool RHI::CommandBuffer::BeginRenderPass(RenderPass & pass, Framebuffer & fb, co
 
 	glViewport(offset.x, offset.y, extent.x, extent.y);
 
+	glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+
 	glClearColor(color.x, color.y, color.z, color.w);
 	glClear(GL_COLOR_BUFFER_BIT);
 
@@ -109,6 +111,8 @@ bool RHI::CommandBuffer::BeginRenderPass(RenderPass & pass, Framebuffer & fb, co
 	m_pCurrentPass->Begin(0 == fb.m_uFramebufferObject);
 
 	glViewport(offset.x, offset.y, extent.x, extent.y);
+
+	glDepthMask(GL_TRUE);
 
 	glClearDepthf(depth);
 	glClearStencil(stencil);
@@ -139,6 +143,9 @@ bool RHI::CommandBuffer::BeginRenderPass(RenderPass & pass, Framebuffer & fb, co
 	m_pCurrentPass->Begin(0 == fb.m_uFramebufferObject);
 
 	glViewport(offset.x, offset.y, extent.x, extent.y);
+
+	glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+	glDepthMask(GL_TRUE);
 
 	glClearColor(color.x, color.y, color.z, color.w);
 	glClearDepthf(depth);
@@ -197,6 +204,24 @@ bool RHI::CommandBuffer::Bind(Pipeline & pipeline)
 		{
 			glDisable(GL_PRIMITIVE_RESTART);
 		}
+	}
+
+	//
+	// Depth State
+	{
+		const Pipeline::DepthStencilState & state = pipeline.m_depthStencilState;
+
+		if (state.enableDepthTest)
+		{
+			glEnable(GL_DEPTH_TEST);
+			glDepthFunc(state.depthCompareOp);
+		}
+		else
+		{
+			glDisable(GL_DEPTH_TEST);
+		}
+
+		glDepthMask(state.enableDepthWrite);
 	}
 
 	//

@@ -22,21 +22,6 @@ class Pipeline
 {
 public:
 
-	struct DepthControl
-	{
-		DepthControl(void)
-		{
-			enable	= false;
-			mask	= GL_TRUE;
-			func	= GL_LESS;
-		}
-
-		bool enable;
-
-		GLboolean mask;
-		GLenum func;
-	};
-
 	struct StencilControl
 	{
 		StencilControl(void)
@@ -85,7 +70,6 @@ protected:
 
 	std::vector<GLenum> m_aEnable;
 
-	DepthControl        m_sDepthControl;
 	StencilControl      m_sStencilControl;
 
 	std::map<std::string, Sampler> m_mapSamplers;
