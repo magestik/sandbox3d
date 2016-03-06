@@ -50,20 +50,20 @@ Pipeline::Pipeline(const XMLElement * root, const Rendering & rendering)
 
 		if (nullptr != depth)
 		{
-			depthStencilState.enableDepthTest = true;
+			depthStencilState.enableDepth = true;
 
 			const char * func = depth->Attribute("func");
 
 			if (nullptr != func)
 			{
-				depthStencilState.depthCompareOp = RHI::CompareOp(strToDepthFunc(func));
+				depthStencilState.depthState.compareOp = RHI::CompareOp(strToDepthFunc(func));
 			}
 
 			const char * mask = depth->Attribute("mask");
 
 			if (nullptr != mask)
 			{
-				depthStencilState.enableDepthWrite = bool(strToDepthMask(mask));
+				depthStencilState.depthState.enableWrite = bool(strToDepthMask(mask));
 			}
 		}
 	}
@@ -74,20 +74,22 @@ Pipeline::Pipeline(const XMLElement * root, const Rendering & rendering)
 
 		if (nullptr != stencil)
 		{
-			m_sStencilControl.enable = true;
+			depthStencilState.enableStencil = true;
 
 			const char * func = stencil->Attribute("func");
 
 			if (nullptr != func)
 			{
-				m_sStencilControl.func = strToStencilFunc(func);
+				depthStencilState.frontStencilState.compareOp = RHI::CompareOp(strToStencilFunc(func));
+				depthStencilState.backStencilState.compareOp = RHI::CompareOp(strToStencilFunc(func));
 			}
 
 			const char * mask = stencil->Attribute("mask");
 
 			if (nullptr != mask)
 			{
-				m_sStencilControl.mask = strToStencilMask(mask);
+				depthStencilState.frontStencilState.writeMask = strToStencilMask(mask);
+				depthStencilState.backStencilState.writeMask = strToStencilMask(mask);
 			}
 		}
 	}
@@ -252,13 +254,6 @@ bool Pipeline::Bind(void) const
 		glEnable(cap);
 	}
 
-	if (m_sStencilControl.enable)
-	{
-		glEnable(GL_STENCIL_TEST);
-		glStencilFunc(m_sStencilControl.func, 0, UINT32_MAX);
-		glStencilMask(m_sStencilControl.mask);
-	}
-
 	glUseProgram(m_uShaderObject);
 
 	return(true);
@@ -270,13 +265,6 @@ bool Pipeline::Bind(void) const
 void Pipeline::UnBind(void) const
 {
 	glUseProgram(0);
-
-	if (m_sStencilControl.enable)
-	{
-		glDisable(GL_STENCIL_TEST);
-		glStencilFunc(GL_ALWAYS, 0, UINT32_MAX);
-		glStencilMask(UINT32_MAX);
-	}
 
 	for (GLenum cap : m_aEnable)
 	{

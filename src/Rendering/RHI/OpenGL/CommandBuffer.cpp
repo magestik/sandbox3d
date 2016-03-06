@@ -207,21 +207,37 @@ bool RHI::CommandBuffer::Bind(Pipeline & pipeline)
 	}
 
 	//
-	// Depth State
+	// DepthStencil State
 	{
 		const Pipeline::DepthStencilState & state = pipeline.m_depthStencilState;
 
-		if (state.enableDepthTest)
+		if (state.enableDepth)
 		{
 			glEnable(GL_DEPTH_TEST);
-			glDepthFunc(state.depthCompareOp);
+			glDepthFunc(state.depthState.compareOp);
+			glDepthMask(state.depthState.enableWrite);
 		}
 		else
 		{
 			glDisable(GL_DEPTH_TEST);
 		}
 
-		glDepthMask(state.enableDepthWrite);
+		if (state.enableStencil)
+		{
+			glEnable(GL_STENCIL_TEST);
+
+			glStencilMaskSeparate(GL_FRONT, state.frontStencilState.writeMask);
+			glStencilFuncSeparate(GL_FRONT, state.frontStencilState.compareOp, state.frontStencilState.reference, state.frontStencilState.compareMask);
+			glStencilOpSeparate(GL_FRONT, state.frontStencilState.failOp, state.frontStencilState.depthFailOp, state.frontStencilState.passOp);
+
+			glStencilMaskSeparate(GL_BACK, state.backStencilState.writeMask);
+			glStencilFuncSeparate(GL_BACK, state.backStencilState.compareOp, state.backStencilState.reference, state.backStencilState.compareMask);
+			glStencilOpSeparate(GL_BACK, state.backStencilState.failOp, state.backStencilState.depthFailOp, state.backStencilState.passOp);
+		}
+		else
+		{
+			glDisable(GL_STENCIL_TEST);
+		}
 	}
 
 	//

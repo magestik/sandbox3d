@@ -16,26 +16,54 @@ public:
 		bool enableRestartPrimitive;
 	};
 
+	struct DepthState
+	{
+		DepthState(void)
+		{
+			enableWrite = true;
+			compareOp = COMPARE_OP_LESS;
+		}
+
+		bool		enableWrite;
+		CompareOp	compareOp;
+	};
+
+	struct StencilState
+	{
+		StencilState(void)
+		{
+			failOp = STENCIL_OP_ZERO;
+			passOp = STENCIL_OP_ZERO;
+			depthFailOp = STENCIL_OP_ZERO;
+			compareOp = COMPARE_OP_ALWAYS;
+			compareMask = UINT32_MAX;
+			writeMask = 0;
+			reference = 0;
+		}
+
+		StencilOp		failOp;
+		StencilOp		passOp;
+		StencilOp		depthFailOp;
+		CompareOp		compareOp;
+		unsigned int	compareMask;
+		unsigned		writeMask;
+		unsigned		reference;
+	};
+
 	struct DepthStencilState
 	{
 		DepthStencilState(void)
 		{
-			enableDepthTest = false;
-			enableDepthWrite = true;
-			depthCompareOp = COMPARE_OP_LESS;
-
-			enableStencilTest = false;
-			//mask	= UINT32_MAX;
-			//func	= GL_ALWAYS;
+			enableDepth = false;
+			enableStencil = false;
 		}
 
-		bool		enableDepthTest;
-		bool		enableDepthWrite;
-		CompareOp	depthCompareOp;
+		bool			enableDepth;
+		DepthState		depthState;
 
-		bool enableStencilTest;
-		//GLuint mask;
-		//GLenum func;
+		bool			enableStencil;
+		StencilState	frontStencilState;
+		StencilState	backStencilState;
 	};
 
 	struct BlendState

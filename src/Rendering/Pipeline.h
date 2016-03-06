@@ -22,21 +22,6 @@ class Pipeline
 {
 public:
 
-	struct StencilControl
-	{
-		StencilControl(void)
-		{
-			enable	= false;
-			mask	= UINT32_MAX;
-			func	= GL_ALWAYS;
-		}
-
-		bool enable;
-
-		GLuint mask;
-		GLenum func;
-	};
-
 	typedef GLuint Sampler;
 
 	typedef GLuint Shader;
@@ -69,8 +54,6 @@ public:
 protected:
 
 	std::vector<GLenum> m_aEnable;
-
-	StencilControl      m_sStencilControl;
 
 	std::map<std::string, Sampler> m_mapSamplers;
 
