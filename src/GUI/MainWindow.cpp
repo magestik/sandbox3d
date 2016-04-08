@@ -60,6 +60,10 @@ MainWindow::MainWindow(QWidget * pParent)
 		m_pEnvSettingsWidget = new EnvSettingsWidget(this, m_pDrawable->m_renderer.environment);
 	}
 
+	{
+		m_pNodeEditorWindow = new NodeEditorWindow(this);
+	}
+
 	QSettings settings;
 	restoreGeometry(settings.value("mainWindowGeometry").toByteArray());
 	restoreState(settings.value("mainWindowState").toByteArray());
@@ -167,6 +171,14 @@ void MainWindow::on_actionFaceCulling_changed()
 void MainWindow::on_actionClear_color_triggered()
 {
 	m_pClearColorChooser->show();
+}
+
+/**
+ * @brief MainWindow::on_actionNode_Editor_triggered
+ */
+void MainWindow::on_actionNode_Editor_triggered()
+{
+	m_pNodeEditorWindow->show();
 }
 
 /**

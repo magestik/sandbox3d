@@ -1,3 +1,6 @@
 [submodule "external/linear-algebra"]
 	path = external/linear-algebra
 	url = git@github.com:magestik/linear-algebra.git
+[submodule "external/qt5-node-editor"]
+	path = external/qt5-node-editor
+	url = git@github.com:magestik/qt5-node-editor.git

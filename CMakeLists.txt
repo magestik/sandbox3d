@@ -11,7 +11,7 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 # My Sources
 include_directories(include)
 
-include_directories(external/linear-algebra/include external/curves/src external/assimp/include)
+include_directories(external/linear-algebra/include external/qt5-node-editor/src)
 
 add_subdirectory(external)
 
@@ -21,7 +21,7 @@ file(GLOB_RECURSE SRC_FILES src/*.cpp src/*.h src/*.inl include/*.h include/*.in
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wshadow -Werror=return-local-addr -Werror=return-type")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -fno-rtti -fno-exceptions")
-#set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=address -fno-omit-frame-pointer ")
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=address ")
 
 # Qt
 set(CMAKE_AUTOMOC ON)
@@ -82,7 +82,7 @@ ENDIF()
 
 target_link_libraries(${PROJECT_NAME} "rt")
 
-target_link_libraries(${PROJECT_NAME} ${OPENGL_LIBRARIES} ${assimp_LIBRARIES} ${TINYXML2_LIBRARY} Qt5::Core Qt5::Widgets Qt5::Gui Qt5::OpenGL)
+target_link_libraries(${PROJECT_NAME} ${OPENGL_LIBRARIES} ${assimp_LIBRARIES} ${TINYXML2_LIBRARY} Qt5::Core Qt5::Widgets Qt5::Gui Qt5::OpenGL Qt5NodeEditor)
 
 add_custom_target(deploy_shaders ALL COMMAND ${PROJECT_SOURCE_DIR}/scripts/deploy_shaders.sh WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})
 
