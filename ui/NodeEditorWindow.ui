@@ -47,19 +47,9 @@
     <string>addNode</string>
    </property>
   </action>
-  <action name="actionAddInput">
+  <action name="actionDeleteNode">
    <property name="text">
-    <string>addInput</string>
-   </property>
-  </action>
-  <action name="actionAddOutput">
-   <property name="text">
-    <string>addOutput</string>
-   </property>
-  </action>
-  <action name="actionActionDelete">
-   <property name="text">
-    <string>delete</string>
+    <string>deleteNode</string>
    </property>
    <property name="shortcut">
     <string>Del</string>

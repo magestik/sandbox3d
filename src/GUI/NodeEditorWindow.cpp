@@ -1,11 +1,15 @@
 #include "NodeEditorWindow.h"
 #include "ui_NodeEditorWindow.h"
 
+#include "NodeCreationWindow.h"
+
 #include <QVBoxLayout>
 #include <QStatusBar>
 #include <QMenuBar>
 #include <QContextMenuEvent>
 #include <QAction>
+#include <QDir>
+#include <QMessageBox>
 
 #include <graphicsnodescene.hpp>
 #include <graphicsnodeview.hpp>
@@ -15,6 +19,8 @@
 #include <qobjectnode.hpp>
 
 #include <assert.h>
+
+#include <jansson.h>
 
 /**
  * @brief NodeEditorWindow::NodeEditorWindow
@@ -64,8 +70,15 @@ NodeEditorWindow::NodeEditorWindow(QWidget * pParent)
 		m_pContextMenuScene->addAction(ui->actionAddNode);
 
 		m_pContextMenuNode = new QMenu(this);
-		m_pContextMenuNode->addAction(ui->actionAddInput);
-		m_pContextMenuNode->addAction(ui->actionAddOutput);
+		m_pContextMenuNode->addAction(ui->actionDeleteNode);
+	}
+
+	loadNodeDescriptors();
+
+	// Node Creation Window
+	{
+		m_pNodeCreationWindow = new NodeCreationWindow(m_aNodeDescriptors, this);
+		connect(m_pNodeCreationWindow, SIGNAL(accepted()), this, SLOT(createNodeFromWindow()));
 	}
 }
 
@@ -115,52 +128,46 @@ void NodeEditorWindow::contextMenuEvent(QContextMenuEvent * pEvent)
 	}
 }
 
+void NodeEditorWindow::loadNodeDescriptors(void)
+{
+	QDir dir("data/nodes");
+	QStringList list = dir.entryList(QDir::Files);
+
+	bool successful = true;
+
+	for (QString & filename : list)
+	{
+		NodeDescriptor desc;
+		bool loading = desc.loadFromFile(dir.filePath(filename).toStdString());
+
+		if (loading)
+		{
+			m_aNodeDescriptors.push_back(desc);
+		}
+		else
+		{
+			successful = false;
+		}
+	}
+
+	if (!successful)
+	{
+		int ret = QMessageBox::warning(this, tr("Sandbox 3D"), tr("All Nodes were not loaded successfully !"));
+	}
+}
+
 /**
  * @brief NodeEditorWindow::on_actionAddNode_triggered
  */
 void NodeEditorWindow::on_actionAddNode_triggered()
 {
-	auto n = new GraphicsNode();
-
-	n->setTitle(QString("Node"));
-
-	m_pScene->addItem(n);
-}
-
-/**
- * @brief NodeEditorWindow::on_actionAddInput_triggered
- */
-void NodeEditorWindow::on_actionAddInput_triggered(void)
-{
-	QList<QGraphicsItem *> list = m_pScene->selectedItems();
-	assert(list.count() == 1);
-
-	QGraphicsItem * item = list.at(0);
-	assert(item->type() == GraphicsNodeItemTypes::TypeNode);
-
-	GraphicsNode * node = static_cast<GraphicsNode*>(item);
-	node->add_sink("input");
-}
-
-/**
- * @brief NodeEditorWindow::on_actionAddOutput_triggered
- */
-void NodeEditorWindow::on_actionAddOutput_triggered(void)
-{
-	QList<QGraphicsItem *> list = m_pScene->selectedItems();
-	assert(list.count() == 1);
-
-	QGraphicsItem * item = list.at(0);
-	assert(item->type() == GraphicsNodeItemTypes::TypeNode);
-
-	GraphicsNode * node = static_cast<GraphicsNode*>(item);
-	node->add_source("output");
+	m_pNodeCreationWindow->show();
 }
 
 /**
  * @brief NodeEditorWindow::on_actionDelete_triggered
  */
-void NodeEditorWindow::on_actionDelete_triggered(void)
+void NodeEditorWindow::on_actionDeleteNode_triggered(void)
 {
 	QList<QGraphicsItem *> list = m_pScene->selectedItems();
 
@@ -171,5 +178,31 @@ void NodeEditorWindow::on_actionDelete_triggered(void)
 			m_pScene->removeItem(item);
 			delete item;
 		}
+	}
+}
+
+/**
+ * @brief NodeEditorWindow::createNodeFromWindow
+ */
+void NodeEditorWindow::createNodeFromWindow()
+{
+	NodeDescriptor * pDesc = m_pNodeCreationWindow->getCurrentDescriptor();
+
+	if (pDesc)
+	{
+		GraphicsNode * n = new GraphicsNode();
+		n->setTitle(QString(pDesc->name.c_str()));
+
+		for (NodeDescriptor::Input & input : pDesc->inputs)
+		{
+			n->add_sink(QString(input.name.c_str()));
+		}
+
+		for (NodeDescriptor::Output & output : pDesc->outputs)
+		{
+			n->add_source(QString(output.name.c_str()));
+		}
+
+		m_pScene->addItem(n);
 	}
 }

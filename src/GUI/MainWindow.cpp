@@ -69,8 +69,8 @@ MainWindow::MainWindow(QWidget * pParent)
 	restoreState(settings.value("mainWindowState").toByteArray());
 
 	ui->statusbar->showMessage(tr("Ready"), 2000);
-	ui->statusbar->addPermanentWidget(ui->cpu_time_text);
-	ui->statusbar->addPermanentWidget(ui->gpu_time_text);
+//	ui->statusbar->addPermanentWidget(ui->cpu_time_text);
+//	ui->statusbar->addPermanentWidget(ui->gpu_time_text);
 }
 
 /**

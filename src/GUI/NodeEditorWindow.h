@@ -1,10 +1,14 @@
 #pragma once
 
+#include "NodeDescription.h"
+
 #include <QDialog>
 
 class QMenuBar;
 class QStatusBar;
 class QMenu;
+
+class NodeCreationWindow;
 
 class GraphicsNodeView;
 class GraphicsNodeScene;
@@ -19,11 +23,15 @@ class NodeEditorWindow : public QDialog
 
 public:
 
-	explicit	NodeEditorWindow		(QWidget * parent = 0);
+	explicit	NodeEditorWindow		(QWidget * parent = nullptr);
 	virtual		~NodeEditorWindow		(void);
 
 	void		closeEvent				(QCloseEvent * event) Q_DECL_OVERRIDE;
 	void		contextMenuEvent		(QContextMenuEvent * event) Q_DECL_OVERRIDE;
+
+protected:
+
+	void		loadNodeDescriptors		(void);
 
 private:
 
@@ -40,13 +48,15 @@ protected:
 	QMenu *					m_pContextMenuScene;
 	QMenu *					m_pContextMenuNode;
 
+	NodeCreationWindow *	m_pNodeCreationWindow;
+
+	std::vector<NodeDescriptor> m_aNodeDescriptors;
+
 private slots:
 
 	void on_actionAddNode_triggered();
+	void on_actionDeleteNode_triggered();
 
-	void on_actionAddInput_triggered();
-	void on_actionAddOutput_triggered();
-
-	void on_actionDelete_triggered();
+	void createNodeFromWindow();
 
 };
