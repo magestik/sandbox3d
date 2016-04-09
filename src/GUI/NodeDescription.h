@@ -11,6 +11,7 @@ struct NodeDescriptor
 	enum NodeType
 	{
 		UnknownNodeType,
+		FinalNode,
 		Renderer,
 		FullscreenEffect
 	};

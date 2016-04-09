@@ -32,6 +32,7 @@ public:
 protected:
 
 	void		loadNodeDescriptors		(void);
+	void		createNode				(const NodeDescriptor & desc);
 
 private:
 

@@ -67,23 +67,32 @@ NodeEditorWindow::NodeEditorWindow(QWidget * pParent)
 	// Context menu
 	{
 		m_pContextMenuScene = new QMenu(this);
-		m_pContextMenuScene->addAction(ui->actionCreateUserDefinedNode);
-
 		m_pContextMenuNode = new QMenu(this);
-		m_pContextMenuNode->addAction(ui->actionRemoveNode);
 	}
 
 	// Actions
 	{
+		m_pContextMenuScene->addAction(ui->actionCreateUserDefinedNode);
+		m_pContextMenuNode->addAction(ui->actionRemoveNode);
+
 		addAction(ui->actionRemoveNode);
 	}
 
-	GraphicsNode * n = new GraphicsNode();
-	n->setTitle(QString("Screen"));
-	n->add_sink(QString("input"));
-	m_pScene->addItem(n);
-
 	loadNodeDescriptors();
+
+	// Create Final Node
+	{
+		NodeDescriptor::Input input;
+		input.name = "input";
+		input.type = NodeDescriptor::Texture;
+
+		NodeDescriptor ScreenDescriptor;
+		ScreenDescriptor.type = NodeDescriptor::FinalNode;
+		ScreenDescriptor.name = "Screen";
+		ScreenDescriptor.inputs.push_back(input);
+
+		createNode(ScreenDescriptor);
+	}
 
 	// Node Creation Window
 	{
@@ -138,6 +147,9 @@ void NodeEditorWindow::contextMenuEvent(QContextMenuEvent * pEvent)
 	}
 }
 
+/**
+ * @brief NodeEditorWindow::loadNodeDescriptors
+ */
 void NodeEditorWindow::loadNodeDescriptors(void)
 {
 	QDir dir("data/nodes");
@@ -164,6 +176,29 @@ void NodeEditorWindow::loadNodeDescriptors(void)
 	{
 		int ret = QMessageBox::warning(this, tr("Sandbox 3D"), tr("All Nodes were not loaded successfully !"));
 	}
+}
+
+/**
+ * @brief NodeEditorWindow::createNode
+ * @param desc
+ */
+void NodeEditorWindow::createNode(const NodeDescriptor & desc)
+{
+	GraphicsNode * n = new GraphicsNode();
+
+	n->setTitle(QString(desc.name.c_str()));
+
+	for (const NodeDescriptor::Input & input : desc.inputs)
+	{
+		n->add_sink(QString(input.name.c_str()));
+	}
+
+	for (const NodeDescriptor::Output & output : desc.outputs)
+	{
+		n->add_source(QString(output.name.c_str()));
+	}
+
+	m_pScene->addItem(n);
 }
 
 /**
@@ -200,19 +235,6 @@ void NodeEditorWindow::createNodeFromWindow()
 
 	if (pDesc)
 	{
-		GraphicsNode * n = new GraphicsNode();
-		n->setTitle(QString(pDesc->name.c_str()));
-
-		for (NodeDescriptor::Input & input : pDesc->inputs)
-		{
-			n->add_sink(QString(input.name.c_str()));
-		}
-
-		for (NodeDescriptor::Output & output : pDesc->outputs)
-		{
-			n->add_source(QString(output.name.c_str()));
-		}
-
-		m_pScene->addItem(n);
+		createNode(*pDesc);
 	}
 }
