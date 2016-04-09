@@ -11,9 +11,42 @@ public:
 
 	struct InputAssemblyState
 	{
-		InputAssemblyState(void) : topology(PRIMITIVE_POINT_LIST), enableRestartPrimitive(false) { /* ... */ }
+		InputAssemblyState(void)
+		{
+			topology = PRIMITIVE_POINT_LIST;
+			enableRestartPrimitive = false;
+		}
+
 		PrimitiveType topology;
 		bool enableRestartPrimitive;
+	};
+
+	struct RasterizationState
+	{
+		RasterizationState(void)
+		{
+			enableDepthClamp = false;
+			enableRasterizerDiscard = false;
+			polygonMode = POLYGON_MODE_FILL;
+			cullMode = CULL_MODE_NONE;
+			frontFace = FRONT_FACE_COUNTER_CLOCKWISE;
+			enableDepthBias = false;
+			depthBiasConstantFactor = 0.0f;
+			depthBiasClamp = 0.0f;
+			depthBiasSlopeFactor = 0.0f;
+			lineWidth = 1.0f;
+		}
+
+		bool			enableDepthClamp;
+		bool			enableRasterizerDiscard;
+		PolygonMode		polygonMode;
+		CullMode		cullMode;
+		FrontFace		frontFace;
+		bool			enableDepthBias;
+		float			depthBiasConstantFactor;
+		float			depthBiasClamp;
+		float			depthBiasSlopeFactor;
+		float			lineWidth;
 	};
 
 	struct DepthState
