@@ -42,14 +42,20 @@
     <number>0</number>
    </property>
   </layout>
-  <action name="actionAddNode">
+  <action name="actionCreateUserDefinedNode">
    <property name="text">
-    <string>addNode</string>
+    <string>Create user-defined Node</string>
+   </property>
+   <property name="toolTip">
+    <string>Create a node from a description in data/nodes</string>
    </property>
   </action>
-  <action name="actionDeleteNode">
+  <action name="actionRemoveNode">
    <property name="text">
-    <string>deleteNode</string>
+    <string>Remove Node</string>
+   </property>
+   <property name="toolTip">
+    <string>Remove the node from the Graph</string>
    </property>
    <property name="shortcut">
     <string>Del</string>

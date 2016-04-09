@@ -64,14 +64,24 @@ NodeEditorWindow::NodeEditorWindow(QWidget * pParent)
 		ui->layout->addWidget(m_pStatusBar);
 	}
 
-	// Centext menu
+	// Context menu
 	{
 		m_pContextMenuScene = new QMenu(this);
-		m_pContextMenuScene->addAction(ui->actionAddNode);
+		m_pContextMenuScene->addAction(ui->actionCreateUserDefinedNode);
 
 		m_pContextMenuNode = new QMenu(this);
-		m_pContextMenuNode->addAction(ui->actionDeleteNode);
+		m_pContextMenuNode->addAction(ui->actionRemoveNode);
 	}
+
+	// Actions
+	{
+		addAction(ui->actionRemoveNode);
+	}
+
+	GraphicsNode * n = new GraphicsNode();
+	n->setTitle(QString("Screen"));
+	n->add_sink(QString("input"));
+	m_pScene->addItem(n);
 
 	loadNodeDescriptors();
 
@@ -157,17 +167,17 @@ void NodeEditorWindow::loadNodeDescriptors(void)
 }
 
 /**
- * @brief NodeEditorWindow::on_actionAddNode_triggered
+ * @brief NodeEditorWindow::actionCreateUserDefinedNode
  */
-void NodeEditorWindow::on_actionAddNode_triggered()
+void NodeEditorWindow::on_actionCreateUserDefinedNode_triggered()
 {
 	m_pNodeCreationWindow->show();
 }
 
 /**
- * @brief NodeEditorWindow::on_actionDelete_triggered
+ * @brief NodeEditorWindow::on_actionRemoveNode_triggered
  */
-void NodeEditorWindow::on_actionDeleteNode_triggered(void)
+void NodeEditorWindow::on_actionRemoveNode_triggered(void)
 {
 	QList<QGraphicsItem *> list = m_pScene->selectedItems();
 
@@ -175,8 +185,8 @@ void NodeEditorWindow::on_actionDeleteNode_triggered(void)
 	{
 		if (item->type() == GraphicsNodeItemTypes::TypeNode)
 		{
+			item->setSelected(false);
 			m_pScene->removeItem(item);
-			delete item;
 		}
 	}
 }

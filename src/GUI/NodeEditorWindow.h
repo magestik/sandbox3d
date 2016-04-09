@@ -54,8 +54,8 @@ protected:
 
 private slots:
 
-	void on_actionAddNode_triggered();
-	void on_actionDeleteNode_triggered();
+	void on_actionCreateUserDefinedNode_triggered();
+	void on_actionRemoveNode_triggered();
 
 	void createNodeFromWindow();
 
