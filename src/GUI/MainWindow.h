@@ -50,11 +50,12 @@ public:
 
 private slots:
 
+	void on_actionFullscreen_toggled(bool checked);
+
 	void on_actionImport_triggered();
 
 	void on_actionClear_color_triggered();
 	void on_actionNode_Editor_triggered();
-
 
 	void on_actionWireframe_toggled(bool checked);
 	void on_actionFaceCulling_changed();

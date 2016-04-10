@@ -135,6 +135,22 @@ void MainWindow::SetStatus(const QString & str)
 }
 
 /**
+ * @brief MainWindow::on_actionFullscreen_toggled
+ * @param checked
+ */
+void MainWindow::on_actionFullscreen_toggled(bool checked)
+{
+	if (checked)
+	{
+		showFullScreen();
+	}
+	else
+	{
+		showNormal();
+	}
+}
+
+/**
  * @brief MainWindow::on_actionImport_triggered
  */
 void MainWindow::on_actionImport_triggered()
