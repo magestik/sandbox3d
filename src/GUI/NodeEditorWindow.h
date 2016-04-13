@@ -12,6 +12,7 @@ class NodeCreationWindow;
 
 class GraphicsNodeView;
 class GraphicsNodeScene;
+class GraphicsNode;
 
 namespace Ui {
 	class NodeEditorWindow;
@@ -31,8 +32,12 @@ public:
 
 protected:
 
-	void		loadNodeDescriptors		(void);
-	void		createNode				(const NodeDescriptor & desc);
+	void				loadNodeDescriptors		(void);
+
+	bool				loadGraph				(void);
+	bool				saveGraph				(void);
+	void				createDefaultNodes		(void);
+	GraphicsNode *		createNode				(const NodeDescriptor & desc);
 
 private:
 
@@ -53,7 +58,11 @@ protected:
 
 	std::vector<NodeDescriptor> m_aNodeDescriptors;
 
+	std::map<const GraphicsNode*, const NodeDescriptor*> m_mapNode;
+
 private slots:
+
+	void on_actionSave_triggered();
 
 	void on_actionCreateUserDefinedNode_triggered();
 	void on_actionRemoveNode_triggered();
