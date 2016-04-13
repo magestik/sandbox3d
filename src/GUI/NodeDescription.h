@@ -35,6 +35,13 @@ struct NodeDescriptor
 		DataType type;
 	};
 
+	bool operator == (const char * strId) const
+	{
+		return(identifier == strId);
+	}
+
+	std::string identifier;
+
 	std::string name;
 	NodeType type;
 

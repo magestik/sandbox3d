@@ -139,7 +139,11 @@ bool NodeDescriptor::loadFromFile(const std::string & filename)
 
 	json_object_foreach(root, key, value)
 	{
-		if (!strcmp(key, "name"))
+		if (!strcmp(key, "id"))
+		{
+			identifier = json_string_value(value);
+		}
+		else if (!strcmp(key, "name"))
 		{
 			name = json_string_value(value);
 		}
