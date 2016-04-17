@@ -19,6 +19,9 @@ public:
 	Framebuffer		(const Framebuffer & fb) = delete;
 	Framebuffer		(Framebuffer && fb);
 	Framebuffer		(const std::vector<const GPU::Texture<GL_TEXTURE_2D> *> & aTextures);
+#if HAVE_OPENGL
+	Framebuffer		(GLuint framebuffer);
+#endif // HAVE_OPENGL
 	~Framebuffer	(void);
 
 	//
@@ -29,7 +32,7 @@ public:
 protected:
 
 #if HAVE_OPENGL
-	GLenum m_uFramebufferObject;
+	GLuint m_uFramebufferObject;
 #endif // HAVE_OPENGL
 
 #if HAVE_VULKAN

@@ -68,6 +68,15 @@ RHI::Framebuffer::Framebuffer(const std::vector<const GPU::Texture<GL_TEXTURE_2D
 		assert(GL_FRAMEBUFFER_COMPLETE == status);
 	}
 }
+/**
+ * @brief Constructor
+ * @param aTextures
+ */
+RHI::Framebuffer::Framebuffer(GLuint framebuffer)
+: m_uFramebufferObject(framebuffer)
+{
+
+}
 
 /**
  * @brief Destructor

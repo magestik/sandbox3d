@@ -28,7 +28,7 @@
  * @param parent
  */
 DrawableSurface::DrawableSurface(QWidget *parent)
-: QGLWidget(parent)
+: QOpenGLWidget(parent)
 , m_camera()
 , m_vLastPos(0, 0)
 , m_eRenderType(Rendering::FINAL)
@@ -196,6 +196,8 @@ void DrawableSurface::resizeGL(int w, int h)
  */
 void DrawableSurface::paintGL(void)
 {
+	m_renderer.GetFramebuffer("default") = RHI::Framebuffer(defaultFramebufferObject());
+
 	GLuint elapsed_time = 0;
 	Timer t;
 
@@ -635,6 +637,8 @@ void DrawableSurface::reloadShader(const QString & filename)
  */
 void DrawableSurface::importScene(const QString & filename)
 {
+	makeCurrent();
+
 	std::string filepath = filename.toStdString();
 
 	Assimp::Importer importer;

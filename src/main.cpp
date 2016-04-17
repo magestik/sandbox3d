@@ -6,18 +6,12 @@
 
 bool setDefaultFormatOpenGL(void)
 {
-	QGLFormat fmt;
-	fmt.setDoubleBuffer(true);
-	fmt.setDirectRendering(true);
-	fmt.setRgba(true);
-	fmt.setStencil(false);
-	fmt.setDepth(false);
-	fmt.setAlpha(false);
-	fmt.setVersion(3, 3);
-	fmt.setProfile(QGLFormat::CoreProfile);
-	QGLFormat::setDefaultFormat(fmt);
+	QSurfaceFormat format;
+	format.setVersion(3, 3);
+	format.setProfile(QSurfaceFormat::CoreProfile);
+	QSurfaceFormat::setDefaultFormat(format);
 
-	return(QGLFormat::openGLVersionFlags() & QGLFormat::OpenGL_Version_3_3);
+	return(true);
 }
 
 int main(int argc, char ** argv)

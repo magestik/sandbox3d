@@ -94,6 +94,16 @@ public:
 		return(m_mapPipeline.at(name));
 	}
 
+	const RHI::Framebuffer & GetFramebuffer(const char * name) const
+	{
+		return(m_mapFramebuffer.at(name));
+	}
+
+	RHI::Framebuffer & GetFramebuffer(const char * name)
+	{
+		return(m_mapFramebuffer.at(name));
+	}
+
 protected:
 
 	void	generateMeshes				(void);
