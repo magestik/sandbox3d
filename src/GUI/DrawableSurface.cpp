@@ -39,7 +39,7 @@ DrawableSurface::DrawableSurface(QWidget *parent)
 {
 	setAutoFillBackground(false);
 	setFocusPolicy(Qt::StrongFocus);
-	makeCurrent();
+	connect(this, &QOpenGLWidget::resized, this, &DrawableSurface::onResized);
 }
 
 /**
@@ -196,8 +196,6 @@ void DrawableSurface::resizeGL(int w, int h)
  */
 void DrawableSurface::paintGL(void)
 {
-	m_renderer.GetFramebuffer("default") = RHI::Framebuffer(defaultFramebufferObject());
-
 	GLuint elapsed_time = 0;
 	Timer t;
 
@@ -222,6 +220,14 @@ void DrawableSurface::paintGL(void)
 	glGetQueryObjectuiv(m_query, GL_QUERY_RESULT, &elapsed_time);
 
 	static_cast<MainWindow*>(parent())->SetRenderTime(t.getElapsedTimeInMs(), elapsed_time / 1000000.0);
+}
+
+/**
+ * @brief DrawableSurface::onResized
+ */
+void DrawableSurface::onResized(void)
+{
+	m_renderer.SetDefaultFramebuffer(defaultFramebufferObject());
 }
 
 /**

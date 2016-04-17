@@ -94,14 +94,13 @@ public:
 		return(m_mapPipeline.at(name));
 	}
 
-	const RHI::Framebuffer & GetFramebuffer(const char * name) const
+	void SetDefaultFramebuffer(GLuint framebuffer)
 	{
-		return(m_mapFramebuffer.at(name));
-	}
-
-	RHI::Framebuffer & GetFramebuffer(const char * name)
-	{
-		return(m_mapFramebuffer.at(name));
+		std::map<std::string, RHI::Framebuffer>::iterator it = m_mapFramebuffer.find("default");
+		if (it != m_mapFramebuffer.end())
+		{
+			it->second = RHI::Framebuffer(framebuffer);
+		}
 	}
 
 protected:

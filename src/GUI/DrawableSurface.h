@@ -51,7 +51,6 @@ protected:
 
 	void	wheelEvent			(QWheelEvent * event);
 
-
 	void    keyPressEvent       (QKeyEvent * event);
 	void    keyReleaseEvent     (QKeyEvent * event);
 
@@ -115,4 +114,6 @@ public slots:
 
 	void setClearColor(const QColor & color);
 	void setAmbientColor(const QColor & color);
+
+	void	onResized				(void);
 };
