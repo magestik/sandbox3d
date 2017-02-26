@@ -4,6 +4,10 @@ project(Sandbox3D)
 
 enable_testing()
 
+if (NOT CMAKE_BUILD_TYPE)
+	set(CMAKE_BUILD_TYPE Debug) # Default
+endif ()
+
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
