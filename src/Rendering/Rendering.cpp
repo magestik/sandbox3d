@@ -8,6 +8,18 @@
 
 #include "RenderXML.h"
 
+#include "Algorithms/RenderSceneToGBuffer.h"
+#include "Algorithms/RenderSceneToShadowMap.h"
+#include "Algorithms/RenderLightsToAccumBuffer.h"
+#include "Algorithms/Compose.h"
+#include "Algorithms/Fog.h"
+#include "Algorithms/BrightFilter.h"
+#include "Algorithms/ToneMapping.h"
+#include "Algorithms/FXAA.h"
+#include "Algorithms/BlurH.h"
+#include "Algorithms/BlurV.h"
+#include "Algorithms/Bloom.h"
+
 std::map<std::string, GPU::Shader<GL_FRAGMENT_SHADER> *> g_FragmentShaders;
 
 std::map<std::string, GPU::Shader<GL_VERTEX_SHADER> *> g_VertexShaders;
@@ -17,8 +29,6 @@ std::map<std::string, GPU::Shader<GL_GEOMETRY_SHADER> *> g_GeometryShaders;
 std::map<std::string, GPU::Texture<GL_TEXTURE_2D> *> g_Textures;
 
 std::map<std::string, Mesh> g_Meshes;
-
-#define SHADOW_MAP_SIZE 1024
 
 const mat3x3 sRGB_to_XYZ(0.4124564, 0.3575761, 0.1804375, 0.2126729, 0.7151522, 0.0721750, 0.0193339, 0.1191920, 0.9503041);
 const mat3x3 XYZ_to_sRGB(3.2404542, -1.5371385, -0.4985314, -0.9692660, 1.8760108, 0.0415560, 0.0556434, -0.2040259, 1.0572252);
@@ -48,7 +58,6 @@ Rendering::Rendering()
 , m_pCameraBuffer(nullptr)
 , m_pObjectsBuffer(nullptr)
 , m_mapTargets()
-, m_mapPass()
 , m_AvLum(nullptr)
 {
 	// ...
@@ -64,10 +73,45 @@ void Rendering::onInitializeComplete()
 	renderXML.initializePipelines(*this);
 	renderXML.initializeTargets(*this);
 
+	//
+	// Create Pick Buffer Texture
+	{
+		RenderTexture RTc(GL_R32UI, 1);
+		m_mapTargets.insert(std::pair<std::string, RenderTexture>("pickbuffer-color", RTc));
+		RenderTexture RTd(GL_DEPTH_COMPONENT32F, 1);
+		m_mapTargets.insert(std::pair<std::string, RenderTexture>("pickbuffer-depth", RTd));
+	}
+
 	onResize(m_uWidth, m_uHeight);
 
+	initPickBuffer();
+	initBoundingBox();
+
 	renderXML.initializeFramebuffers(*this);
-	renderXML.initializePasses(*this);
+
+	//
+	// Fill Render Queue
+	m_renderQueue.push_back(new RenderSceneToGBuffer(*this, m_mapFramebuffer["normals-earlyZ"]));
+	m_renderQueue.push_back(new RenderSceneToShadowMap(*this, m_mapFramebuffer["shadow-map"]));
+	m_renderQueue.push_back(new RenderLightsToAccumBuffer(*this, m_mapFramebuffer["lights"]));
+	m_renderQueue.push_back(new Compose(*this, m_mapFramebuffer["HDR-earlyZ"]));
+
+	if (environment.isEnabled(EnvironmentSettings::FOG))
+	{
+		m_renderQueue.push_back(new Fog(*this, m_mapFramebuffer["HDR"]));
+	}
+
+	m_renderQueue.push_back(new BrightFilter(*this, m_mapFramebuffer["bloom_br"]));
+	m_renderQueue.push_back(new BlurH(*this, m_mapFramebuffer["bloom_bh"]));
+	m_renderQueue.push_back(new BlurV(*this, m_mapFramebuffer["bloom_bv"]));
+	m_renderQueue.push_back(new ToneMapping(*this, m_mapFramebuffer["LDR"]));
+	m_renderQueue.push_back(new FXAA(*this, m_mapFramebuffer["default"]));
+	m_renderQueue.push_back(new Bloom(*this, m_mapFramebuffer["default"]));
+
+	for (GraphicsAlgorithm * qElmt : m_renderQueue)
+	{
+		qElmt->init();
+	}
 
 	//
 	// Initialize hardcoded passes
@@ -87,12 +131,6 @@ void Rendering::onInitializeComplete()
 
 	m_pObjectsBuffer = new GPU::Buffer<GL_UNIFORM_BUFFER>();
 	GPU::realloc(*m_pObjectsBuffer, sizeof(ObjectBlock)*m_aObjects.size(), GL_STREAM_DRAW);
-
-	for (auto const & p : m_mapPipeline)
-	{
-		p.second->SetUniformBlockBinding("CameraBlock", BLOCK_BINDING_CAMERA);
-		p.second->SetUniformBlockBinding("ObjectBlock", BLOCK_BINDING_OBJECT);
-	}
 
 	glBindBufferRange(GL_UNIFORM_BUFFER, BLOCK_BINDING_CAMERA, m_pCameraBuffer->GetObject(), 0, sizeof(CameraBlock));
 }
@@ -252,138 +290,25 @@ void Rendering::onUpdate(const mat4x4 & mView, const vec4 & clearColor, bool bWi
 	const vec4 clearColorXYZ(sRGB_to_XYZ * clearColor.xyz, clearColor.w);
 	const vec4 clearColorRGB(XYZ_to_sRGB * clearColorXYZ.xyz, clearColor.w);
 
-	if (FINAL == eRenderType && bWireframe)
+	m_matCurrentView = mView;
+	m_vCurrentClearColor = clearColorXYZ;
+
+	for (GraphicsAlgorithm * a : m_renderQueue)
 	{
-		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-
-		renderSceneToGBuffer();
-
-		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-
-		renderLightsToAccumBuffer(mView);
-
-		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-
-		renderFinal(mView, clearColorXYZ);
-
-		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-
-		renderIntermediateToScreen(FINAL);
-
-		return;
-	}
-
-	//
-	// Render Scene to G-Buffer
-	//
-
-	renderSceneToGBuffer();
-
-	//
-	// Render Scene to Shadow Map
-	//
-
-	renderSceneToShadowMap();
-
-
-	//
-	// Render Lights to Accumulation Buffer
-	//
-
-	renderLightsToAccumBuffer(mView);
-
-	//
-	// Render Scene using light buffer
-	//
-
-	renderFinal(mView, clearColorXYZ);
-
-	//
-	// Add Fog if requested
-	//
-
-	if (environment.isEnabled(EnvironmentSettings::FOG))
-	{
-		renderFog();
-	}
-
-	//
-	// Bloom
-	//
-
-	renderBloom();
-
-	//
-	// Render to Screen
-	//
-
-	if (eRenderType == FINAL)
-	{
-		float avLum = 0.0f;
-		float white2 = 0.0f;
-
-		computeToneMappingParams(avLum, white2);
-
 		RHI::CommandBuffer commandBuffer;
 
 		commandBuffer.Begin();
 
-		RHI::Pipeline ToneMappingPipeline(m_mapPipeline["tonemapping"]->m_pipeline);
-		RHI::RenderPass & ToneMappingTechnique = m_mapPass["tonemapping"];
-		RHI::Framebuffer & ToneMappingFramebuffer = m_mapFramebuffer["LDR"];
-
-		commandBuffer.BeginRenderPass(ToneMappingTechnique, ToneMappingFramebuffer, ivec2(0, 0), ivec2(m_uWidth, m_uHeight));
-		{
-			commandBuffer.Bind(ToneMappingPipeline);
-
-			m_mapPipeline["tonemapping"]->Bind();
-
-			m_mapPipeline["tonemapping"]->SetTexture("texSampler", 0, *(m_mapTargets["HDR"].getTexture()));
-			m_mapPipeline["tonemapping"]->SetUniform("avLum", avLum);
-			m_mapPipeline["tonemapping"]->SetUniform("white2", white2);
-
-			m_pQuadMesh->draw(commandBuffer);
-
-			m_mapPipeline["tonemapping"]->UnBind();
-		}
-		commandBuffer.EndRenderPass();
-
-		RHI::Pipeline AntiAliasingPipeline(m_mapPipeline["fxaa"]->m_pipeline);
-		RHI::RenderPass & AntiAliasingTechnique = m_mapPass["anti-aliasing"];
-		RHI::Framebuffer & AntiAliasingFramebuffer = m_mapFramebuffer["default"];
-
-		commandBuffer.BeginRenderPass(AntiAliasingTechnique, AntiAliasingFramebuffer, ivec2(0, 0), ivec2(m_uWidth, m_uHeight));
-		{
-			commandBuffer.Bind(AntiAliasingPipeline);
-
-			m_mapPipeline["fxaa"]->Bind();
-
-			m_mapPipeline["fxaa"]->SetTexture("texSampler", 0, *(m_mapTargets["LDR"].getTexture()));
-			m_mapPipeline["fxaa"]->SetUniform("fxaaQualityRcpFrame", vec2(1.0/m_uWidth, 1.0/m_uHeight));
-
-			m_pQuadMesh->draw(commandBuffer);
-
-			m_mapPipeline["fxaa"]->UnBind();
-		}
-		commandBuffer.EndRenderPass();
+		a->render(commandBuffer);
 
 		commandBuffer.End();
-
-		//
-		// post process
-
-		renderPostProcessEffects();
-
-		renderPickBuffer();
-
-		if (nullptr != pSelectedObject)
-		{
-			renderBoundingBox(pSelectedObject);
-		}
 	}
-	else
+
+	renderPickBuffer();
+
+	if (nullptr != pSelectedObject)
 	{
-		renderIntermediateToScreen(eRenderType);
+		renderBoundingBox(pSelectedObject);
 	}
 }
 
@@ -425,83 +350,24 @@ void Rendering::onDelete(const Mesh::Instance & instance)
  */
 Mesh::Instance * Rendering::getObjectAtPos(const ivec2 & pos)
 {
-	ivec2 glPos(pos.x, m_uHeight - pos.y);
-
 	Mesh::Instance * object = nullptr;
 
-	RHI::CommandBuffer commandBuffer;
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, m_pickBufferFramebuffer.m_uFramebufferObject);
+	glReadBuffer(GL_COLOR_ATTACHMENT0);
 
-	commandBuffer.Begin();
+	unsigned int id = UINT32_MAX;
 
-	RHI::Pipeline pipeline;
-	RHI::RenderPass & PickBufferTechnique = m_mapPass["picking"];
-	RHI::Framebuffer & PickBufferFramebuffer = m_mapFramebuffer["pickbuffer-earlyZ"];
+	glReadPixels(pos.x, m_uHeight - pos.y, 1, 1, GL_RED_INTEGER, GL_UNSIGNED_INT, &id);
 
-	commandBuffer.BeginRenderPass(PickBufferTechnique, PickBufferFramebuffer, ivec2(0, 0), ivec2(m_uWidth, m_uHeight));
+	if (id < m_aObjects.size())
 	{
-		unsigned int id = UINT32_MAX;
-#if 0
-		PickBufferTechnique.ReadPixel(glPos, id);
-#endif
-		if (id < m_aObjects.size())
-		{
-			object = &(m_aObjects[id]);
-		}
+		object = &(m_aObjects[id]);
 	}
-	commandBuffer.EndRenderPass();
 
-	commandBuffer.End();
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+	glReadBuffer(GL_BACK);
 
 	return(object);
-}
-
-/**
- * @brief Rendering::renderSceneToShadowMap
- * @param mViewProjection
- */
-void Rendering::renderSceneToShadowMap(void)
-{
-	RHI::CommandBuffer commandBuffer;
-
-	commandBuffer.Begin();
-
-	RHI::Pipeline pipeline(m_mapPipeline["shadow_map"]->m_pipeline);
-	RHI::RenderPass & ShadowMapPass = m_mapPass["shadow_map"];
-	RHI::Framebuffer & ShadowMapFramebuffer = m_mapFramebuffer["shadow-map"];
-
-	commandBuffer.BeginRenderPass(ShadowMapPass, ShadowMapFramebuffer, ivec2(0, 0), ivec2(SHADOW_MAP_SIZE, SHADOW_MAP_SIZE), 1.0f, 0);
-	{
-		commandBuffer.Bind(pipeline);
-
-		m_mapPipeline["shadow_map"]->Bind();
-
-		glPolygonOffset(10.0f, 1.0f);
-
-		mat4x4 mDepthView = _lookAt(vec3(0,0,0), m_pLight->GetDirection(), vec3(0.0f, -1.0f, 0.0f));
-		mat4x4 mDepthViewProjection = m_matShadowMapProjection * mDepthView;
-
-		m_mapPipeline["shadow_map"]->SetUniform("LightViewProjection", mDepthViewProjection);
-
-		for (Mesh::Instance & object : m_aObjects)
-		{
-			m_mapPipeline["shadow_map"]->SetUniform("Model", object.transformation);
-
-			object.mesh->bind();
-
-			// TODO : remove loop and directly use glDrawElements on the full buffer
-			for (SubMesh * m : object.getDrawCommands())
-			{
-				m->draw(commandBuffer);
-			}
-
-			object.mesh->unbind();
-		}
-
-		m_mapPipeline["shadow_map"]->UnBind();
-	}
-	commandBuffer.EndRenderPass();
-
-	commandBuffer.End();
 }
 
 /**
@@ -510,6 +376,7 @@ void Rendering::renderSceneToShadowMap(void)
  */
 void Rendering::renderIntermediateToScreen(ERenderType eRenderType)
 {
+#if 0
 	RHI::CommandBuffer commandBuffer;
 
 	commandBuffer.Begin();
@@ -686,326 +553,62 @@ void Rendering::renderIntermediateToScreen(ERenderType eRenderType)
 	}
 
 	commandBuffer.End();
+#endif // 0
 }
 
 /**
- * @brief Rendering::renderGBuffer
+ * @brief Rendering::initPickBuffer
  */
-void Rendering::renderSceneToGBuffer(void)
+void Rendering::initPickBuffer(void)
 {
-	RHI::CommandBuffer commandBuffer;
-
-	commandBuffer.Begin();
-
-	RHI::Pipeline GeometrySimplePipeline(m_mapPipeline["geometry_simple"]->m_pipeline);
-	RHI::Pipeline GeometryNormalMApPipeline(m_mapPipeline["geometry_normalmap"]->m_pipeline);
-
-	RHI::RenderPass & GeometryPass = m_mapPass["geometry"];
-	RHI::Framebuffer & GeometryFramebuffer = m_mapFramebuffer["normals-earlyZ"];
-
-	commandBuffer.BeginRenderPass(GeometryPass, GeometryFramebuffer, ivec2(0, 0), ivec2(m_uWidth, m_uHeight), vec4(0.0f, 0.0f, 0.0f, 0.0f), 1.0f, 0);
-
-	{
-
-		// OPTIMIZE THIS !!!!!
-		{
-			commandBuffer.Bind(GeometrySimplePipeline);
-			m_mapPipeline["geometry_simple"]->Bind();
-
-			unsigned int offset = 0;
-
-			for (Mesh::Instance & object : m_aObjects)
-			{
-				glBindBufferRange(GL_UNIFORM_BUFFER, BLOCK_BINDING_OBJECT, m_pObjectsBuffer->GetObject(), sizeof(ObjectBlock)*offset, sizeof(ObjectBlock));
-
-				object.mesh->bind();
-
-				for (SubMesh * m : object.getDrawCommands())
-				{
-					const GPU::Texture<GL_TEXTURE_2D> * pNormalMap = m->getNormalMap();
-
-					if (nullptr == pNormalMap)
-					{
-						m_mapPipeline["geometry_simple"]->SetUniform("shininess", m->m_material.shininess);
-
-						m->draw(commandBuffer);
-					}
-				}
-
-				object.mesh->unbind();
-
-				++offset;
-			}
-
-			m_mapPipeline["geometry_simple"]->UnBind();
-		}
-
-		commandBuffer.NextSubpass();
-
-		{
-			commandBuffer.Bind(GeometryNormalMApPipeline);
-			m_mapPipeline["geometry_normalmap"]->Bind();
-
-			unsigned int offset = 0;
-
-			for (Mesh::Instance & object : m_aObjects)
-			{
-				glBindBufferRange(GL_UNIFORM_BUFFER, BLOCK_BINDING_OBJECT, m_pObjectsBuffer->GetObject(), sizeof(ObjectBlock)*offset, sizeof(ObjectBlock));
-
-				object.mesh->bind();
-
-				for (SubMesh * m : object.getDrawCommands())
-				{
-					const GPU::Texture<GL_TEXTURE_2D> * pNormalMap = m->getNormalMap();
-
-					if (nullptr != pNormalMap)
-					{
-						m_mapPipeline["geometry_normalmap"]->SetTexture("normalMap", 0, *pNormalMap);
-						m_mapPipeline["geometry_normalmap"]->SetUniform("shininess", m->m_material.shininess);
-
-						m->draw(commandBuffer);
-					}
-				}
-
-				object.mesh->unbind();
-
-				++offset;
-			}
-
-			m_mapPipeline["geometry_normalmap"]->UnBind();
-		}
-	}
-
-	commandBuffer.EndRenderPass();
-
-	commandBuffer.End();
-}
-
-/**
- * @brief Rendering::renderLightsToAccumBuffer
- */
-void Rendering::renderLightsToAccumBuffer(const mat4x4 & mView)
-{
-	RHI::CommandBuffer commandBuffer;
-
-	commandBuffer.Begin();
-
-	RHI::Pipeline pipeline(m_mapPipeline["lights_directional"]->m_pipeline);
-	RHI::RenderPass & LightsTechnique = m_mapPass["lights"];
-	RHI::Framebuffer & LightsFramebuffer = m_mapFramebuffer["lights"];
-
-	commandBuffer.BeginRenderPass(LightsTechnique, LightsFramebuffer, ivec2(0, 0), ivec2(m_uWidth, m_uHeight), vec4(0.0f, 0.0f, 0.0f, 0.0f));
-
-	{
-		commandBuffer.Bind(pipeline);
-
-		m_mapPipeline["lights_directional"]->Bind();
-
-		mat4x4 mCameraViewProjection = m_matProjection * mView;
-
-		m_mapPipeline["lights_directional"]->SetUniform("viewPos", (inverse(mView) * vec4(0.0, 0.0, 0.0, 1.0)).xyz);
-		m_mapPipeline["lights_directional"]->SetUniform("InverseViewProjection", inverse(mCameraViewProjection));
-		m_mapPipeline["lights_directional"]->SetUniform("lightDir", - normalize(m_pLight->GetDirection()));
-		m_mapPipeline["lights_directional"]->SetUniform("lightColor", sRGB_to_XYZ * m_pLight->GetColor());
-		m_mapPipeline["lights_directional"]->SetTexture("depthSampler", 0, *(m_mapTargets["depth"].getTexture()));
-		m_mapPipeline["lights_directional"]->SetTexture("normalSampler", 1, *(m_mapTargets["normals"].getTexture()));
-
-		m_pQuadMesh->draw(commandBuffer);
-
-		m_mapPipeline["lights_directional"]->UnBind();
-
-		// TODO : render all lights
-	}
-
-	commandBuffer.EndRenderPass();
-
-	commandBuffer.End();
-}
-
-/**
- * @brief Rendering::renderFinal
- * @param mViewProjection
- */
-void Rendering::renderFinal(const mat4x4 & mView, const vec4 & clearColor)
-{
-	RHI::CommandBuffer commandBuffer;
-
-	commandBuffer.Begin();
-
-	RHI::Pipeline pipeline(m_mapPipeline["compose"]->m_pipeline);
-	RHI::RenderPass & ComposeTechnique = m_mapPass["compose"];
-	RHI::Framebuffer & ComposeFramebuffer = m_mapFramebuffer["HDR-earlyZ"];
-
-	commandBuffer.BeginRenderPass(ComposeTechnique, ComposeFramebuffer, ivec2(0, 0), ivec2(m_uWidth, m_uHeight), vec4(clearColor.x, clearColor.y, clearColor.z, clearColor.w));
-
-	{
-		commandBuffer.Bind(pipeline);
-
-		m_mapPipeline["compose"]->Bind();
-
-		mat4x4 mDepthView = _lookAt(vec3(0,0,0), m_pLight->GetDirection(), vec3(0.0f, -1.0f, 0.0f));
-		mat4x4 mDepthViewProjection = m_matShadowMapProjection * mDepthView;
-
-		m_mapPipeline["compose"]->SetTexture("diffuseLightSampler", 0, *(m_mapTargets["lights_diffuse"].getTexture()));
-		m_mapPipeline["compose"]->SetTexture("specularLightSampler", 1, *(m_mapTargets["lights_specular"].getTexture()));
-		m_mapPipeline["compose"]->SetTexture("shadowMap", 2, *(m_mapTargets["shadow_map"].getTexture()));
-
-		m_mapPipeline["compose"]->SetUniform("ambientColor", sRGB_to_XYZ * environment.ambient.Color);
-		m_mapPipeline["compose"]->SetUniform("DepthTransformation", mDepthViewProjection);
-		m_mapPipeline["compose"]->SetUniform("View", mView);
-
-		unsigned int offset = 0;
-
-		for (Mesh::Instance & object : m_aObjects)
-		{
-			glBindBufferRange(GL_UNIFORM_BUFFER, BLOCK_BINDING_OBJECT, m_pObjectsBuffer->GetObject(), sizeof(ObjectBlock)*offset, sizeof(ObjectBlock));
-
-			object.mesh->bind();
-
-			for (SubMesh * m : object.getDrawCommands())
-			{
-				m_mapPipeline["compose"]->SetTexture("diffuseSampler", 3, *(m->m_material.m_diffuse));
-				m_mapPipeline["compose"]->SetTexture("specularSampler", 4, *(m->m_material.m_specular));
-
-				m->draw(commandBuffer);
-			}
-
-			object.mesh->unbind();
-
-			++offset;
-		}
-
-		m_mapPipeline["compose"]->UnBind();
-	}
-
-	commandBuffer.EndRenderPass();
-
-	commandBuffer.End();
-}
-
-/**
- * @brief Rendering::renderFog
- * @param mView
- */
-void Rendering::renderFog(void)
-{
-	RHI::CommandBuffer commandBuffer;
-
-	commandBuffer.Begin();
-
-	RHI::Pipeline pipeline(m_mapPipeline["fog_simple"]->m_pipeline);
-	RHI::RenderPass & ComposeTechnique = m_mapPass["fog"];
-	RHI::Framebuffer & ComposeFramebuffer = m_mapFramebuffer["HDR"];
-
-	commandBuffer.BeginRenderPass(ComposeTechnique, ComposeFramebuffer, ivec2(0, 0), ivec2(m_uWidth, m_uHeight));
-
-	{
-		commandBuffer.Bind(pipeline);
-
-		m_mapPipeline["fog_simple"]->Bind();
-
-		m_mapPipeline["fog_simple"]->SetTexture("depthMapSampler", 0, *(m_mapTargets["depth"].getTexture()));
-		m_mapPipeline["fog_simple"]->SetUniform("FogScattering", environment.fog.Scattering);
-		m_mapPipeline["fog_simple"]->SetUniform("FogExtinction", environment.fog.Extinction);
-		m_mapPipeline["fog_simple"]->SetUniform("FogColor", environment.fog.Color);
-		m_mapPipeline["fog_simple"]->SetUniform("camera_near", 1.0f);
-		m_mapPipeline["fog_simple"]->SetUniform("camera_far", 1000.0f);
-		m_mapPipeline["fog_simple"]->SetUniform("near_plane_half_size", vec2(m_uHeight * float(m_uWidth/(float)m_uHeight), tanf(75.0f/2.0)));
-
-		m_pQuadMesh->draw(commandBuffer);
-
-		m_mapPipeline["fog_simple"]->UnBind();
-	}
-
-	commandBuffer.EndRenderPass();
-
-	commandBuffer.End();
-}
-
-/**
- * @brief Rendering::renderBloom
- */
-void Rendering::renderBloom(void)
-{
-	RHI::CommandBuffer commandBuffer;
-
-	commandBuffer.Begin();
-
-	RHI::Pipeline pipeline(m_mapPipeline["bloom_bright"]->m_pipeline);
-	RHI::RenderPass & BloomTechnique = m_mapPass["bloom"];
-	RHI::Framebuffer & BloomFramebuffer = m_mapFramebuffer["bloom"];
-
-	commandBuffer.BeginRenderPass(BloomTechnique, BloomFramebuffer, ivec2(0, 0), ivec2(m_uWidth/4, m_uHeight/4));
-	{
-		commandBuffer.Bind(pipeline);
-
-		{
-			m_mapPipeline["bloom_bright"]->Bind();
-
-			m_mapPipeline["bloom_bright"]->SetTexture("texSampler", 0, *(m_mapTargets["HDR"].getTexture()));
-
-			m_pQuadMesh->draw(commandBuffer);
-
-			m_mapPipeline["bloom_bright"]->UnBind();
-		}
-
-		commandBuffer.NextSubpass();
-
-		{
-			m_mapPipeline["bloom_horizontal_blur"]->Bind();
-
-			m_mapPipeline["bloom_horizontal_blur"]->SetTexture("texSampler", 0, *(m_mapTargets["bloom1"].getTexture()));
-
-			m_pQuadMesh->draw(commandBuffer);
-
-			m_mapPipeline["bloom_horizontal_blur"]->UnBind();
-		}
-
-		commandBuffer.NextSubpass();
-
-		{
-			m_mapPipeline["bloom_vertical_blur"]->Bind();
-
-			m_mapPipeline["bloom_vertical_blur"]->SetTexture("texSampler", 0, *(m_mapTargets["bloom2"].getTexture()));
-
-			m_pQuadMesh->draw(commandBuffer);
-
-			m_mapPipeline["bloom_vertical_blur"]->UnBind();
-		}
-	}
-	commandBuffer.EndRenderPass();
-
-	commandBuffer.End();
-}
-
-/**
- * @brief Rendering::renderPostProcessEffects
- */
-void Rendering::renderPostProcessEffects()
-{
-	RHI::CommandBuffer commandBuffer;
-
-	commandBuffer.Begin();
-
-	RHI::Pipeline pipeline(m_mapPipeline["bloom"]->m_pipeline);
-	RHI::RenderPass & BlendTechnique = m_mapPass["blend"];
-	RHI::Framebuffer & BlendFramebuffer = m_mapFramebuffer["default"];
-
-	commandBuffer.BeginRenderPass(BlendTechnique, BlendFramebuffer, ivec2(0, 0), ivec2(m_uWidth, m_uHeight));
-	{
-		commandBuffer.Bind(pipeline);
-
-		m_mapPipeline["bloom"]->Bind();
-
-		m_mapPipeline["bloom"]->SetTexture("texSampler", 0, *(m_mapTargets["bloom1"].getTexture()));
-
-		m_pQuadMesh->draw(commandBuffer);
-
-		m_mapPipeline["bloom"]->UnBind();
-	}
-	commandBuffer.EndRenderPass();
-
-	commandBuffer.End();
+	//
+	// Create Framebuffer
+	std::vector<const GPU::Texture<GL_TEXTURE_2D> *> aTextures;
+	const GPU::Texture<GL_TEXTURE_2D> * pDepthTexture = GetRenderTexture("pickbuffer-depth");
+	const GPU::Texture<GL_TEXTURE_2D> * pRenderTexture = GetRenderTexture("pickbuffer-color");
+	aTextures.push_back(pDepthTexture);
+	aTextures.push_back(pRenderTexture);
+
+	m_pickBufferFramebuffer = RHI::Framebuffer(aTextures);
+
+	//
+	// Create Render Pass
+	RHI::RenderPass::SubpassDescription desc;
+	desc.depthAttachment = 0; // disable depth buffer
+	desc.aColorAttachments.push_back(0);
+
+	m_pickBufferRenderPass = RHI::RenderPass(desc);
+
+	//
+	// Create Pipeline
+	RHI::Pipeline::InputAssemblyState input;
+	RHI::Pipeline::RasterizationState rasterization;
+
+	RHI::Pipeline::DepthStencilState depthStencil;
+	depthStencil.enableDepth = true;
+	depthStencil.depthState.enableWrite = true;
+	depthStencil.depthState.compareOp = RHI::COMPARE_OP_LESS;
+
+	RHI::Pipeline::BlendState blend;
+
+	RHI::Pipeline::ShaderStage vertexShader;
+	vertexShader.stage = RHI::SHADER_STAGE_VERTEX;
+	vertexShader.module = g_VertexShaders["pickbuffer.vert"]->GetObject();
+
+	RHI::Pipeline::ShaderStage fragmentShader;
+	fragmentShader.stage = RHI::SHADER_STAGE_FRAGMENT;
+	fragmentShader.module = g_FragmentShaders["pickbuffer.frag"]->GetObject();
+
+	std::vector<RHI::Pipeline::ShaderStage> aStages;
+	aStages.push_back(vertexShader);
+	aStages.push_back(fragmentShader);
+
+	m_pickBufferPipeline = RHI::Pipeline(input, rasterization, depthStencil, blend, aStages);
+
+	//
+	// TODO : remove this
+	SetUniformBlockBinding(m_pickBufferPipeline.m_uShaderObject, "CameraBlock", Rendering::BLOCK_BINDING_CAMERA);
+	SetUniformBlockBinding(m_pickBufferPipeline.m_uShaderObject, "ObjectBlock", Rendering::BLOCK_BINDING_OBJECT);
 }
 
 /**
@@ -1017,15 +620,9 @@ void Rendering::renderPickBuffer(void)
 
 	commandBuffer.Begin();
 
-	RHI::Pipeline pipeline(m_mapPipeline["pickbuffer"]->m_pipeline);
-	RHI::RenderPass & PickBufferTechnique = m_mapPass["picking"];
-	RHI::Framebuffer & PickBufferFramebuffer = m_mapFramebuffer["pickbuffer-earlyZ"];
-
-	commandBuffer.BeginRenderPass(PickBufferTechnique, PickBufferFramebuffer, ivec2(0, 0), ivec2(m_uWidth, m_uHeight), vec4(1.0f, 1.0f, 1.0f, 1.0f));
+	commandBuffer.BeginRenderPass(m_pickBufferRenderPass, m_pickBufferFramebuffer, ivec2(0, 0), ivec2(m_uWidth, m_uHeight), vec4(1.0f, 1.0f, 1.0f, 1.0f), 1.0f, 0);
 	{
-		commandBuffer.Bind(pipeline);
-
-		m_mapPipeline["pickbuffer"]->Bind();
+		commandBuffer.Bind(m_pickBufferPipeline);
 
 		unsigned int i = 0;
 
@@ -1033,7 +630,7 @@ void Rendering::renderPickBuffer(void)
 		{
 			object.mesh->bind();
 
-			m_mapPipeline["pickbuffer"]->SetUniform("Model", object.transformation);
+			SetUniform(m_pickBufferPipeline.m_uShaderObject, "Model", object.transformation);
 
 			glVertexAttribI1ui(5, i);
 
@@ -1046,12 +643,55 @@ void Rendering::renderPickBuffer(void)
 
 			++i;
 		}
-
-		m_mapPipeline["pickbuffer"]->UnBind();
 	}
 	commandBuffer.EndRenderPass();
 
 	commandBuffer.End();
+}
+
+/**
+ * @brief Rendering::initBoundingBox
+ */
+void Rendering::initBoundingBox(void)
+{
+	//
+	// Create Render Pass
+	RHI::RenderPass::SubpassDescription desc;
+	desc.depthAttachment = 0; // disable depth buffer
+	desc.aColorAttachments.push_back(0);
+
+	m_boundingBoxRenderPass = RHI::RenderPass(desc);
+
+	//
+	// Create Pipeline
+	RHI::Pipeline::InputAssemblyState input;
+	RHI::Pipeline::RasterizationState rasterization;
+	RHI::Pipeline::DepthStencilState depthStencil;
+	RHI::Pipeline::BlendState blend;
+
+	RHI::Pipeline::ShaderStage vertexShader;
+	vertexShader.stage = RHI::SHADER_STAGE_VERTEX;
+	vertexShader.module = g_VertexShaders["bbox.vert"]->GetObject();
+
+	RHI::Pipeline::ShaderStage geometryShader;
+	geometryShader.stage = RHI::SHADER_STAGE_GEOMETRY;
+	geometryShader.module = g_GeometryShaders["bbox.geom"]->GetObject();
+
+	RHI::Pipeline::ShaderStage fragmentShader;
+	fragmentShader.stage = RHI::SHADER_STAGE_FRAGMENT;
+	fragmentShader.module = g_FragmentShaders["bbox.frag"]->GetObject();
+
+	std::vector<RHI::Pipeline::ShaderStage> aStages;
+	aStages.push_back(vertexShader);
+	aStages.push_back(geometryShader);
+	aStages.push_back(fragmentShader);
+
+	m_boundingBoxPipeline = RHI::Pipeline(input, rasterization, depthStencil, blend, aStages);
+
+	//
+	// TODO : remove this
+	SetUniformBlockBinding(m_boundingBoxPipeline.m_uShaderObject, "CameraBlock", Rendering::BLOCK_BINDING_CAMERA);
+	SetUniformBlockBinding(m_boundingBoxPipeline.m_uShaderObject, "ObjectBlock", Rendering::BLOCK_BINDING_OBJECT);
 }
 
 /**
@@ -1064,88 +704,21 @@ void Rendering::renderBoundingBox(const Mesh::Instance * pSelectedObject)
 
 	commandBuffer.Begin();
 
-	RHI::Pipeline pipeline(m_mapPipeline["bbox"]->m_pipeline);
-	RHI::RenderPass & BBoxTechnique = m_mapPass["bbox"];
 	RHI::Framebuffer & DefaultFramebuffer = m_mapFramebuffer["default"];
 
-	commandBuffer.BeginRenderPass(BBoxTechnique, DefaultFramebuffer, ivec2(0, 0), ivec2(m_uWidth, m_uHeight));
+	commandBuffer.BeginRenderPass(m_boundingBoxRenderPass, DefaultFramebuffer, ivec2(0, 0), ivec2(m_uWidth, m_uHeight));
 	{
-		commandBuffer.Bind(pipeline);
+		commandBuffer.Bind(m_boundingBoxPipeline);
 
-		m_mapPipeline["bbox"]->Bind();
+		SetUniform(m_boundingBoxPipeline.m_uShaderObject, "Model", pSelectedObject->transformation);
 
-		m_mapPipeline["bbox"]->SetUniform("Model", pSelectedObject->transformation);
-
-		m_mapPipeline["bbox"]->SetUniform("BBoxMin", pSelectedObject->mesh->m_BoundingBox.min);
-		m_mapPipeline["bbox"]->SetUniform("BBoxMax", pSelectedObject->mesh->m_BoundingBox.max);
-		m_mapPipeline["bbox"]->SetUniform("color", vec3(1.0, 1.0, 1.0));
+		SetUniform(m_boundingBoxPipeline.m_uShaderObject, "BBoxMin", pSelectedObject->mesh->m_BoundingBox.min);
+		SetUniform(m_boundingBoxPipeline.m_uShaderObject, "BBoxMax", pSelectedObject->mesh->m_BoundingBox.max);
+		SetUniform(m_boundingBoxPipeline.m_uShaderObject, "color", vec3(1.0, 1.0, 1.0));
 
 		m_pPointMesh->draw(commandBuffer);
-
-		m_mapPipeline["bbox"]->UnBind();
 	}
 	commandBuffer.EndRenderPass();
 
 	commandBuffer.End();
-}
-
-/**
- * @brief Rendering::computeLuminance
- * @param avLum
- * @param white²
- */
-void Rendering::computeToneMappingParams(float & avLum, float & white2)
-{
-#if 0
-	RHI::RenderPass & ToneMappingComputePass = m_mapPass["compute-tonemapping-params"];
-	RHI::Framebuffer & LuminanceFramebuffer = m_mapFramebuffer["luminance"];
-
-	ToneMappingComputePass.BeginRenderPass(LuminanceFramebuffer, ivec2(0, 0), ivec2(m_uLuminanceSizePOT, m_uLuminanceSizePOT));
-	{
-		{
-			m_mapPipeline["luminance_conversion"]->Bind();
-
-			m_mapPipeline["luminance_conversion"]->SetTexture("texSampler", 0, *(m_mapTargets["HDR"].getTexture()));
-
-			m_pQuadMesh->draw();
-
-			m_mapPipeline["luminance_conversion"]->UnBind();
-		}
-
-		const GPU::Texture<GL_TEXTURE_2D> * textures [2] =
-		{
-			m_mapTargets["luminance1"].getTexture(),
-			m_mapTargets["luminance2"].getTexture()
-		};
-
-		m_AvLum->begin();
-		{
-			vec2 texture_scale (1.0f, 1.0f);
-
-			for (int size = m_uLuminanceSizePOT >> 1; size > 1; size >>= 1)
-			{
-				glViewport(0, 0, size, size);
-
-				unsigned int tex = m_AvLum->next();
-
-				m_AvLum->SetTexture("texSampler", 0, *(textures[tex]));
-				m_AvLum->SetUniform("textureScale", texture_scale);
-
-				m_pQuadMesh->draw();
-
-				texture_scale = texture_scale * 0.5f;
-			}
-		}
-		m_AvLum->end();
-
-	}
-	ToneMappingComputePass.EndRenderPass();
-
-
-	avLum = m_AvLum->getAverage();
-	white2 = m_AvLum->getMax2();
-#else
-	avLum = 0.5f;
-	white2 = 0.5f;
-#endif
 }

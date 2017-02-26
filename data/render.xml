@@ -38,19 +38,13 @@
 		<texture name="LDR" format="GL_RGBA8" />
 		<texture name="bloom1" format="GL_R11F_G11F_B10F" size_divisor="4" />
 		<texture name="bloom2" format="GL_R11F_G11F_B10F" size_divisor="4" />
-		<texture name="pickbuffer" format="GL_R32UI" />
 		<texture name="luminance1" format="GL_RG16F" />
 		<texture name="luminance2" format="GL_RG16F" />
 	</targets>
 
 	<framebuffers>
-		<framebuffer name="default" />
 		<framebuffer name="shadow-map">
 			<output texture="shadow_map" />
-		</framebuffer>
-		<framebuffer name="pickbuffer-earlyZ">
-			<output texture="depth" /> <!-- early z-cull -->
-			<output texture="pickbuffer" />
 		</framebuffer>
 		<framebuffer name="normals-earlyZ">
 			<output texture="depth" /> <!-- early z-cull -->
@@ -60,9 +54,14 @@
 			<output texture="lights_diffuse" />
 			<output texture="lights_specular" />
 		</framebuffer>
-		<framebuffer name="bloom">
+		<framebuffer name="bloom_br">
 			<output texture="bloom1" />
+		</framebuffer>
+		<framebuffer name="bloom_bh">
 			<output texture="bloom2" />
+		</framebuffer>
+		<framebuffer name="bloom_bv">
+			<output texture="bloom1" />
 		</framebuffer>
 		<framebuffer name="HDR-earlyZ">
 			<output texture="depth" /> <!-- early z-cull -->
@@ -81,58 +80,30 @@
 
 	<pipelines>
 		<pipeline name="pickbuffer">
-			<depth mask="GL_FALSE" func="GL_EQUAL" />
-			<shader name="pickbuffer.vert" type="GL_VERTEX_SHADER" />
-			<shader name="pickbuffer.frag" type="GL_FRAGMENT_SHADER" />
 		</pipeline>
 		<pipeline name="shadow_map">
-			<enable cap="GL_POLYGON_OFFSET_FILL" />
-			<depth mask="GL_TRUE" func="GL_LESS" />
-			<shader name="depth_only.vert" type="GL_VERTEX_SHADER" />
-			<shader name="depth_only.frag" type="GL_FRAGMENT_SHADER" />
 		</pipeline>
 		<pipeline name="bbox">
-			<shader name="bbox.vert" type="GL_VERTEX_SHADER" />
-			<shader name="bbox.geom" type="GL_GEOMETRY_SHADER" />
-			<shader name="bbox.frag" type="GL_FRAGMENT_SHADER" />
 		</pipeline>
 		<pipeline name="geometry_simple">
-			<depth mask="GL_TRUE" func="GL_LESS" />
-			<shader name="geometry_pass.vert" type="GL_VERTEX_SHADER" />
-			<shader name="geometry_pass.frag" type="GL_FRAGMENT_SHADER" />
 		</pipeline>
 		<pipeline name="geometry_normalmap">
-			<depth mask="GL_TRUE" func="GL_LESS" />
-			<shader name="geometry_normalmap_pass.vert" type="GL_VERTEX_SHADER" />
-			<shader name="geometry_normalmap_pass.frag" type="GL_FRAGMENT_SHADER" />
 			<sampler name="normalMap" min_filter="GL_LINEAR" mag_filter="GL_LINEAR" wrap_s="GL_CLAMP_TO_EDGE" wrap_t="GL_CLAMP_TO_EDGE" />
 		</pipeline>
 		<pipeline name="lights_directional">
-			<blend sfactor="GL_ONE" equation="GL_FUNC_ADD" dfactor="GL_ONE" />
-			<shader name="directionnal_light.vert" type="GL_VERTEX_SHADER" />
-			<shader name="directionnal_light.frag" type="GL_FRAGMENT_SHADER" />
 			<sampler name="depthSampler" min_filter="GL_NEAREST" mag_filter="GL_NEAREST" wrap_s="GL_CLAMP_TO_EDGE" wrap_t="GL_CLAMP_TO_EDGE" />
 			<sampler name="normalSampler" min_filter="GL_NEAREST" mag_filter="GL_NEAREST" wrap_s="GL_CLAMP_TO_EDGE" wrap_t="GL_CLAMP_TO_EDGE" />
 		</pipeline>
 		<pipeline name="bloom_bright">
-			<shader name="fullscreen.vert" type="GL_VERTEX_SHADER" />
-			<shader name="fullscreen_bright.frag" type="GL_FRAGMENT_SHADER" />
 			<sampler name="texSampler" min_filter="GL_NEAREST" mag_filter="GL_NEAREST" wrap_s="GL_CLAMP_TO_EDGE" wrap_t="GL_CLAMP_TO_EDGE" />
 		</pipeline>
 		<pipeline name="bloom_horizontal_blur">
-			<shader name="fullscreen.vert" type="GL_VERTEX_SHADER" />
-			<shader name="gaussian_blur_h.frag" type="GL_FRAGMENT_SHADER" />
 			<sampler name="texSampler" min_filter="GL_NEAREST" mag_filter="GL_NEAREST" wrap_s="GL_CLAMP_TO_EDGE" wrap_t="GL_CLAMP_TO_EDGE" />
 		</pipeline>
 		<pipeline name="bloom_vertical_blur">
-			<shader name="fullscreen.vert" type="GL_VERTEX_SHADER" />
-			<shader name="gaussian_blur_v.frag" type="GL_FRAGMENT_SHADER" />
 			<sampler name="texSampler" min_filter="GL_NEAREST" mag_filter="GL_NEAREST" wrap_s="GL_CLAMP_TO_EDGE" wrap_t="GL_CLAMP_TO_EDGE" />
 		</pipeline>
 		<pipeline name="compose">
-			<depth mask="GL_FALSE" func="GL_EQUAL" />
-			<shader name="full.vert" type="GL_VERTEX_SHADER" />
-			<shader name="full.frag" type="GL_FRAGMENT_SHADER" />
 			<sampler name="diffuseSampler" min_filter="GL_LINEAR" mag_filter="GL_LINEAR" wrap_s="GL_CLAMP_TO_EDGE" wrap_t="GL_CLAMP_TO_EDGE" />
 			<sampler name="specularSampler" min_filter="GL_LINEAR" mag_filter="GL_LINEAR" wrap_s="GL_CLAMP_TO_EDGE" wrap_t="GL_CLAMP_TO_EDGE" />
 			<sampler name="diffuseLightSampler" min_filter="GL_NEAREST" mag_filter="GL_NEAREST" wrap_s="GL_CLAMP_TO_EDGE" wrap_t="GL_CLAMP_TO_EDGE" />
@@ -140,206 +111,36 @@
 			<sampler name="shadowMap" min_filter="GL_LINEAR" mag_filter="GL_LINEAR" wrap_s="GL_CLAMP_TO_BORDER" wrap_t="GL_CLAMP_TO_BORDER" compare_mode="GL_COMPARE_REF_TO_TEXTURE" compare_func="GL_LEQUAL" />
 		</pipeline>
 		<pipeline name="fog_simple">
-			<!-- dst = src.a * dst + 1 * src.rgb -->
-			<!-- src.a : Extinction ; src.rgb = Scattering -->
-			<blend sfactor="GL_ONE" equation="GL_FUNC_ADD" dfactor="GL_SRC_ALPHA" />
-			<shader name="fullscreen.vert" type="GL_VERTEX_SHADER" />
-			<shader name="fog_simple.frag" type="GL_FRAGMENT_SHADER" />
-			<sampler name="texSampler" min_filter="GL_NEAREST" mag_filter="GL_NEAREST" wrap_s="GL_CLAMP_TO_EDGE" wrap_t="GL_CLAMP_TO_EDGE" />
-			<sampler name="depthMapSampler" min_filter="GL_NEAREST" mag_filter="GL_NEAREST" wrap_s="GL_CLAMP_TO_EDGE" wrap_t="GL_CLAMP_TO_EDGE" />
-		</pipeline>
-		<pipeline name="fog_scattering">
-			<!-- dst = src.a * dst + 1 * src.rgb -->
-			<!-- src.a : Extinction ; src.rgb = Scattering -->
-			<blend sfactor="GL_ONE" equation="GL_FUNC_ADD" dfactor="GL_SRC_ALPHA" />
-			<shader name="fullscreen.vert" type="GL_VERTEX_SHADER" />
-			<shader name="fog_scattering.frag" type="GL_FRAGMENT_SHADER" />
-			<sampler name="texSampler" min_filter="GL_NEAREST" mag_filter="GL_NEAREST" wrap_s="GL_CLAMP_TO_EDGE" wrap_t="GL_CLAMP_TO_EDGE" />
-			<sampler name="depthMapSampler" min_filter="GL_NEAREST" mag_filter="GL_NEAREST" wrap_s="GL_CLAMP_TO_EDGE" wrap_t="GL_CLAMP_TO_EDGE" />
-		</pipeline>
-		<pipeline name="fog_godrays">
-			<!-- dst = src.a * dst + 1 * src.rgb -->
-			<!-- src.a : Extinction ; src.rgb = Scattering -->
-			<blend sfactor="GL_ONE" equation="GL_FUNC_ADD" dfactor="GL_SRC_ALPHA" />
-			<shader name="fullscreen.vert" type="GL_VERTEX_SHADER" />
-			<shader name="fog_godrays.frag" type="GL_FRAGMENT_SHADER" />
 			<sampler name="texSampler" min_filter="GL_NEAREST" mag_filter="GL_NEAREST" wrap_s="GL_CLAMP_TO_EDGE" wrap_t="GL_CLAMP_TO_EDGE" />
 			<sampler name="depthMapSampler" min_filter="GL_NEAREST" mag_filter="GL_NEAREST" wrap_s="GL_CLAMP_TO_EDGE" wrap_t="GL_CLAMP_TO_EDGE" />
 		</pipeline>
 		<pipeline name="luminance_conversion">
-			<shader name="fullscreen.vert" type="GL_VERTEX_SHADER" />
-			<shader name="fullscreen_luminance.frag" type="GL_FRAGMENT_SHADER" />
 			<sampler name="texSampler" min_filter="GL_LINEAR" mag_filter="GL_LINEAR" wrap_s="GL_CLAMP_TO_EDGE" wrap_t="GL_CLAMP_TO_EDGE" />
 		</pipeline>
 		<pipeline name="average_luminance">
-			<shader name="fullscreen.vert" type="GL_VERTEX_SHADER" />
-			<shader name="fullscreen_luminance_mean.frag" type="GL_FRAGMENT_SHADER" />
 			<sampler name="texSampler" min_filter="GL_LINEAR" mag_filter="GL_LINEAR" wrap_s="GL_CLAMP_TO_EDGE" wrap_t="GL_CLAMP_TO_EDGE" />
 		</pipeline>
 		<pipeline name="tonemapping">
-			<shader name="fullscreen.vert" type="GL_VERTEX_SHADER" />
-			<shader name="tonemapping.frag" type="GL_FRAGMENT_SHADER" />
 			<sampler name="texSampler" min_filter="GL_NEAREST" mag_filter="GL_NEAREST" wrap_s="GL_CLAMP_TO_EDGE" wrap_t="GL_CLAMP_TO_EDGE" />
 		</pipeline>
 		<pipeline name="fxaa">
-			<shader name="fullscreen.vert" type="GL_VERTEX_SHADER" />
-			<shader name="fullscreen_fxaa.frag" type="GL_FRAGMENT_SHADER" />
 			<sampler name="texSampler" min_filter="GL_NEAREST" mag_filter="GL_NEAREST" wrap_s="GL_CLAMP_TO_EDGE" wrap_t="GL_CLAMP_TO_EDGE" />
 		</pipeline>
 		<pipeline name="bloom">
-			<blend sfactor="GL_ONE" equation="GL_FUNC_ADD" dfactor="GL_ONE" />
-			<shader name="fullscreen.vert" type="GL_VERTEX_SHADER" />
-			<shader name="fullscreen_color.frag" type="GL_FRAGMENT_SHADER" />
 			<sampler name="texSampler" min_filter="GL_LINEAR" mag_filter="GL_LINEAR" wrap_s="GL_CLAMP_TO_EDGE" wrap_t="GL_CLAMP_TO_EDGE" />
 		</pipeline>
 		<pipeline name="debug_depth">
-			<shader name="fullscreen.vert" type="GL_VERTEX_SHADER" />
-			<shader name="fullscreen_depth.frag" type="GL_FRAGMENT_SHADER" />
 			<sampler name="texSampler" min_filter="GL_NEAREST" mag_filter="GL_NEAREST" wrap_s="GL_CLAMP_TO_EDGE" wrap_t="GL_CLAMP_TO_EDGE" />
 		</pipeline>
 		<pipeline name="debug_normal">
-			<shader name="fullscreen.vert" type="GL_VERTEX_SHADER" />
-			<shader name="fullscreen_normal.frag" type="GL_FRAGMENT_SHADER" />
 			<sampler name="texSampler" min_filter="GL_NEAREST" mag_filter="GL_NEAREST" wrap_s="GL_CLAMP_TO_EDGE" wrap_t="GL_CLAMP_TO_EDGE" />
 		</pipeline>
 		<pipeline name="debug_color">
-			<shader name="fullscreen.vert" type="GL_VERTEX_SHADER" />
-			<shader name="fullscreen_color.frag" type="GL_FRAGMENT_SHADER" />
 			<sampler name="texSampler" min_filter="GL_NEAREST" mag_filter="GL_NEAREST" wrap_s="GL_CLAMP_TO_EDGE" wrap_t="GL_CLAMP_TO_EDGE" />
 		</pipeline>
 		<pipeline name="debug_luminance">
-			<shader name="fullscreen.vert" type="GL_VERTEX_SHADER" />
-			<shader name="fullscreen_exp.frag" type="GL_FRAGMENT_SHADER" />
 			<sampler name="texSampler" min_filter="GL_NEAREST" mag_filter="GL_NEAREST" wrap_s="GL_CLAMP_TO_EDGE" wrap_t="GL_CLAMP_TO_EDGE" />
 		</pipeline>
 	</pipelines>
-
-	<pass_list>
-
-		<pass name="shadow_map" fb="shadow-map">
-			<subpass name="default" pipeline="shadow_map">
-				<output depth_buffer="0" />
-			</subpass>
-		</pass>
-
-		<pass name="lights" fb="lights">
-			<subpass name="directional" pipeline="lights_directional">
-				<output color_buffer="0" />
-				<output color_buffer="1" />
-			</subpass>
-		</pass>
-
-		<pass name="picking" fb="pickbuffer-earlyZ">
-			<subpass name="default" pipeline="pickbuffer">
-				<output depth_buffer="0" /> <!-- early z-cull -->
-				<output color_buffer="0" />
-			</subpass>
-		</pass>
-
-		<pass name="bbox" fb="default">
-			<subpass name="default" pipeline="bbox">
-				<output color_buffer="0" />
-			</subpass>
-		</pass>
-
-		<pass name="geometry" fb="normals-earlyZ">
-			<subpass name="simple" pipeline="geometry_simple">
-				<output depth_buffer="0" />
-				<output color_buffer="0" />
-			</subpass>
-			<subpass name="normal_map" pipeline="geometry_normalmap">
-				<output depth_buffer="0" />
-				<output color_buffer="0" />
-			</subpass>
-		</pass>
-
-		<pass name="bloom" fb="bloom">
-			<subpass name="bright" pipeline="bloom_bright">
-				<output color_buffer="0" />
-			</subpass>
-			<subpass name="horizontal_blur" pipeline="bloom_horizontal_blur">
-				<output color_buffer="1" />
-			</subpass>
-			<subpass name="vertical_blur" pipeline="bloom_vertical_blur">
-				<output color_buffer="0" />
-			</subpass>
-		</pass>
-
-		<pass name="compose" fb="HDR-earlyZ">
-			<subpass name="default" pipeline="compose">
-				<output depth_buffer="0" /> <!-- early z-cull -->
-				<output color_buffer="0" />
-			</subpass>
-		</pass>
-
-		<pass name="fog" fb="HDR">
-			<subpass name="simple" pipeline="fog_simple">
-				<output color_buffer="0" />
-			</subpass>
-<!--
-			<subpass name="scattering" pipeline="fog_scattering">
-				<output texture="HDR" />
-			</subpass>
-			<subpass name="godrays" pipeline="fog_godrays">
-				<output texture="HDR" />
-			</subpass>
--->
-		</pass>
-
-		<pass name="compute-tonemapping-params" fb="luminance">
-			<subpass name="to_luminance" pipeline="luminance_conversion">
-				<output color_buffer="0" />
-			</subpass>
-			<!-- + reduction to compute mean luminance and white² -->
-		</pass>
-
-		<pass name="tonemapping" fb="LDR">
-			<subpass name="with_burnout" pipeline="tonemapping">
-				<output color_buffer="0" />
-			</subpass>
-		</pass>
-
-		<pass name="anti-aliasing" fb="default">
-			<subpass name="fxaa" pipeline="fxaa">
-				<output color_buffer="0" />
-			</subpass>
-		</pass>
-
-		<pass name="blend" fb="default">
-			<subpass name="bloom" pipeline="bloom">
-				<output color_buffer="0" />
-			</subpass>
-		</pass>
-
-		<pass name="debug_color" fb="default">
-			<subpass name="default" pipeline="debug_color">
-				<output color_buffer="0" />
-			</subpass>
-		</pass>
-
-		<pass name="debug_normals" fb="default">
-			<subpass name="default" pipeline="debug_normal">
-				<output color_buffer="0" />
-			</subpass>
-		</pass>
-
-		<pass name="debug_depth" fb="default">
-			<subpass name="default" pipeline="debug_depth">
-				<output color_buffer="0" />
-			</subpass>
-		</pass>
-<!--
-		<pass name="debug">
-			<subpass name="depth" pipeline="debug_depth">
-			</subpass>
-			<subpass name="normal" pipeline="debug_normal">
-			</subpass>
-			<subpass name="color" pipeline="debug_color">
-			</subpass>
-			<subpass name="luminance" pipeline="debug_luminance">
-			</subpass>
-		</pass>
--->
-	</pass_list>
 
 </render>

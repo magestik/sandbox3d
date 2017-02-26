@@ -20,9 +20,6 @@ static const char FRAMEBUFFER_STR []	= "framebuffer";
 static const char PIPELINES_STR []		= "pipelines";
 static const char PIPELINE_STR []		= "pipeline";
 
-static const char PASSES_STR []			= "pass_list";
-static const char PASS_STR []			= "pass";
-
 /**
  * @brief Constructor
  */
@@ -117,28 +114,6 @@ void RenderXML::initializeTargets(Rendering & rendering)
 }
 
 /**
- * @brief RenderXML::initializePasses
- * @param rendering
- */
-void RenderXML::initializePasses(Rendering & rendering)
-{
-	const XMLElement * root = static_cast<XMLDocument*>(m_pData)->RootElement();
-	assert(nullptr != root);
-
-	const XMLElement * passes = root->FirstChildElement(PASSES_STR);
-	assert(nullptr != passes);
-
-	const XMLElement * elmt = passes->FirstChildElement(PASS_STR);
-
-	while (nullptr != elmt)
-	{
-		createPass(elmt, rendering);
-
-		elmt = elmt->NextSiblingElement(PASS_STR);
-	}
-}
-
-/**
  * @brief RenderXML::initializeFramebuffers
  * @param rendering
  */
@@ -158,37 +133,6 @@ void RenderXML::initializeFramebuffers(Rendering & rendering)
 
 		elmt = elmt->NextSiblingElement(FRAMEBUFFER_STR);
 	}
-}
-
-/**
- * @brief RenderXML::createPass
- * @param pNode
- * @param rendering
- */
-void RenderXML::createPass(const void * pNode, Rendering & rendering)
-{
-	std::vector<RHI::RenderPass::SubpassDescription> aSubpass;
-
-	const char * passName = static_cast<const XMLElement*>(pNode)->Attribute("name");
-
-	const XMLElement * elmt = static_cast<const XMLElement*>(pNode)->FirstChildElement("subpass");
-
-	while (nullptr != elmt)
-	{
-		const char * name = elmt->Attribute("name");
-		assert(nullptr != name);
-
-		RHI::RenderPass::SubpassDescription desc;
-		desc.depthAttachment = 0;
-
-		getSubpassDescription(elmt, desc);
-
-		aSubpass.push_back(desc);
-
-		elmt = elmt->NextSiblingElement("subpass");
-	}
-
-	rendering.m_mapPass[passName] = RHI::RenderPass(aSubpass);
 }
 
 /**
@@ -217,26 +161,4 @@ void RenderXML::createFramebuffer(const void * pNode, Rendering & rendering)
 	}
 
 	rendering.m_mapFramebuffer[framebufferName] = RHI::Framebuffer(aTextures);
-}
-
-/**
- * @brief RenderXML::getSubpassDescription
- * @param pNode
- * @param subpassDesc
- */
-void RenderXML::getSubpassDescription(const void * pNode, RHI::RenderPass::SubpassDescription & subpassDesc)
-{
-	const XMLElement * elmt = static_cast<const XMLElement*>(pNode)->FirstChildElement("output");
-
-	while (nullptr != elmt)
-	{
-		const char * buffer = elmt->Attribute("color_buffer");
-
-		if (nullptr != buffer)
-		{
-			subpassDesc.aColorAttachments.push_back(atoi(buffer));
-		}
-
-		elmt = elmt->NextSiblingElement("output");
-	}
 }

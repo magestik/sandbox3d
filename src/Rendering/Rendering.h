@@ -8,6 +8,7 @@
 #include <map>
 #include <vector>
 #include <string>
+#include <queue>
 
 // Rendering Hardware Interface
 #include "RHI/RHI.h"
@@ -21,6 +22,7 @@
 
 #include "RenderTexture.h"
 #include "Pipeline.h"
+#include "GraphicsAlgorithm.h"
 
 #include "Environment.h"
 
@@ -34,6 +36,88 @@ extern std::map<std::string, GPU::Shader<GL_GEOMETRY_SHADER> *>	g_GeometryShader
 extern std::map<std::string, GPU::Texture<GL_TEXTURE_2D> *> g_Textures;
 
 extern std::map<std::string, Mesh>			g_Meshes;
+
+inline void SetUniform(GLuint uShaderObject, const char * name, const mat2x2 & m)
+{
+	GLint location = glGetUniformLocation(uShaderObject, name);
+	//assert(-1 != location);
+	glUniformMatrix2fv(location, 1, false, (float*)&m);
+}
+
+inline void SetUniform(GLuint uShaderObject, const char * name, const mat3x3 & m)
+{
+	GLint location = glGetUniformLocation(uShaderObject, name);
+	//assert(-1 != location);
+	glUniformMatrix3fv(location, 1, false, (float*)&m);
+}
+
+inline void SetUniform(GLuint uShaderObject, const char * name, const mat4x4 & m)
+{
+	GLint location = glGetUniformLocation(uShaderObject, name);
+	//assert(-1 != location);
+	glUniformMatrix4fv(location, 1, false, (float*)&m);
+}
+
+inline void SetUniform(GLuint uShaderObject, const char * name, const vec4 & v)
+{
+	GLint location = glGetUniformLocation(uShaderObject, name);
+	//assert(-1 != location);
+	glUniform4fv(location, 1, (float*)&v);
+}
+
+inline void SetUniform(GLuint uShaderObject, const char * name, const vec3 & v)
+{
+	GLint location = glGetUniformLocation(uShaderObject, name);
+	//assert(-1 != location);
+	glUniform3fv(location, 1, (float*)&v);
+}
+
+inline void SetUniform(GLuint uShaderObject, const char * name, const vec2 & v)
+{
+	GLint location = glGetUniformLocation(uShaderObject, name);
+	//assert(-1 != location);
+	glUniform2fv(location, 1, (float*)&v);
+}
+
+inline void SetUniform(GLuint uShaderObject, const char * name, int n)
+{
+	GLint location = glGetUniformLocation(uShaderObject, name);
+	//assert(-1 != location);
+	glUniform1i(location, n);
+}
+
+inline void SetUniform(GLuint uShaderObject, const char * name, unsigned int n)
+{
+	GLint location = glGetUniformLocation(uShaderObject, name);
+	//assert(-1 != location);
+	glUniform1ui(location, n);
+}
+
+inline void SetUniform(GLuint uShaderObject, const char * name, float n)
+{
+	GLint location = glGetUniformLocation(uShaderObject, name);
+	//assert(-1 != location);
+	glUniform1f(location, n);
+}
+
+inline void SetUniformBlockBinding(GLuint uShaderObject, const char * name, unsigned int binding)
+{
+	GLuint blockIndex = glGetUniformBlockIndex(uShaderObject, name);
+
+	if (GL_INVALID_INDEX != blockIndex)
+	{
+		glUniformBlockBinding(uShaderObject, blockIndex, binding);
+	}
+}
+
+template<GLenum D>
+inline void SetTexture(GLuint uShaderObject, const char * name, int unit, const GPU::Texture<D> & texture, GLuint sampler)
+{
+	SetUniform(uShaderObject, name, unit);
+	glActiveTexture(GL_TEXTURE0 + unit);
+	glBindTexture(D, texture.GetObject());
+	glBindSampler(unit, sampler);
+}
 
 class Rendering
 {
@@ -69,6 +153,17 @@ public:
 
 	Mesh::Instance * getObjectAtPos	(const ivec2 & pos);
 
+
+	unsigned int GetWidth(void) const
+	{
+		return(m_uWidth);
+	}
+
+	unsigned int GetHeight(void) const
+	{
+		return(m_uHeight);
+	}
+
 	const GPU::Shader<GL_VERTEX_SHADER> * GetVertexShader(const char * name) const
 	{
 		return(g_VertexShaders[name]);
@@ -94,13 +189,14 @@ public:
 		return(m_mapPipeline.at(name));
 	}
 
+	Pipeline * GetPipeline(const char * name)
+	{
+		return((Pipeline*)m_mapPipeline.at(name));
+	}
+
 	void SetDefaultFramebuffer(GLuint framebuffer)
 	{
-		std::map<std::string, RHI::Framebuffer>::iterator it = m_mapFramebuffer.find("default");
-		if (it != m_mapFramebuffer.end())
-		{
-			it->second = RHI::Framebuffer(framebuffer);
-		}
+		m_mapFramebuffer["default"] = RHI::Framebuffer(framebuffer);
 	}
 
 protected:
@@ -112,29 +208,18 @@ protected:
 
 	void    computeAverageLum           (void);
 
-	void	renderSceneToGBuffer		(void);
-
-	void	renderLightsToAccumBuffer	(const mat4x4 & mView);
-
-	void	renderSceneToShadowMap		(void);
-
-	void    renderBloom                 (void);
-
-	void	renderFinal					(const mat4x4 & mView, const vec4 & clearColor);
-
-	void    renderFog                   (void);
-
 	void	renderIntermediateToScreen	(ERenderType eRenderType);
 
-	void    renderPostProcessEffects    (void);
-
+	void	initPickBuffer				(void);
 	void	renderPickBuffer			(void);
 
+	void	initBoundingBox				(void);
 	void	renderBoundingBox			(const Mesh::Instance * pSelected);
 
 	void	computeToneMappingParams	(float & avLum, float & white2);
 
-private:
+//private:
+public:
 
 	struct CAMERA_BLOCK_DEFINITION(CameraBlock);
 	struct OBJECT_BLOCK_DEFINITION(ObjectBlock);
@@ -168,8 +253,22 @@ private:
 	std::map<std::string, RenderTexture>	m_mapTargets;
 	std::map<std::string, const Pipeline *>	m_mapPipeline;
 
-	std::map<std::string, RHI::RenderPass>	m_mapPass;
 	std::map<std::string, RHI::Framebuffer>	m_mapFramebuffer;
+
+	std::vector<GraphicsAlgorithm*> m_renderQueue;
+
+	mat4x4	m_matCurrentView;
+	vec4	m_vCurrentClearColor;
+
+	//
+	// Pick-Buffer
+	RHI::Framebuffer m_pickBufferFramebuffer;
+
+	RHI::Pipeline m_pickBufferPipeline;
+	RHI::RenderPass m_pickBufferRenderPass;
+
+	RHI::Pipeline m_boundingBoxPipeline;
+	RHI::RenderPass m_boundingBoxRenderPass;
 
 public:
 
