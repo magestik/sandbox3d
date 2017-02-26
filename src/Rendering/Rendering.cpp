@@ -70,7 +70,6 @@ void Rendering::onInitializeComplete()
 {
 	RenderXML renderXML("data/render.xml");
 
-	renderXML.initializePipelines(*this);
 	renderXML.initializeTargets(*this);
 
 	//
@@ -581,25 +580,25 @@ void Rendering::initPickBuffer(void)
 
 	//
 	// Create Pipeline
-	RHI::Pipeline::InputAssemblyState input;
-	RHI::Pipeline::RasterizationState rasterization;
+	RHI::PipelineInputAssemblyStateCreateInfo input;
+	RHI::PipelineRasterizationStateCreateInfo rasterization;
 
-	RHI::Pipeline::DepthStencilState depthStencil;
+	RHI::PipelineDepthStencilStateCreateInfo depthStencil;
 	depthStencil.enableDepth = true;
 	depthStencil.depthState.enableWrite = true;
 	depthStencil.depthState.compareOp = RHI::COMPARE_OP_LESS;
 
-	RHI::Pipeline::BlendState blend;
+	RHI::PipelineBlendStateCreateInfo blend;
 
-	RHI::Pipeline::ShaderStage vertexShader;
+	RHI::PipelineShaderStageCreateInfo vertexShader;
 	vertexShader.stage = RHI::SHADER_STAGE_VERTEX;
 	vertexShader.module = g_VertexShaders["pickbuffer.vert"]->GetObject();
 
-	RHI::Pipeline::ShaderStage fragmentShader;
+	RHI::PipelineShaderStageCreateInfo fragmentShader;
 	fragmentShader.stage = RHI::SHADER_STAGE_FRAGMENT;
 	fragmentShader.module = g_FragmentShaders["pickbuffer.frag"]->GetObject();
 
-	std::vector<RHI::Pipeline::ShaderStage> aStages;
+	std::vector<RHI::PipelineShaderStageCreateInfo> aStages;
 	aStages.push_back(vertexShader);
 	aStages.push_back(fragmentShader);
 
@@ -664,24 +663,24 @@ void Rendering::initBoundingBox(void)
 
 	//
 	// Create Pipeline
-	RHI::Pipeline::InputAssemblyState input;
-	RHI::Pipeline::RasterizationState rasterization;
-	RHI::Pipeline::DepthStencilState depthStencil;
-	RHI::Pipeline::BlendState blend;
+	RHI::PipelineInputAssemblyStateCreateInfo input;
+	RHI::PipelineRasterizationStateCreateInfo rasterization;
+	RHI::PipelineDepthStencilStateCreateInfo depthStencil;
+	RHI::PipelineBlendStateCreateInfo blend;
 
-	RHI::Pipeline::ShaderStage vertexShader;
+	RHI::PipelineShaderStageCreateInfo vertexShader;
 	vertexShader.stage = RHI::SHADER_STAGE_VERTEX;
 	vertexShader.module = g_VertexShaders["bbox.vert"]->GetObject();
 
-	RHI::Pipeline::ShaderStage geometryShader;
+	RHI::PipelineShaderStageCreateInfo geometryShader;
 	geometryShader.stage = RHI::SHADER_STAGE_GEOMETRY;
 	geometryShader.module = g_GeometryShaders["bbox.geom"]->GetObject();
 
-	RHI::Pipeline::ShaderStage fragmentShader;
+	RHI::PipelineShaderStageCreateInfo fragmentShader;
 	fragmentShader.stage = RHI::SHADER_STAGE_FRAGMENT;
 	fragmentShader.module = g_FragmentShaders["bbox.frag"]->GetObject();
 
-	std::vector<RHI::Pipeline::ShaderStage> aStages;
+	std::vector<RHI::PipelineShaderStageCreateInfo> aStages;
 	aStages.push_back(vertexShader);
 	aStages.push_back(geometryShader);
 	aStages.push_back(fragmentShader);

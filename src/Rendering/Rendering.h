@@ -111,12 +111,12 @@ inline void SetUniformBlockBinding(GLuint uShaderObject, const char * name, unsi
 }
 
 template<GLenum D>
-inline void SetTexture(GLuint uShaderObject, const char * name, int unit, const GPU::Texture<D> & texture, GLuint sampler)
+inline void SetTexture(GLuint uShaderObject, const char * name, int unit, const GPU::Texture<D> & texture, RHI::Sampler & sampler)
 {
 	SetUniform(uShaderObject, name, unit);
 	glActiveTexture(GL_TEXTURE0 + unit);
 	glBindTexture(D, texture.GetObject());
-	glBindSampler(unit, sampler);
+	glBindSampler(unit, sampler.m_uSamplerObject);
 }
 
 class Rendering

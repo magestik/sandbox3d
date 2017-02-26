@@ -14,7 +14,6 @@ public:
 
 	//
 	// Parsing
-	void initializePipelines	(Rendering & rendering);
 	void initializeTargets		(Rendering & rendering);
 	void initializeFramebuffers	(Rendering & rendering);
 

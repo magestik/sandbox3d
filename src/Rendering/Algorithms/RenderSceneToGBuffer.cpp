@@ -36,42 +36,54 @@ bool RenderSceneToGBuffer::init(void)
 	//
 	// Initialize Pipelines
 	{
-		RHI::Pipeline::InputAssemblyState input;
-		RHI::Pipeline::RasterizationState rasterization;
+		RHI::PipelineInputAssemblyStateCreateInfo input;
+		RHI::PipelineRasterizationStateCreateInfo rasterization;
 
-		RHI::Pipeline::DepthStencilState depthStencil;
+		RHI::PipelineDepthStencilStateCreateInfo depthStencil;
 		depthStencil.enableDepth = true;
 		depthStencil.depthState.enableWrite = true;
 		depthStencil.depthState.compareOp = RHI::COMPARE_OP_LESS;
 
-		RHI::Pipeline::BlendState blend;
+		RHI::PipelineBlendStateCreateInfo blend;
 
-		RHI::Pipeline::ShaderStage vertexShaderSimple;
+		RHI::PipelineShaderStageCreateInfo vertexShaderSimple;
 		vertexShaderSimple.stage = RHI::SHADER_STAGE_VERTEX;
 		vertexShaderSimple.module = g_VertexShaders["geometry_pass.vert"]->GetObject();
 
-		RHI::Pipeline::ShaderStage fragmentShaderSimple;
+		RHI::PipelineShaderStageCreateInfo fragmentShaderSimple;
 		fragmentShaderSimple.stage = RHI::SHADER_STAGE_FRAGMENT;
 		fragmentShaderSimple.module = g_FragmentShaders["geometry_pass.frag"]->GetObject();
 
-		std::vector<RHI::Pipeline::ShaderStage> aStagesSimple;
+		std::vector<RHI::PipelineShaderStageCreateInfo> aStagesSimple;
 		aStagesSimple.push_back(vertexShaderSimple);
 		aStagesSimple.push_back(fragmentShaderSimple);
 
-		RHI::Pipeline::ShaderStage vertexShaderNM;
+		RHI::PipelineShaderStageCreateInfo vertexShaderNM;
 		vertexShaderNM.stage = RHI::SHADER_STAGE_VERTEX;
 		vertexShaderNM.module = g_VertexShaders["geometry_normalmap_pass.vert"]->GetObject();
 
-		RHI::Pipeline::ShaderStage fragmentShaderNM;
+		RHI::PipelineShaderStageCreateInfo fragmentShaderNM;
 		fragmentShaderNM.stage = RHI::SHADER_STAGE_FRAGMENT;
 		fragmentShaderNM.module = g_FragmentShaders["geometry_normalmap_pass.frag"]->GetObject();
 
-		std::vector<RHI::Pipeline::ShaderStage> aStagesNM;
+		std::vector<RHI::PipelineShaderStageCreateInfo> aStagesNM;
 		aStagesNM.push_back(vertexShaderNM);
 		aStagesNM.push_back(fragmentShaderNM);
 
 		m_pipelineSimple = RHI::Pipeline(input, rasterization, depthStencil, blend, aStagesSimple);
 		m_pipelineNormalMap = RHI::Pipeline(input, rasterization, depthStencil, blend, aStagesNM);
+	}
+
+	//
+	// Initialize Samplers
+	{
+		RHI::SamplerCreateInfo sampler;
+		sampler.minFilter = RHI::FILTER_LINEAR;
+		sampler.magFilter = RHI::FILTER_LINEAR;
+		sampler.addressModeU = RHI::SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+		sampler.addressModeV = RHI::SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+
+		m_sampler = RHI::Sampler(sampler);
 	}
 
 	//
@@ -142,7 +154,7 @@ bool RenderSceneToGBuffer::render(RHI::CommandBuffer & commandBuffer)
 
 					if (nullptr != pNormalMap)
 					{
-						SetTexture(m_pipelineNormalMap.m_uShaderObject, "normalMap", 0, *pNormalMap, m_rendering.GetPipeline("geometry_normalmap")->m_mapSamplers["normalMap"]);
+						SetTexture(m_pipelineNormalMap.m_uShaderObject, "normalMap", 0, *pNormalMap, m_sampler);
 
 						SetUniform(m_pipelineNormalMap.m_uShaderObject, "shininess", m->m_material.shininess);
 

@@ -18,4 +18,9 @@ public:
 private:
 
 	RHI::Pipeline m_pipeline;
+	RHI::Sampler m_samplerDiffuseSampler;
+	RHI::Sampler m_samplerSpecularSampler;
+	RHI::Sampler m_samplerDiffuseLightSampler;
+	RHI::Sampler m_samplerSpecularLightSampler;
+	RHI::Sampler m_samplerShadowMap;
 };

@@ -37,30 +37,30 @@ bool RenderSceneToShadowMap::init(void)
 	//
 	// Initialize Pipelines
 	{
-		RHI::Pipeline::InputAssemblyState input;
+		RHI::PipelineInputAssemblyStateCreateInfo input;
 
-		RHI::Pipeline::RasterizationState rasterization;
+		RHI::PipelineRasterizationStateCreateInfo rasterization;
 		rasterization.enableDepthBias = true;
 		rasterization.depthBiasConstantFactor = 10.0f;
 		rasterization.depthBiasClamp = 0.0f;
 		rasterization.depthBiasSlopeFactor = 1.0f;
 
-		RHI::Pipeline::DepthStencilState depthStencil;
+		RHI::PipelineDepthStencilStateCreateInfo depthStencil;
 		depthStencil.enableDepth = true;
 		depthStencil.depthState.enableWrite = true;
 		depthStencil.depthState.compareOp = RHI::COMPARE_OP_LESS;
 
-		RHI::Pipeline::BlendState blend;
+		RHI::PipelineBlendStateCreateInfo blend;
 
-		RHI::Pipeline::ShaderStage vertexShader;
+		RHI::PipelineShaderStageCreateInfo vertexShader;
 		vertexShader.stage = RHI::SHADER_STAGE_VERTEX;
 		vertexShader.module = g_VertexShaders["depth_only.vert"]->GetObject();
 
-		RHI::Pipeline::ShaderStage fragmentShader;
+		RHI::PipelineShaderStageCreateInfo fragmentShader;
 		fragmentShader.stage = RHI::SHADER_STAGE_FRAGMENT;
 		fragmentShader.module = g_FragmentShaders["depth_only.frag"]->GetObject();
 
-		std::vector<RHI::Pipeline::ShaderStage> aStages;
+		std::vector<RHI::PipelineShaderStageCreateInfo> aStages;
 		aStages.push_back(vertexShader);
 		aStages.push_back(fragmentShader);
 

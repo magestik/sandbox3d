@@ -20,4 +20,6 @@ public:
 private:
 
 	RHI::Pipeline m_pipelineDirectionalLight;
+	RHI::Sampler m_samplerDepth;
+	RHI::Sampler m_samplerNormal;
 };

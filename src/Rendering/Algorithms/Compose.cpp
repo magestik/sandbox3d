@@ -41,29 +41,61 @@ bool Compose::init(void)
 	//
 	// Initialize Pipelines
 	{
-		RHI::Pipeline::InputAssemblyState input;
-		RHI::Pipeline::RasterizationState rasterization;
+		RHI::PipelineInputAssemblyStateCreateInfo input;
+		RHI::PipelineRasterizationStateCreateInfo rasterization;
 
-		RHI::Pipeline::DepthStencilState depthStencil;
+		RHI::PipelineDepthStencilStateCreateInfo depthStencil;
 		depthStencil.enableDepth = true;
 		depthStencil.depthState.compareOp = RHI::COMPARE_OP_EQUAL;
 		depthStencil.depthState.enableWrite = false;
 
-		RHI::Pipeline::BlendState blend;
+		RHI::PipelineBlendStateCreateInfo blend;
 
-		RHI::Pipeline::ShaderStage vertexShader;
+		RHI::PipelineShaderStageCreateInfo vertexShader;
 		vertexShader.stage = RHI::SHADER_STAGE_VERTEX;
 		vertexShader.module = g_VertexShaders["full.vert"]->GetObject();
 
-		RHI::Pipeline::ShaderStage fragmentShader;
+		RHI::PipelineShaderStageCreateInfo fragmentShader;
 		fragmentShader.stage = RHI::SHADER_STAGE_FRAGMENT;
 		fragmentShader.module = g_FragmentShaders["full.frag"]->GetObject();
 
-		std::vector<RHI::Pipeline::ShaderStage> aStages;
+		std::vector<RHI::PipelineShaderStageCreateInfo> aStages;
 		aStages.push_back(vertexShader);
 		aStages.push_back(fragmentShader);
 
 		m_pipeline = RHI::Pipeline(input, rasterization, depthStencil, blend, aStages);
+	}
+
+	//
+	// Initialize Samplers
+	{
+		RHI::SamplerCreateInfo samplerLinear;
+		samplerLinear.minFilter = RHI::FILTER_LINEAR;
+		samplerLinear.magFilter = RHI::FILTER_LINEAR;
+		samplerLinear.addressModeU = RHI::SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+		samplerLinear.addressModeV = RHI::SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+
+		RHI::SamplerCreateInfo samplerNearest;
+		samplerNearest.minFilter = RHI::FILTER_NEAREST;
+		samplerNearest.magFilter = RHI::FILTER_NEAREST;
+		samplerNearest.addressModeU = RHI::SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+		samplerNearest.addressModeV = RHI::SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+
+		RHI::SamplerCreateInfo samplerShadowMap;
+		samplerShadowMap.minFilter = RHI::FILTER_LINEAR;
+		samplerShadowMap.magFilter = RHI::FILTER_LINEAR;
+		samplerShadowMap.addressModeU = RHI::SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER;
+		samplerShadowMap.addressModeV = RHI::SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER;
+		samplerShadowMap.compareEnable = true;
+		samplerShadowMap.compareOp = RHI::COMPARE_OP_LESS_OR_EQUAL;
+
+		m_samplerDiffuseSampler = RHI::Sampler(samplerLinear);
+		m_samplerSpecularSampler = RHI::Sampler(samplerLinear);
+
+		m_samplerDiffuseLightSampler = RHI::Sampler(samplerNearest);
+		m_samplerSpecularLightSampler = RHI::Sampler(samplerNearest);
+
+		m_samplerShadowMap = RHI::Sampler(samplerShadowMap);
 	}
 
 	//
@@ -89,9 +121,9 @@ bool Compose::render(RHI::CommandBuffer & commandBuffer)
 		mat4x4 mDepthView = _lookAt(vec3(0,0,0), m_rendering.m_pLight->GetDirection(), vec3(0.0f, -1.0f, 0.0f));
 		mat4x4 mDepthViewProjection = m_rendering.m_matShadowMapProjection * mDepthView;
 
-		SetTexture(m_pipeline.m_uShaderObject, "diffuseLightSampler", 0, *(m_rendering.m_mapTargets["lights_diffuse"].getTexture()), m_rendering.GetPipeline("compose")->m_mapSamplers["diffuseLightSampler"]);
-		SetTexture(m_pipeline.m_uShaderObject, "specularLightSampler", 1, *(m_rendering.m_mapTargets["lights_specular"].getTexture()), m_rendering.GetPipeline("compose")->m_mapSamplers["specularLightSampler"]);
-		SetTexture(m_pipeline.m_uShaderObject, "shadowMap", 2, *(m_rendering.m_mapTargets["shadow_map"].getTexture()), m_rendering.GetPipeline("compose")->m_mapSamplers["shadowMap"]);
+		SetTexture(m_pipeline.m_uShaderObject, "diffuseLightSampler", 0, *(m_rendering.m_mapTargets["lights_diffuse"].getTexture()), m_samplerDiffuseLightSampler);
+		SetTexture(m_pipeline.m_uShaderObject, "specularLightSampler", 1, *(m_rendering.m_mapTargets["lights_specular"].getTexture()), m_samplerSpecularLightSampler);
+		SetTexture(m_pipeline.m_uShaderObject, "shadowMap", 2, *(m_rendering.m_mapTargets["shadow_map"].getTexture()), m_samplerShadowMap);
 
 		SetUniform(m_pipeline.m_uShaderObject, "ambientColor", sRGB_to_XYZ * m_rendering.environment.ambient.Color);
 		SetUniform(m_pipeline.m_uShaderObject, "DepthTransformation", mDepthViewProjection);
@@ -107,8 +139,8 @@ bool Compose::render(RHI::CommandBuffer & commandBuffer)
 
 			for (SubMesh * m : object.getDrawCommands())
 			{
-				SetTexture(m_pipeline.m_uShaderObject, "diffuseSampler", 3, *(m->m_material.m_diffuse), m_rendering.GetPipeline("compose")->m_mapSamplers["diffuseSampler"]);
-				SetTexture(m_pipeline.m_uShaderObject, "specularSampler", 4, *(m->m_material.m_specular), m_rendering.GetPipeline("compose")->m_mapSamplers["specularSampler"]);
+				SetTexture(m_pipeline.m_uShaderObject, "diffuseSampler", 3, *(m->m_material.m_diffuse), m_samplerDiffuseSampler);
+				SetTexture(m_pipeline.m_uShaderObject, "specularSampler", 4, *(m->m_material.m_specular), m_samplerSpecularSampler);
 
 				m->draw(commandBuffer);
 			}

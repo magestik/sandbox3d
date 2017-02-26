@@ -40,29 +40,49 @@ bool RenderLightsToAccumBuffer::init(void)
 	//
 	// Initialize Pipelines
 	{
-		RHI::Pipeline::InputAssemblyState input;
-		RHI::Pipeline::RasterizationState rasterization;
-		RHI::Pipeline::DepthStencilState depthStencil;
+		RHI::PipelineInputAssemblyStateCreateInfo input;
+		RHI::PipelineRasterizationStateCreateInfo rasterization;
+		RHI::PipelineDepthStencilStateCreateInfo depthStencil;
 
-		RHI::Pipeline::BlendState blend;
+		RHI::PipelineBlendStateCreateInfo blend;
 		blend.enable = true;
 		blend.colorEquation = RHI::BLEND_OP_ADD;
 		blend.srcColorFactor = RHI::BLEND_FACTOR_ONE;
 		blend.dstColorFactor = RHI::BLEND_FACTOR_ONE;
 
-		RHI::Pipeline::ShaderStage vertexShader;
+		RHI::PipelineShaderStageCreateInfo vertexShader;
 		vertexShader.stage = RHI::SHADER_STAGE_VERTEX;
 		vertexShader.module = g_VertexShaders["directionnal_light.vert"]->GetObject();
 
-		RHI::Pipeline::ShaderStage fragmentShader;
+		RHI::PipelineShaderStageCreateInfo fragmentShader;
 		fragmentShader.stage = RHI::SHADER_STAGE_FRAGMENT;
 		fragmentShader.module = g_FragmentShaders["directionnal_light.frag"]->GetObject();
 
-		std::vector<RHI::Pipeline::ShaderStage> aStages;
+		std::vector<RHI::PipelineShaderStageCreateInfo> aStages;
 		aStages.push_back(vertexShader);
 		aStages.push_back(fragmentShader);
 
 		m_pipelineDirectionalLight = RHI::Pipeline(input, rasterization, depthStencil, blend, aStages);
+	}
+
+	//
+	// Initialize Samplers
+	{
+		RHI::SamplerCreateInfo depthSampler;
+		depthSampler.minFilter = RHI::FILTER_NEAREST;
+		depthSampler.magFilter = RHI::FILTER_NEAREST;
+		depthSampler.addressModeU = RHI::SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+		depthSampler.addressModeV = RHI::SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+
+		m_samplerDepth = RHI::Sampler(depthSampler);
+
+		RHI::SamplerCreateInfo normalSampler;
+		normalSampler.minFilter = RHI::FILTER_NEAREST;
+		normalSampler.magFilter = RHI::FILTER_NEAREST;
+		normalSampler.addressModeU = RHI::SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+		normalSampler.addressModeV = RHI::SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+
+		m_samplerNormal = RHI::Sampler(normalSampler);
 	}
 
 	//
@@ -92,8 +112,8 @@ bool RenderLightsToAccumBuffer::render(RHI::CommandBuffer & commandBuffer)
 		SetUniform(m_pipelineDirectionalLight.m_uShaderObject, "lightDir", - normalize(m_rendering.m_pLight->GetDirection()));
 		SetUniform(m_pipelineDirectionalLight.m_uShaderObject, "lightColor", sRGB_to_XYZ * m_rendering.m_pLight->GetColor());
 
-		SetTexture(m_pipelineDirectionalLight.m_uShaderObject, "depthSampler", 0, *(m_rendering.m_mapTargets["depth"].getTexture()), m_rendering.GetPipeline("lights_directional")->m_mapSamplers["depthSampler"]);
-		SetTexture(m_pipelineDirectionalLight.m_uShaderObject, "normalSampler", 1, *(m_rendering.m_mapTargets["normals"].getTexture()), m_rendering.GetPipeline("lights_directional")->m_mapSamplers["normalSampler"]);
+		SetTexture(m_pipelineDirectionalLight.m_uShaderObject, "depthSampler", 0, *(m_rendering.m_mapTargets["depth"].getTexture()), m_samplerDepth);
+		SetTexture(m_pipelineDirectionalLight.m_uShaderObject, "normalSampler", 1, *(m_rendering.m_mapTargets["normals"].getTexture()), m_samplerNormal);
 
 		m_rendering.m_pQuadMesh->draw(commandBuffer);
 

@@ -36,24 +36,36 @@ bool BlurH::init(void)
 	//
 	// Initialize Pipelines
 	{
-		RHI::Pipeline::InputAssemblyState input;
-		RHI::Pipeline::RasterizationState rasterization;
-		RHI::Pipeline::DepthStencilState depthStencil;
-		RHI::Pipeline::BlendState blend;
+		RHI::PipelineInputAssemblyStateCreateInfo input;
+		RHI::PipelineRasterizationStateCreateInfo rasterization;
+		RHI::PipelineDepthStencilStateCreateInfo depthStencil;
+		RHI::PipelineBlendStateCreateInfo blend;
 
-		RHI::Pipeline::ShaderStage vertexShader;
+		RHI::PipelineShaderStageCreateInfo vertexShader;
 		vertexShader.stage = RHI::SHADER_STAGE_VERTEX;
 		vertexShader.module = g_VertexShaders["fullscreen.vert"]->GetObject();
 
-		RHI::Pipeline::ShaderStage fragmentShader;
+		RHI::PipelineShaderStageCreateInfo fragmentShader;
 		fragmentShader.stage = RHI::SHADER_STAGE_FRAGMENT;
 		fragmentShader.module = g_FragmentShaders["gaussian_blur_h.frag"]->GetObject();
 
-		std::vector<RHI::Pipeline::ShaderStage> aStages;
+		std::vector<RHI::PipelineShaderStageCreateInfo> aStages;
 		aStages.push_back(vertexShader);
 		aStages.push_back(fragmentShader);
 
 		m_pipeline = RHI::Pipeline(input, rasterization, depthStencil, blend, aStages);
+	}
+
+	//
+	// Initialize Samplers
+	{
+		RHI::SamplerCreateInfo sampler;
+		sampler.minFilter = RHI::FILTER_NEAREST;
+		sampler.magFilter = RHI::FILTER_NEAREST;
+		sampler.addressModeU = RHI::SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+		sampler.addressModeV = RHI::SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+
+		m_sampler = RHI::Sampler(sampler);
 	}
 
 	//
@@ -75,7 +87,7 @@ bool BlurH::render(RHI::CommandBuffer & commandBuffer)
 	{
 		commandBuffer.Bind(m_pipeline);
 
-		SetTexture(m_pipeline.m_uShaderObject, "texSampler", 0, *(m_rendering.m_mapTargets["bloom1"].getTexture()), m_rendering.GetPipeline("bloom_horizontal_blur")->m_mapSamplers["texSampler"]);
+		SetTexture(m_pipeline.m_uShaderObject, "texSampler", 0, *(m_rendering.m_mapTargets["bloom1"].getTexture()), m_sampler);
 
 		m_rendering.m_pQuadMesh->draw(commandBuffer);
 

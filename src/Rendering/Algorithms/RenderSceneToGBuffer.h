@@ -19,4 +19,5 @@ private:
 
 	RHI::Pipeline m_pipelineSimple;
 	RHI::Pipeline m_pipelineNormalMap;
+	RHI::Sampler m_sampler;
 };

@@ -53,32 +53,6 @@ RenderXML::~RenderXML(void)
 }
 
 /**
- * @brief RenderXML::initializePipelines
- * @param rendering
- */
-void RenderXML::initializePipelines(Rendering & rendering)
-{
-	const XMLElement * root = static_cast<XMLDocument*>(m_pData)->RootElement();
-	assert(nullptr != root);
-
-	const XMLElement * pipelines = root->FirstChildElement(PIPELINES_STR);
-	assert(nullptr != pipelines);
-
-	const XMLElement * elmt = pipelines->FirstChildElement(PIPELINE_STR);
-
-	while (nullptr != elmt)
-	{
-		const char * name = elmt->Attribute("name");
-
-		assert(nullptr != name);
-
-		rendering.m_mapPipeline[name] = new Pipeline(elmt, rendering);
-
-		elmt = elmt->NextSiblingElement(PIPELINE_STR);
-	}
-}
-
-/**
  * @brief RenderXML::initializeTargets
  * @param rendering
  */
