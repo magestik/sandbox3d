@@ -194,7 +194,7 @@ bool RHI::CommandBuffer::Bind(Pipeline & pipeline)
 	//
 	// Input Assembly State
 	{
-		const Pipeline::InputAssemblyState & state = pipeline.m_inputAssemblyState;
+		const PipelineInputAssemblyStateCreateInfo & state = pipeline.m_inputAssemblyState;
 
 		if (state.enableRestartPrimitive)
 		{
@@ -209,7 +209,7 @@ bool RHI::CommandBuffer::Bind(Pipeline & pipeline)
 	//
 	// Rasterization State
 	{
-		const Pipeline::RasterizationState & state = pipeline.m_rasterizationState;
+		const PipelineRasterizationStateCreateInfo & state = pipeline.m_rasterizationState;
 
 		if (state.enableDepthClamp)
 		{
@@ -260,7 +260,7 @@ bool RHI::CommandBuffer::Bind(Pipeline & pipeline)
 	//
 	// DepthStencil State
 	{
-		const Pipeline::DepthStencilState & state = pipeline.m_depthStencilState;
+		const PipelineDepthStencilStateCreateInfo & state = pipeline.m_depthStencilState;
 
 		if (state.enableDepth)
 		{
@@ -294,7 +294,7 @@ bool RHI::CommandBuffer::Bind(Pipeline & pipeline)
 	//
 	// Blend State
 	{
-		const Pipeline::BlendState & state = pipeline.m_blendState;
+		const PipelineBlendStateCreateInfo & state = pipeline.m_blendState;
 
 		if (state.enable)
 		{

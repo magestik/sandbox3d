@@ -18,6 +18,10 @@
 #include "RHI_enums.h"
 
 //
+// Structurs
+#include "RHI_structs.h"
+
+//
 // Render Pass
 #include "Pass.h"
 

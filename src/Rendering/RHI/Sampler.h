@@ -12,9 +12,10 @@ public:
 	//
 	// Constructors / Destructor
 	Sampler			(void);
+	Sampler			(const SamplerCreateInfo & sample);
 	~Sampler		(void);
 
-protected:
+public:
 
 #if HAVE_OPENGL
 	GLuint m_uSamplerObject;

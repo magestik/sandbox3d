@@ -17,7 +17,7 @@ RHI::Pipeline::Pipeline(void)
  * @brief Constructor
  * @param input
  */
-RHI::Pipeline::Pipeline(const InputAssemblyState & input, const RasterizationState & rasterization, const DepthStencilState & depthStencil, const BlendState & blend, const std::vector<ShaderStage> & aStages)
+RHI::Pipeline::Pipeline(const PipelineInputAssemblyStateCreateInfo & input, const PipelineRasterizationStateCreateInfo & rasterization, const PipelineDepthStencilStateCreateInfo & depthStencil, const PipelineBlendStateCreateInfo & blend, const std::vector<PipelineShaderStageCreateInfo> & aStages)
 : m_inputAssemblyState(input)
 , m_rasterizationState(rasterization)
 , m_depthStencilState(depthStencil)
@@ -25,7 +25,7 @@ RHI::Pipeline::Pipeline(const InputAssemblyState & input, const RasterizationSta
 {
 	m_uShaderObject = glCreateProgram();
 
-	for (ShaderStage stage : aStages)
+	for (PipelineShaderStageCreateInfo stage : aStages)
 	{
 		glAttachShader(m_uShaderObject, stage.module);
 	}
