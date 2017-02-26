@@ -108,8 +108,6 @@ signals:
 
 public slots:
 
-	void reloadShader(const QString & filename);
-
 	void importScene(const QString & filename);
 
 	void setClearColor(const QColor & color);

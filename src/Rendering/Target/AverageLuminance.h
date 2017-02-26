@@ -7,13 +7,11 @@
 
 #include "../RHI/RHI.h"
 
-#include "../Pipeline.h"
-
 class AverageLuminance : public Subpass
 {
 public:
 
-	AverageLuminance(const Pipeline * pipeline);
+	AverageLuminance(void);
 	~AverageLuminance(void);
 
 	bool	init	(const GPU::Texture<GL_TEXTURE_2D> * pTexture1, const GPU::Texture<GL_TEXTURE_2D> * pTexture2);

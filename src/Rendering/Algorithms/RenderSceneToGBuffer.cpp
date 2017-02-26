@@ -59,11 +59,11 @@ bool RenderSceneToGBuffer::init(void)
 
 		RHI::PipelineShaderStageCreateInfo vertexShaderSimple;
 		vertexShaderSimple.stage = RHI::SHADER_STAGE_VERTEX;
-		vertexShaderSimple.module = g_VertexShaders["geometry_pass.vert"]->GetObject();
+		vertexShaderSimple.module = m_rendering.m_mapShaderModules["geometry_pass.vert"];
 
 		RHI::PipelineShaderStageCreateInfo fragmentShaderSimple;
 		fragmentShaderSimple.stage = RHI::SHADER_STAGE_FRAGMENT;
-		fragmentShaderSimple.module = g_FragmentShaders["geometry_pass.frag"]->GetObject();
+		fragmentShaderSimple.module = m_rendering.m_mapShaderModules["geometry_pass.frag"];
 
 		std::vector<RHI::PipelineShaderStageCreateInfo> aStagesSimple;
 		aStagesSimple.push_back(vertexShaderSimple);
@@ -71,11 +71,11 @@ bool RenderSceneToGBuffer::init(void)
 
 		RHI::PipelineShaderStageCreateInfo vertexShaderNM;
 		vertexShaderNM.stage = RHI::SHADER_STAGE_VERTEX;
-		vertexShaderNM.module = g_VertexShaders["geometry_normalmap_pass.vert"]->GetObject();
+		vertexShaderNM.module = m_rendering.m_mapShaderModules["geometry_normalmap_pass.vert"];
 
 		RHI::PipelineShaderStageCreateInfo fragmentShaderNM;
 		fragmentShaderNM.stage = RHI::SHADER_STAGE_FRAGMENT;
-		fragmentShaderNM.module = g_FragmentShaders["geometry_normalmap_pass.frag"]->GetObject();
+		fragmentShaderNM.module = m_rendering.m_mapShaderModules["geometry_normalmap_pass.frag"];
 
 		std::vector<RHI::PipelineShaderStageCreateInfo> aStagesNM;
 		aStagesNM.push_back(vertexShaderNM);

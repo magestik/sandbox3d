@@ -7,7 +7,7 @@
 /**
  * @brief AverageLuminance::AverageLuminance
  */
-AverageLuminance::AverageLuminance(const Pipeline * pipeline)
+AverageLuminance::AverageLuminance(void)
 : Subpass()
 , m_uCurrentObject(0)
 , m_fSumLog(0.0f)

@@ -164,20 +164,6 @@ void DrawableSurface::initializeGL(void)
 
 	m_pSpecial = new GPU::Buffer<GL_PIXEL_UNPACK_BUFFER>();
 
-	{
-		Timer t;
-
-		glFinish();
-		t.Start();
-
-		loadShaders();
-
-		glFinish(); // remove this ?
-		t.Stop();
-
-		printf("Shaders loading time = %f ms\n", t.getElapsedTimeInMs());
-	}
-
 	m_renderer.onInitializeComplete();
 }
 
@@ -323,53 +309,6 @@ void DrawableSurface::keyReleaseEvent(QKeyEvent *event)
 			m_pSelectedObject = nullptr;
 			update();
 		}
-	}
-}
-
-/**
- * @brief DrawableSurface::loadShaders
- */
-void DrawableSurface::loadShaders(void)
-{
-	QDir dir("data/shaders");
-	QStringList list = dir.entryList(QDir::Files);
-
-	bool successful = true;
-
-	for (QString & filename : list)
-	{
-		QFile f(dir.filePath(filename));
-		f.open(QFile::ReadOnly);
-		QByteArray source = f.readAll();
-
-		if (filename.endsWith("vert"))
-		{
-			GPU::Shader<GL_VERTEX_SHADER> * vs = new GPU::Shader<GL_VERTEX_SHADER>();
-			successful &= vs->compileFromSource(source.data());
-			//assert(successful);
-			g_VertexShaders.insert(std::pair<std::string, GPU::Shader<GL_VERTEX_SHADER> *>(filename.toStdString(), vs));
-		}
-		else if (filename.endsWith("frag"))
-		{
-			GPU::Shader<GL_FRAGMENT_SHADER> * fs = new GPU::Shader<GL_FRAGMENT_SHADER>();
-			successful &= fs->compileFromSource(source.data());
-			//assert(successful);
-			g_FragmentShaders.insert(std::pair<std::string, GPU::Shader<GL_FRAGMENT_SHADER> *>(filename.toStdString(), fs));
-		}
-		else if (filename.endsWith("geom"))
-		{
-			GPU::Shader<GL_GEOMETRY_SHADER> * gs = new GPU::Shader<GL_GEOMETRY_SHADER>();
-			successful &= gs->compileFromSource(source.data());
-			//assert(successful);
-			g_GeometryShaders.insert(std::pair<std::string, GPU::Shader<GL_GEOMETRY_SHADER> *>(filename.toStdString(), gs));
-		}
-
-		f.close();
-	}
-
-	if (!successful)
-	{
-		int ret = QMessageBox::warning(this, tr("Sandbox 3D"), tr("All Shaders were not compiled successfully !"));
 	}
 }
 
@@ -624,17 +563,6 @@ GPU::Texture<GL_TEXTURE_2D> * DrawableSurface::loadTexture(const QString & filen
 	}
 
 	return(nullptr);
-}
-
-/**
- * @brief DrawableSurface::reloadShader
- * @param filename
- */
-void DrawableSurface::reloadShader(const QString & filename)
-{
-	std::string str = filename.toStdString();
-	printf("file modified : %s \n", str.c_str());
-	//loadShader(filename);
 }
 
 /**

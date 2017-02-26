@@ -2,9 +2,11 @@
 
 #include <assert.h>
 
-#include "utils.inl"
+#include <sys/types.h>
+#include <dirent.h>
+#include <QFile> // TODO : remove this
 
-#include "Pipeline.h"
+#include "utils.inl"
 
 #include "RenderXML.h"
 
@@ -20,11 +22,11 @@
 #include "Algorithms/BlurV.h"
 #include "Algorithms/Bloom.h"
 
-std::map<std::string, GPU::Shader<GL_FRAGMENT_SHADER> *> g_FragmentShaders;
-
-std::map<std::string, GPU::Shader<GL_VERTEX_SHADER> *> g_VertexShaders;
-
-std::map<std::string, GPU::Shader<GL_GEOMETRY_SHADER> *> g_GeometryShaders;
+inline bool ends_with(std::string const & value, std::string const & ending)
+{
+    if (ending.size() > value.size()) return false;
+    return std::equal(ending.rbegin(), ending.rend(), value.rbegin());
+}
 
 std::map<std::string, GPU::Texture<GL_TEXTURE_2D> *> g_Textures;
 
@@ -32,9 +34,6 @@ std::map<std::string, Mesh> g_Meshes;
 
 const mat3x3 sRGB_to_XYZ(0.4124564, 0.3575761, 0.1804375, 0.2126729, 0.7151522, 0.0721750, 0.0193339, 0.1191920, 0.9503041);
 const mat3x3 XYZ_to_sRGB(3.2404542, -1.5371385, -0.4985314, -0.9692660, 1.8760108, 0.0415560, 0.0556434, -0.2040259, 1.0572252);
-
-static const char PIPELINE_STR []	= "pipeline";
-static const char PASS_STR []		= "pass";
 
 static inline unsigned int toPOT(unsigned int v)
 {
@@ -67,6 +66,55 @@ Rendering::Rendering()
  */
 void Rendering::onInitializeComplete()
 {
+	//
+	// Create Shaders
+	{
+		DIR * dir = opendir("data/shaders");
+
+		if (dir != nullptr)
+		{
+			struct dirent *ep;
+			while (ep = readdir(dir))
+			{
+				std::string filename(ep->d_name);
+
+				RHI::ShaderStage stage = RHI::ShaderStage(0);
+
+				if (ends_with(filename, "vert"))
+				{
+					stage = RHI::SHADER_STAGE_VERTEX;
+				}
+				else if (ends_with(filename, "frag"))
+				{
+					stage = RHI::SHADER_STAGE_FRAGMENT;
+				}
+				else if (ends_with(filename, "geom"))
+				{
+					stage = RHI::SHADER_STAGE_GEOMETRY;
+				}
+
+				if (0 != stage)
+				{
+					QFile f(QString("data/shaders/") + ep->d_name);
+					f.open(QFile::ReadOnly);
+					QByteArray source = f.readAll();
+
+					RHI::ShaderModuleCreateInfo createInfo;
+					createInfo.stage = stage;
+					createInfo.pCode = source.data();
+					createInfo.codeSize = source.length();
+
+					RHI::ShaderModule module(createInfo);
+					m_mapShaderModules.insert(std::pair<std::string, RHI::ShaderModule>(filename, module));
+
+					f.close();
+				}
+			}
+
+			closedir(dir);
+		}
+	}
+
 	RenderXML renderXML("data/render.xml");
 
 	renderXML.initializeTargets(*this);
@@ -571,11 +619,11 @@ void Rendering::initPickBuffer(void)
 
 	RHI::PipelineShaderStageCreateInfo vertexShader;
 	vertexShader.stage = RHI::SHADER_STAGE_VERTEX;
-	vertexShader.module = g_VertexShaders["pickbuffer.vert"]->GetObject();
+	vertexShader.module = m_mapShaderModules["pickbuffer.vert"];
 
 	RHI::PipelineShaderStageCreateInfo fragmentShader;
 	fragmentShader.stage = RHI::SHADER_STAGE_FRAGMENT;
-	fragmentShader.module = g_FragmentShaders["pickbuffer.frag"]->GetObject();
+	fragmentShader.module = m_mapShaderModules["pickbuffer.frag"];
 
 	std::vector<RHI::PipelineShaderStageCreateInfo> aStages;
 	aStages.push_back(vertexShader);
@@ -649,15 +697,15 @@ void Rendering::initBoundingBox(void)
 
 	RHI::PipelineShaderStageCreateInfo vertexShader;
 	vertexShader.stage = RHI::SHADER_STAGE_VERTEX;
-	vertexShader.module = g_VertexShaders["bbox.vert"]->GetObject();
+	vertexShader.module = m_mapShaderModules["bbox.vert"];
 
 	RHI::PipelineShaderStageCreateInfo geometryShader;
 	geometryShader.stage = RHI::SHADER_STAGE_GEOMETRY;
-	geometryShader.module = g_GeometryShaders["bbox.geom"]->GetObject();
+	geometryShader.module = m_mapShaderModules["bbox.geom"];
 
 	RHI::PipelineShaderStageCreateInfo fragmentShader;
 	fragmentShader.stage = RHI::SHADER_STAGE_FRAGMENT;
-	fragmentShader.module = g_FragmentShaders["bbox.frag"]->GetObject();
+	fragmentShader.module = m_mapShaderModules["bbox.frag"];
 
 	std::vector<RHI::PipelineShaderStageCreateInfo> aStages;
 	aStages.push_back(vertexShader);

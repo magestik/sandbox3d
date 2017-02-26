@@ -64,11 +64,11 @@ bool Compose::init(void)
 
 		RHI::PipelineShaderStageCreateInfo vertexShader;
 		vertexShader.stage = RHI::SHADER_STAGE_VERTEX;
-		vertexShader.module = g_VertexShaders["full.vert"]->GetObject();
+		vertexShader.module = m_rendering.m_mapShaderModules["full.vert"];
 
 		RHI::PipelineShaderStageCreateInfo fragmentShader;
 		fragmentShader.stage = RHI::SHADER_STAGE_FRAGMENT;
-		fragmentShader.module = g_FragmentShaders["full.frag"]->GetObject();
+		fragmentShader.module = m_rendering.m_mapShaderModules["full.frag"];
 
 		std::vector<RHI::PipelineShaderStageCreateInfo> aStages;
 		aStages.push_back(vertexShader);

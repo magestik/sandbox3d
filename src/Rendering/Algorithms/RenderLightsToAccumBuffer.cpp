@@ -63,11 +63,11 @@ bool RenderLightsToAccumBuffer::init(void)
 
 		RHI::PipelineShaderStageCreateInfo vertexShader;
 		vertexShader.stage = RHI::SHADER_STAGE_VERTEX;
-		vertexShader.module = g_VertexShaders["directionnal_light.vert"]->GetObject();
+		vertexShader.module = m_rendering.m_mapShaderModules["directionnal_light.vert"];
 
 		RHI::PipelineShaderStageCreateInfo fragmentShader;
 		fragmentShader.stage = RHI::SHADER_STAGE_FRAGMENT;
-		fragmentShader.module = g_FragmentShaders["directionnal_light.frag"]->GetObject();
+		fragmentShader.module = m_rendering.m_mapShaderModules["directionnal_light.frag"];
 
 		std::vector<RHI::PipelineShaderStageCreateInfo> aStages;
 		aStages.push_back(vertexShader);

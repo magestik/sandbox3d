@@ -21,7 +21,6 @@
 #include "Target/AverageLuminance.h"
 
 #include "RenderTexture.h"
-#include "Pipeline.h"
 #include "GraphicsAlgorithm.h"
 
 #include "Environment.h"
@@ -29,10 +28,6 @@
 #include "Shader/Interface.h"
 
 // theses maps contains all shaders, compiled at launch time
-extern std::map<std::string, GPU::Shader<GL_FRAGMENT_SHADER> *>	g_FragmentShaders;
-extern std::map<std::string, GPU::Shader<GL_VERTEX_SHADER> *>	g_VertexShaders;
-extern std::map<std::string, GPU::Shader<GL_GEOMETRY_SHADER> *>	g_GeometryShaders;
-
 extern std::map<std::string, GPU::Texture<GL_TEXTURE_2D> *> g_Textures;
 
 extern std::map<std::string, Mesh>			g_Meshes;
@@ -164,21 +159,6 @@ public:
 		return(m_uHeight);
 	}
 
-	const GPU::Shader<GL_VERTEX_SHADER> * GetVertexShader(const char * name) const
-	{
-		return(g_VertexShaders[name]);
-	}
-
-	const GPU::Shader<GL_FRAGMENT_SHADER> * GetFragmentShader(const char * name) const
-	{
-		return(g_FragmentShaders[name]);
-	}
-
-	const GPU::Shader<GL_GEOMETRY_SHADER> * GetGeometryShader(const char * name) const
-	{
-		return(g_GeometryShaders[name]);
-	}
-
 	const GPU::Texture<GL_TEXTURE_2D> * GetRenderTexture(const char * name) const
 	{
 		return(m_mapTargets.at(name).getTexture());
@@ -242,6 +222,7 @@ public:
 
 	std::map<std::string, RenderTexture>	m_mapTargets;
 
+	std::map<std::string, RHI::ShaderModule> m_mapShaderModules;
 	std::map<std::string, RHI::Framebuffer>	m_mapFramebuffer;
 
 	std::vector<GraphicsAlgorithm*> m_renderQueue;

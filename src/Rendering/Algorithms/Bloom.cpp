@@ -58,11 +58,11 @@ bool Bloom::init(void)
 
 		RHI::PipelineShaderStageCreateInfo vertexShader;
 		vertexShader.stage = RHI::SHADER_STAGE_VERTEX;
-		vertexShader.module = g_VertexShaders["fullscreen.vert"]->GetObject();
+		vertexShader.module = m_rendering.m_mapShaderModules["fullscreen.vert"];
 
 		RHI::PipelineShaderStageCreateInfo fragmentShader;
 		fragmentShader.stage = RHI::SHADER_STAGE_FRAGMENT;
-		fragmentShader.module = g_FragmentShaders["fullscreen_color.frag"]->GetObject();
+		fragmentShader.module = m_rendering.m_mapShaderModules["fullscreen_color.frag"];
 
 		std::vector<RHI::PipelineShaderStageCreateInfo> aStages;
 		aStages.push_back(vertexShader);
