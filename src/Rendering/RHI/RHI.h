@@ -18,6 +18,10 @@
 #include "RHI_enums.h"
 
 //
+// Shader Module
+#include "ShaderModule.h"
+
+//
 // Structurs
 #include "RHI_structs.h"
 
@@ -34,7 +38,7 @@
 #include "Sampler.h"
 
 //
-// Render Pass
+// Pipeline
 #include "Pipeline.h"
 
 //

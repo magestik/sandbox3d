@@ -27,7 +27,7 @@ RHI::Pipeline::Pipeline(const PipelineInputAssemblyStateCreateInfo & input, cons
 
 	for (PipelineShaderStageCreateInfo stage : aStages)
 	{
-		glAttachShader(m_uShaderObject, stage.module);
+		glAttachShader(m_uShaderObject, stage.module.m_uShaderObject);
 	}
 
 	glLinkProgram(m_uShaderObject);
