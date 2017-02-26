@@ -1,7 +1,12 @@
 #include "RenderLightsToAccumBuffer.h"
 
+// sRGB
 const mat3x3 sRGB_to_XYZ(0.4124564, 0.3575761, 0.1804375, 0.2126729, 0.7151522, 0.0721750, 0.0193339, 0.1191920, 0.9503041);
 const mat3x3 XYZ_to_sRGB(3.2404542, -1.5371385, -0.4985314, -0.9692660, 1.8760108, 0.0415560, 0.0556434, -0.2040259, 1.0572252);
+
+// Adobe RGB
+const mat3x3 RGB_to_XYZ(0.5767309, 0.1855540, 0.1881852, 0.2973769, 0.6273491, 0.0752741, 0.0270343, 0.0706872, 0.9911085);
+const mat3x3 XYZ_to_RGB(2.0413690, -0.5649464, -0.3446944, -0.9692660, 1.8760108, 0.0415560, 0.0134474, -0.1183897, 1.0154096);
 
 /**
  * @brief Constructor
@@ -121,7 +126,7 @@ bool RenderLightsToAccumBuffer::render(RHI::CommandBuffer & commandBuffer)
 		SetUniform(m_pipelineDirectionalLight.m_uShaderObject, "viewPos", (inverse(m_rendering.m_matCurrentView) * vec4(0.0, 0.0, 0.0, 1.0)).xyz);
 		SetUniform(m_pipelineDirectionalLight.m_uShaderObject, "InverseViewProjection", inverse(mCameraViewProjection));
 		SetUniform(m_pipelineDirectionalLight.m_uShaderObject, "lightDir", - normalize(m_rendering.m_pLight->GetDirection()));
-		SetUniform(m_pipelineDirectionalLight.m_uShaderObject, "lightColor", sRGB_to_XYZ * m_rendering.m_pLight->GetColor());
+		SetUniform(m_pipelineDirectionalLight.m_uShaderObject, "lightColor", RGB_to_XYZ * m_rendering.m_pLight->GetColor());
 
 		SetTexture(m_pipelineDirectionalLight.m_uShaderObject, "depthSampler", 0, *(m_rendering.m_mapTargets["depth"].getTexture()), m_samplerDepth);
 		SetTexture(m_pipelineDirectionalLight.m_uShaderObject, "normalSampler", 1, *(m_rendering.m_mapTargets["normals"].getTexture()), m_samplerNormal);

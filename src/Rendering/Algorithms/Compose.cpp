@@ -2,8 +2,13 @@
 
 #include "../utils.inl"
 
+// sRGB
 const mat3x3 sRGB_to_XYZ(0.4124564, 0.3575761, 0.1804375, 0.2126729, 0.7151522, 0.0721750, 0.0193339, 0.1191920, 0.9503041);
 const mat3x3 XYZ_to_sRGB(3.2404542, -1.5371385, -0.4985314, -0.9692660, 1.8760108, 0.0415560, 0.0556434, -0.2040259, 1.0572252);
+
+// Adobe RGB
+const mat3x3 RGB_to_XYZ(0.5767309, 0.1855540, 0.1881852, 0.2973769, 0.6273491, 0.0752741, 0.0270343, 0.0706872, 0.9911085);
+const mat3x3 XYZ_to_RGB(2.0413690, -0.5649464, -0.3446944, -0.9692660, 1.8760108, 0.0415560, 0.0134474, -0.1183897, 1.0154096);
 
 /**
  * @brief Constructor
@@ -136,7 +141,7 @@ bool Compose::render(RHI::CommandBuffer & commandBuffer)
 		SetTexture(m_pipeline.m_uShaderObject, "specularLightSampler", 1, *(m_rendering.m_mapTargets["lights_specular"].getTexture()), m_samplerSpecularLightSampler);
 		SetTexture(m_pipeline.m_uShaderObject, "shadowMap", 2, *(m_rendering.m_mapTargets["shadow_map"].getTexture()), m_samplerShadowMap);
 
-		SetUniform(m_pipeline.m_uShaderObject, "ambientColor", sRGB_to_XYZ * m_rendering.environment.ambient.Color);
+		SetUniform(m_pipeline.m_uShaderObject, "ambientColor", RGB_to_XYZ * m_rendering.environment.ambient.Color);
 		SetUniform(m_pipeline.m_uShaderObject, "DepthTransformation", mDepthViewProjection);
 		SetUniform(m_pipeline.m_uShaderObject, "View", m_rendering.m_matCurrentView);
 

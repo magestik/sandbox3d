@@ -32,8 +32,13 @@ std::map<std::string, GPU::Texture<GL_TEXTURE_2D> *> g_Textures;
 
 std::map<std::string, Mesh> g_Meshes;
 
+// sRGB
 const mat3x3 sRGB_to_XYZ(0.4124564, 0.3575761, 0.1804375, 0.2126729, 0.7151522, 0.0721750, 0.0193339, 0.1191920, 0.9503041);
 const mat3x3 XYZ_to_sRGB(3.2404542, -1.5371385, -0.4985314, -0.9692660, 1.8760108, 0.0415560, 0.0556434, -0.2040259, 1.0572252);
+
+// Adobe RGB
+const mat3x3 RGB_to_XYZ(0.5767309, 0.1855540, 0.1881852, 0.2973769, 0.6273491, 0.0752741, 0.0270343, 0.0706872, 0.9911085);
+const mat3x3 XYZ_to_RGB(2.0413690, -0.5649464, -0.3446944, -0.9692660, 1.8760108, 0.0415560, 0.0134474, -0.1183897, 1.0154096);
 
 static inline unsigned int toPOT(unsigned int v)
 {
@@ -313,8 +318,8 @@ void Rendering::onUpdate(const mat4x4 & mView, const vec4 & clearColor, bool bWi
 {
 	updateCameraBuffer(mView);
 
-	const vec4 clearColorXYZ(sRGB_to_XYZ * clearColor.xyz, clearColor.w);
-	const vec4 clearColorRGB(XYZ_to_sRGB * clearColorXYZ.xyz, clearColor.w);
+	const vec4 clearColorXYZ(RGB_to_XYZ * clearColor.xyz, clearColor.w);
+	const vec4 clearColorRGB(XYZ_to_RGB * clearColorXYZ.xyz, clearColor.w);
 
 	m_matCurrentView = mView;
 	m_vCurrentClearColor = clearColorXYZ;
