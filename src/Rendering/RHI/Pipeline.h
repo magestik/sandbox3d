@@ -1,5 +1,7 @@
 #pragma once
 
+#include <vector>
+
 namespace RHI
 {
 
@@ -125,18 +127,40 @@ public:
 		unsigned int writeMask;
 	};
 
+#if HAVE_OPENGL
+	typedef GLuint ShaderModule;
+#endif // HAVE_OPENGL
+
+#if HAVE_VULKAN
+	typedef VkShaderModule ShaderModule;
+#endif // HAVE_VULKAN
+
+	struct ShaderStage
+	{
+		ShaderStage(void)
+		{
+			stage = ShaderStageFlag(0);
+			module = 0;
+		}
+
+		ShaderStageFlag stage;
+		ShaderModule module;
+	};
+
 	//
 	// Constructors / Destructor
 	Pipeline		(void);
-	Pipeline		(const InputAssemblyState & input, const DepthStencilState & depthStencil, const BlendState & blend);
+	Pipeline		(const InputAssemblyState & input, const RasterizationState & rasterization, const DepthStencilState & depthStencil, const BlendState & blend, const std::vector<ShaderStage> & aStages);
 	~Pipeline		(void);
 
 public:
 
 #if HAVE_OPENGL
 	InputAssemblyState m_inputAssemblyState;
+	RasterizationState m_rasterizationState;
 	DepthStencilState m_depthStencilState;
 	BlendState m_blendState;
+	GLuint m_uShaderObject;
 #endif // HAVE_OPENGL
 
 #if HAVE_VULKAN

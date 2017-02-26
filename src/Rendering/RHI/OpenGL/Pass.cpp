@@ -30,6 +30,15 @@ RHI::RenderPass::RenderPass(RenderPass && pass)
 }
 
 /**
+ * @brief RHI::RenderPass::RenderPass
+ * @param pass
+ */
+RHI::RenderPass::RenderPass(const SubpassDescription & desc)
+{
+	m_aPass.push_back(Subpass(desc.aColorAttachments));
+}
+
+/**
  * @brief Constructor
  * @param aPassDesc
  */

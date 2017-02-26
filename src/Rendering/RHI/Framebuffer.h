@@ -29,7 +29,7 @@ public:
 	Framebuffer &	operator =		(const Framebuffer & pass) = delete;
 	Framebuffer &	operator =		(Framebuffer && pass);
 
-protected:
+public:
 
 #if HAVE_OPENGL
 	GLuint m_uFramebufferObject;

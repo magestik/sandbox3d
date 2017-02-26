@@ -2,15 +2,9 @@
 
 #include <vector>
 
-#include <GPU.h>
-
-#include <Vector.h>
-
 #if HAVE_OPENGL
 #	include "OpenGL/Subpass.h"
 #endif // HAVE_OPENGL
-
-class Rendering;
 
 namespace RHI
 {
@@ -32,6 +26,7 @@ public:
 	RenderPass		(void);
 	RenderPass		(const RenderPass & pass) = delete;
 	RenderPass		(RenderPass && pass);
+	RenderPass		(const SubpassDescription & pass);
 	RenderPass		(const std::vector<SubpassDescription> & aPass);
 	~RenderPass		(void);
 

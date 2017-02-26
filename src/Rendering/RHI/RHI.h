@@ -5,9 +5,13 @@
 #	include <GL/glcorearb.h>
 #endif // HAVE_OPENGL
 
-#if HAVE_VULKAN
+#if HAVE_VULKAN || 1
 #	include <vulkan/vulkan.h>
 #endif // HAVE_VULKAN
+
+//
+// math vectors
+#include <Vector.h>
 
 //
 // Enumerations
@@ -20,6 +24,10 @@
 //
 // Framebuffer
 #include "Framebuffer.h"
+
+//
+// Sampler
+#include "Sampler.h"
 
 //
 // Render Pass

@@ -207,6 +207,57 @@ bool RHI::CommandBuffer::Bind(Pipeline & pipeline)
 	}
 
 	//
+	// Rasterization State
+	{
+		const Pipeline::RasterizationState & state = pipeline.m_rasterizationState;
+
+		if (state.enableDepthClamp)
+		{
+			glEnable(GL_DEPTH_CLAMP);
+		}
+		else
+		{
+			glDisable(GL_DEPTH_CLAMP);
+		}
+
+		if (state.enableRasterizerDiscard)
+		{
+			glEnable(GL_RASTERIZER_DISCARD);
+		}
+		else
+		{
+			glDisable(GL_RASTERIZER_DISCARD);
+		}
+
+		glPolygonMode(GL_FRONT_AND_BACK, state.polygonMode);
+
+		if (CULL_MODE_NONE != state.cullMode)
+		{
+			glEnable(GL_CULL_FACE);
+			glCullFace(state.cullMode);
+		}
+		else
+		{
+			glDisable(GL_CULL_FACE);
+		}
+
+		glFrontFace(state.frontFace);
+
+		if (state.enableDepthBias)
+		{
+			glEnable(GL_POLYGON_OFFSET_FILL);
+			glPolygonOffset(state.depthBiasConstantFactor, state.depthBiasSlopeFactor);
+			// FIXME : depthBiasClamp ???
+		}
+		else
+		{
+			glDisable(GL_POLYGON_OFFSET_FILL);
+		}
+
+		glLineWidth(state.lineWidth);
+	}
+
+	//
 	// DepthStencil State
 	{
 		const Pipeline::DepthStencilState & state = pipeline.m_depthStencilState;
@@ -259,7 +310,9 @@ bool RHI::CommandBuffer::Bind(Pipeline & pipeline)
 		glColorMask(state.writeMask & COLOR_MASK_R, state.writeMask & COLOR_MASK_G, state.writeMask & COLOR_MASK_B, state.writeMask & COLOR_MASK_A);
 	}
 
-	// TODO : apply pipeline states
+	glUseProgram(pipeline.m_uShaderObject);
+
+	// TODO : apply other pipeline states
 
 	return(true);
 }
