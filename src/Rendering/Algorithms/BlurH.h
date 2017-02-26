@@ -7,8 +7,12 @@ class BlurH : public GraphicsAlgorithm
 
 public:
 
+	//
+	// Constructor / Destructor
 	explicit BlurH(Rendering & rendering, RHI::Framebuffer & framebuffer);
 	virtual ~BlurH(void);
+
+	static GraphicsAlgorithm * Create(Rendering & rendering, RHI::Framebuffer & framebuffer);
 
 	//
 	// override GraphicsAlgorithm

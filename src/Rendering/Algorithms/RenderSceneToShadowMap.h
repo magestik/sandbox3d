@@ -14,6 +14,8 @@ public:
 	explicit		RenderSceneToShadowMap	(Rendering & rendering, RHI::Framebuffer & framebuffer);
 	virtual			~RenderSceneToShadowMap	(void);
 
+	static GraphicsAlgorithm * Create(Rendering & rendering, RHI::Framebuffer & framebuffer);
+
 	//
 	// override GraphicsAlgorithm
 	virtual bool	init		(void) override;

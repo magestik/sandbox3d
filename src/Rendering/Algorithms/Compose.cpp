@@ -23,6 +23,17 @@ Compose::~Compose(void)
 }
 
 /**
+ * @brief Compose::Create
+ * @param rendering
+ * @param framebuffer
+ * @return
+ */
+GraphicsAlgorithm * Compose::Create(Rendering & rendering, RHI::Framebuffer & framebuffer)
+{
+	return(new Compose(rendering, framebuffer));
+}
+
+/**
  * @brief ComposeAlgorithm::init
  * @return
  */

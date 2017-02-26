@@ -20,6 +20,17 @@ RenderSceneToShadowMap::~RenderSceneToShadowMap(void)
 }
 
 /**
+ * @brief RenderSceneToShadowMap::Create
+ * @param rendering
+ * @param framebuffer
+ * @return
+ */
+GraphicsAlgorithm * RenderSceneToShadowMap::Create(Rendering & rendering, RHI::Framebuffer & framebuffer)
+{
+	return(new RenderSceneToShadowMap(rendering, framebuffer));
+}
+
+/**
  * @brief RenderSceneToShadowMap::init
  * @return
  */

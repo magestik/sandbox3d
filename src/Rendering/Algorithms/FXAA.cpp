@@ -21,6 +21,17 @@ FXAA::~FXAA(void)
 }
 
 /**
+ * @brief FXAA::Create
+ * @param rendering
+ * @param framebuffer
+ * @return
+ */
+GraphicsAlgorithm * FXAA::Create(Rendering & rendering, RHI::Framebuffer & framebuffer)
+{
+	return(new FXAA(rendering, framebuffer));
+}
+
+/**
  * @brief FXAA::init
  * @return
  */

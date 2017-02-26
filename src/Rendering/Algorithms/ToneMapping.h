@@ -12,6 +12,8 @@ public:
 	explicit		ToneMapping		(Rendering & rendering, RHI::Framebuffer & framebuffer);
 	virtual			~ToneMapping	(void);
 
+	static GraphicsAlgorithm * Create(Rendering & rendering, RHI::Framebuffer & framebuffer);
+
 	//
 	// override GraphicsAlgorithm
 	virtual bool	init		(void) override;

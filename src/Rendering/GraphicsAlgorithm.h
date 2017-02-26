@@ -5,7 +5,12 @@
 #include <Vector.h>
 #include <Matrix.h>
 
+#include <map>
+
 class Rendering;
+class GraphicsAlgorithm;
+
+typedef GraphicsAlgorithm * (*GraphicsAlgorithmFactory)(Rendering & rendering, RHI::Framebuffer & framebuffer);
 
 class GraphicsAlgorithm
 {
@@ -19,6 +24,9 @@ public:
 
 	virtual bool render(RHI::CommandBuffer & commandBuffer) = 0;
 
+	static GraphicsAlgorithm * Create(const char * szType, Rendering & rendering, RHI::Framebuffer & framebuffer);
+	static void RegisterEverything(void);
+
 protected:
 
 	Rendering & m_rendering;
@@ -26,4 +34,9 @@ protected:
 	RHI::Framebuffer & m_framebuffer;
 
 	RHI::RenderPass m_renderPass;
+
+private:
+
+	static std::map<std::string, GraphicsAlgorithmFactory> m_FactoryMap;
 };
+

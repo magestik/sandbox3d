@@ -184,16 +184,6 @@ public:
 		return(m_mapTargets.at(name).getTexture());
 	}
 
-	const Pipeline * GetPipeline(const char * name) const
-	{
-		return(m_mapPipeline.at(name));
-	}
-
-	Pipeline * GetPipeline(const char * name)
-	{
-		return((Pipeline*)m_mapPipeline.at(name));
-	}
-
 	void SetDefaultFramebuffer(GLuint framebuffer)
 	{
 		m_mapFramebuffer["default"] = RHI::Framebuffer(framebuffer);
@@ -251,7 +241,6 @@ public:
 	GPU::Buffer<GL_UNIFORM_BUFFER> * m_pObjectsBuffer;
 
 	std::map<std::string, RenderTexture>	m_mapTargets;
-	std::map<std::string, const Pipeline *>	m_mapPipeline;
 
 	std::map<std::string, RHI::Framebuffer>	m_mapFramebuffer;
 

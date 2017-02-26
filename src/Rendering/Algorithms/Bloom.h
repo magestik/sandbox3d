@@ -7,8 +7,12 @@ class Bloom : public GraphicsAlgorithm
 
 public:
 
+	//
+	// Constructor / Destructor
 	Bloom(Rendering & rendering, RHI::Framebuffer & framebuffer);
 	virtual ~Bloom(void);
+
+	static GraphicsAlgorithm * Create(Rendering & rendering, RHI::Framebuffer & framebuffer);
 
 	//
 	// override GraphicsAlgorithm

@@ -9,8 +9,12 @@ class RenderLightsToAccumBuffer : public GraphicsAlgorithm
 
 public:
 
+	//
+	// Constructor / Destructor
 	RenderLightsToAccumBuffer(Rendering & rendering, RHI::Framebuffer & framebuffer);
 	virtual ~RenderLightsToAccumBuffer(void);
+
+	static GraphicsAlgorithm * Create(Rendering & rendering, RHI::Framebuffer & framebuffer);
 
 	//
 	// override GraphicsAlgorithm

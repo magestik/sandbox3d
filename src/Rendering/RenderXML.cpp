@@ -17,8 +17,8 @@ static const char TARGET_STR []			= "texture";
 static const char FRAMEBUFFERS_STR []	= "framebuffers";
 static const char FRAMEBUFFER_STR []	= "framebuffer";
 
-static const char PIPELINES_STR []		= "pipelines";
-static const char PIPELINE_STR []		= "pipeline";
+static const char QUEUE_STR []			= "queue";
+static const char QUEUE_ELMT_STR []		= "element";
 
 /**
  * @brief Constructor
@@ -135,4 +135,32 @@ void RenderXML::createFramebuffer(const void * pNode, Rendering & rendering)
 	}
 
 	rendering.m_mapFramebuffer[framebufferName] = RHI::Framebuffer(aTextures);
+}
+
+/**
+ * @brief RenderXML::initializeQueue
+ * @param rendering
+ */
+void RenderXML::initializeQueue(Rendering & rendering)
+{
+	const XMLElement * root = static_cast<XMLDocument*>(m_pData)->RootElement();
+	assert(nullptr != root);
+
+	const XMLElement * queue = root->FirstChildElement(QUEUE_STR);
+	assert(nullptr != queue);
+
+	const XMLElement * elmt = queue->FirstChildElement(QUEUE_ELMT_STR);
+
+	while (nullptr != elmt)
+	{
+		const char * type = elmt->Attribute("type");
+
+		const char * fb = elmt->Attribute("framebuffer");
+
+		GraphicsAlgorithm * a = GraphicsAlgorithm::Create(type, rendering, rendering.m_mapFramebuffer[fb]);
+
+		rendering.m_renderQueue.push_back(a);
+
+		elmt = elmt->NextSiblingElement(QUEUE_ELMT_STR);
+	}
 }

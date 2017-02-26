@@ -21,6 +21,17 @@ ToneMapping::~ToneMapping(void)
 }
 
 /**
+ * @brief ToneMapping::Create
+ * @param rendering
+ * @param framebuffer
+ * @return
+ */
+GraphicsAlgorithm * ToneMapping::Create(Rendering & rendering, RHI::Framebuffer & framebuffer)
+{
+	return(new ToneMapping(rendering, framebuffer));
+}
+
+/**
  * @brief ToneMapping::init
  * @return
  */

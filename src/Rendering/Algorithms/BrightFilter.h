@@ -7,8 +7,12 @@ class BrightFilter : public GraphicsAlgorithm
 
 public:
 
+	//
+	// Constructor / Destructor
 	BrightFilter(Rendering & rendering, RHI::Framebuffer & framebuffer);
 	virtual ~BrightFilter(void);
+
+	static GraphicsAlgorithm * Create(Rendering & rendering, RHI::Framebuffer & framebuffer);
 
 	//
 	// override GraphicsAlgorithm

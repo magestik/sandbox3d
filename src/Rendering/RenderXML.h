@@ -16,6 +16,7 @@ public:
 	// Parsing
 	void initializeTargets		(Rendering & rendering);
 	void initializeFramebuffers	(Rendering & rendering);
+	void initializeQueue		(Rendering & rendering);
 
 protected:
 

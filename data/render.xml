@@ -1,33 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE render SYSTEM "render.dtd">
 <render>
-<!--
-	<attachment_descriptions>
 
-		<attachment name="test">
-			<format value="RG16F" />
-			<samples value="1" />
-			<loadOp value="VK_ATTACHMENT_LOAD_OP_CLEAR" />
-			<storeOp value="VK_ATTACHMENT_STORE_OP_STORE" />
-			<stencilLoadOp value="VK_ATTACHMENT_LOAD_OP_DONT_CARE" />
-			<stencilStoreOp value="VK_ATTACHMENT_STORE_OP_DONT_CARE" />
-			<initialLayout value="VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL" />
-			<initialLayout value="VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL" />
-		</attachment>
-
-		<attachment name="depth">
-			<format value="RG16F" />
-			<samples value="1" />
-			<loadOp value="VK_ATTACHMENT_LOAD_OP_CLEAR" />
-			<storeOp value="VK_ATTACHMENT_STORE_OP_STORE" />
-			<stencilLoadOp value="VK_ATTACHMENT_LOAD_OP_DONT_CARE" />
-			<stencilStoreOp value="VK_ATTACHMENT_STORE_OP_DONT_CARE" />
-			<initialLayout value="VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL" />
-			<initialLayout value="VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL" />
-		</attachment>
-
-	</attachment_descriptions>
--->
 	<targets>
 		<texture name="depth" format="GL_DEPTH_COMPONENT32F" />
 		<texture name="shadow_map" format="GL_DEPTH_COMPONENT32F" />
@@ -77,5 +51,19 @@
 			<output texture="luminance1" />
 		</framebuffer>
 	</framebuffers>
+
+	<queue>
+		<element type="geometry" framebuffer="normals-earlyZ" />
+		<element type="shadowmap-directional" framebuffer="shadow-map" />
+		<element type="lights" framebuffer="lights" />
+		<element type="lighting" framebuffer="HDR-earlyZ" />
+		<!--<element type="fog" framebuffer="HDR" />-->
+		<element type="bright" framebuffer="bloom_br" />
+		<element type="BlurH" framebuffer="bloom_bh" />
+		<element type="BlurV" framebuffer="bloom_bv" />
+		<element type="tonemapping" framebuffer="LDR" />
+		<element type="FXAA" framebuffer="default" />
+		<element type="compose" framebuffer="default" />
+	</queue>
 
 </render>

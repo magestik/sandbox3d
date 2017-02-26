@@ -7,9 +7,12 @@ class FXAA : public GraphicsAlgorithm
 
 public:
 
+	//
+	// Constructor / Destructor
 	FXAA(Rendering & rendering, RHI::Framebuffer & framebuffer);
 	virtual ~FXAA(void);
 
+	static GraphicsAlgorithm * Create(Rendering & rendering, RHI::Framebuffer & framebuffer);
 
 	//
 	// override GraphicsAlgorithm

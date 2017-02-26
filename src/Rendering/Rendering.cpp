@@ -58,9 +58,8 @@ Rendering::Rendering()
 , m_pCameraBuffer(nullptr)
 , m_pObjectsBuffer(nullptr)
 , m_mapTargets()
-, m_AvLum(nullptr)
 {
-	// ...
+	GraphicsAlgorithm::RegisterEverything();
 }
 
 /**
@@ -88,24 +87,7 @@ void Rendering::onInitializeComplete()
 
 	renderXML.initializeFramebuffers(*this);
 
-	//
-	// Fill Render Queue
-	m_renderQueue.push_back(new RenderSceneToGBuffer(*this, m_mapFramebuffer["normals-earlyZ"]));
-	m_renderQueue.push_back(new RenderSceneToShadowMap(*this, m_mapFramebuffer["shadow-map"]));
-	m_renderQueue.push_back(new RenderLightsToAccumBuffer(*this, m_mapFramebuffer["lights"]));
-	m_renderQueue.push_back(new Compose(*this, m_mapFramebuffer["HDR-earlyZ"]));
-
-	if (environment.isEnabled(EnvironmentSettings::FOG))
-	{
-		m_renderQueue.push_back(new Fog(*this, m_mapFramebuffer["HDR"]));
-	}
-
-	m_renderQueue.push_back(new BrightFilter(*this, m_mapFramebuffer["bloom_br"]));
-	m_renderQueue.push_back(new BlurH(*this, m_mapFramebuffer["bloom_bh"]));
-	m_renderQueue.push_back(new BlurV(*this, m_mapFramebuffer["bloom_bv"]));
-	m_renderQueue.push_back(new ToneMapping(*this, m_mapFramebuffer["LDR"]));
-	m_renderQueue.push_back(new FXAA(*this, m_mapFramebuffer["default"]));
-	m_renderQueue.push_back(new Bloom(*this, m_mapFramebuffer["default"]));
+	renderXML.initializeQueue(*this);
 
 	for (GraphicsAlgorithm * qElmt : m_renderQueue)
 	{
@@ -113,10 +95,7 @@ void Rendering::onInitializeComplete()
 	}
 
 	//
-	// Initialize hardcoded passes
-	m_AvLum = new AverageLuminance(m_mapPipeline["average_luminance"]);
-	m_AvLum->init(m_mapTargets["luminance1"].getTexture(), m_mapTargets["luminance2"].getTexture());
-
+	//
 	m_pLight = new Light::Directionnal(vec3(-20.0f, -20.0f, -20.0f));
 
 	//

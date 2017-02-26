@@ -18,6 +18,17 @@ RenderSceneToGBuffer::~RenderSceneToGBuffer(void)
 }
 
 /**
+ * @brief RenderSceneToGBuffer::Create
+ * @param rendering
+ * @param framebuffer
+ * @return
+ */
+GraphicsAlgorithm * RenderSceneToGBuffer::Create(Rendering & rendering, RHI::Framebuffer & framebuffer)
+{
+	return(new RenderSceneToGBuffer(rendering, framebuffer));
+}
+
+/**
  * @brief RenderSceneToGBufferAlgorithm::init
  * @return
  */

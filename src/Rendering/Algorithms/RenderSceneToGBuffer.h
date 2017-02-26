@@ -7,8 +7,12 @@ class RenderSceneToGBuffer : public GraphicsAlgorithm
 
 public:
 
+	//
+	// Constructor / Destructor
 	RenderSceneToGBuffer(Rendering & rendering, RHI::Framebuffer & framebuffer);
 	virtual ~RenderSceneToGBuffer(void);
+
+	static GraphicsAlgorithm * Create(Rendering & rendering, RHI::Framebuffer & framebuffer);
 
 	//
 	// override GraphicsAlgorithm

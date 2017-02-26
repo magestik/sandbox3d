@@ -26,6 +26,17 @@ Fog::~Fog(void)
 }
 
 /**
+ * @brief Fog::Create
+ * @param rendering
+ * @param framebuffer
+ * @return
+ */
+GraphicsAlgorithm * Fog::Create(Rendering & rendering, RHI::Framebuffer & framebuffer)
+{
+	return(new Fog(rendering, framebuffer));
+}
+
+/**
  * @brief RenderFogAlgorithm::init
  * @return
  */

@@ -18,6 +18,17 @@ Bloom::~Bloom(void)
 }
 
 /**
+ * @brief Bloom::Create
+ * @param rendering
+ * @param framebuffer
+ * @return
+ */
+GraphicsAlgorithm * Bloom::Create(Rendering & rendering, RHI::Framebuffer & framebuffer)
+{
+	return(new Bloom(rendering, framebuffer));
+}
+
+/**
  * @brief Bloom::init
  * @return
  */

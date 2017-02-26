@@ -18,6 +18,17 @@ BrightFilter::~BrightFilter(void)
 }
 
 /**
+ * @brief BrightFilter::Create
+ * @param rendering
+ * @param framebuffer
+ * @return
+ */
+GraphicsAlgorithm * BrightFilter::Create(Rendering & rendering, RHI::Framebuffer & framebuffer)
+{
+	return(new BrightFilter(rendering, framebuffer));
+}
+
+/**
  * @brief BrightFilter::init
  * @return
  */

@@ -21,6 +21,17 @@ RenderLightsToAccumBuffer::~RenderLightsToAccumBuffer(void)
 }
 
 /**
+ * @brief RenderLightsToAccumBuffer::Create
+ * @param rendering
+ * @param framebuffer
+ * @return
+ */
+GraphicsAlgorithm * RenderLightsToAccumBuffer::Create(Rendering & rendering, RHI::Framebuffer & framebuffer)
+{
+	return(new RenderLightsToAccumBuffer(rendering, framebuffer));
+}
+
+/**
  * @brief RenderLightsToAccumBufferAlgorithm::init
  * @return
  */

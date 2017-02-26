@@ -7,8 +7,12 @@ class Compose : public GraphicsAlgorithm
 
 public:
 
+	//
+	// Constructor / Destructor
 	Compose(Rendering & rendering, RHI::Framebuffer & framebuffer);
 	virtual ~Compose(void);
+
+	static GraphicsAlgorithm * Create(Rendering & rendering, RHI::Framebuffer & framebuffer);
 
 	//
 	// override GraphicsAlgorithm

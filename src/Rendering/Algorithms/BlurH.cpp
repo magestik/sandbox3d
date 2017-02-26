@@ -18,6 +18,17 @@ BlurH::~BlurH(void)
 }
 
 /**
+ * @brief BlurH::Create
+ * @param rendering
+ * @param framebuffer
+ * @return
+ */
+GraphicsAlgorithm * BlurH::Create(Rendering & rendering, RHI::Framebuffer & framebuffer)
+{
+	return(new BlurH(rendering, framebuffer));
+}
+
+/**
  * @brief BlurH::init
  * @return
  */

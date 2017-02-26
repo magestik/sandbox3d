@@ -7,9 +7,12 @@ class Fog : public GraphicsAlgorithm
 
 public:
 
+	//
+	// Constructor / Destructor
 	Fog(Rendering & rendering, RHI::Framebuffer & framebuffer);
 	virtual ~Fog(void);
 
+	static GraphicsAlgorithm * Create(Rendering & rendering, RHI::Framebuffer & framebuffer);
 
 	//
 	// override GraphicsAlgorithm

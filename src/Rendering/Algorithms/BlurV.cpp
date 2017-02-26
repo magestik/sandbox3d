@@ -18,6 +18,17 @@ BlurV::~BlurV(void)
 }
 
 /**
+ * @brief BlurV::Create
+ * @param rendering
+ * @param framebuffer
+ * @return
+ */
+GraphicsAlgorithm * BlurV::Create(Rendering & rendering, RHI::Framebuffer & framebuffer)
+{
+	return(new BlurV(rendering, framebuffer));
+}
+
+/**
  * @brief BlurV::init
  * @return
  */
