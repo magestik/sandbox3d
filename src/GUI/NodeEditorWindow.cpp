@@ -200,6 +200,8 @@ bool NodeEditorWindow::loadGraph(void)
 	json_t * pGraphNodes = json_object_get(pGraph, "nodes");
 	assert(nullptr != pGraphNodes);
 
+	std::map<uintptr_t, GraphicsNode *> mapUID;
+
 	{
 		size_t index;
 		json_t * pNode;
@@ -208,7 +210,8 @@ bool NodeEditorWindow::loadGraph(void)
 		{
 			// ID
 			json_t * pNodeID = json_object_get(pNode, "id");
-			assert(0 != json_integer_value(pNodeID));
+			uintptr_t uid = json_integer_value(pNodeID);
+			assert(0 != uid);
 
 			// Type
 			json_t * pNodeType = json_object_get(pNode, "type");
@@ -225,11 +228,17 @@ bool NodeEditorWindow::loadGraph(void)
 			assert(nullptr != pNodeMetada);
 
 			json_t * pNodePosX = json_object_get(pNodeMetada, "xloc");
-			json_t * pNodePosY = json_object_get(pNodeMetada, "yloc");
+			assert(nullptr != pNodePosX);
 
+			json_t * pNodePosY = json_object_get(pNodeMetada, "yloc");
+			assert(nullptr != pNodePosY);
+
+			// Create Node
 			GraphicsNode * n = createNode(*it);
 			n->setPos(json_real_value(pNodePosX), json_real_value(pNodePosY));
 			n->setTitle(json_string_value(pNodeLabel)); // currently useless
+
+			mapUID[uid] = n;
 		}
 	}
 
@@ -239,11 +248,43 @@ bool NodeEditorWindow::loadGraph(void)
 
 	{
 		size_t index;
-		json_t * value;
+		json_t * pNode;
 
-		json_array_foreach(pGraphEdges, index, value)
+		json_array_foreach(pGraphEdges, index, pNode)
 		{
-			/* block of code that uses index and value */
+			// Source
+			json_t * pNodeEdgeSource = json_object_get(pNode, "source");
+			uintptr_t source_uid = json_integer_value(pNodeEdgeSource);
+
+			// Target
+			json_t * pNodeEdgeTarget = json_object_get(pNode, "target");
+			uintptr_t target_uid = json_integer_value(pNodeEdgeTarget);
+
+			// Directed
+			json_t * pNodeEdgeDirected = json_object_get(pNode, "directed");
+			assert(json_boolean_value(pNodeEdgeDirected));
+
+			// Metadata
+			json_t * pNodeEdgeMetada = json_object_get(pNode, "metadata");
+			assert(nullptr != pNodeEdgeMetada);
+
+			json_t * pNodeEdgeSourceId = json_object_get(pNodeEdgeMetada, "source_id");
+			assert(nullptr != pNodeEdgeSourceId);
+
+			json_t * pNodeEdgeTargetId = json_object_get(pNodeEdgeMetada, "target_id");
+			assert(nullptr != pNodeEdgeTargetId);
+
+			// Create Edge
+			GraphicsNode * pSourceNode = mapUID[source_uid];
+			assert(nullptr != pSourceNode);
+
+			GraphicsNode * pTargetNode = mapUID[target_uid];
+			assert(nullptr != pTargetNode);
+
+			GraphicsDirectedEdge * pEdge = new GraphicsBezierEdge();
+			pEdge->connect(pSourceNode, json_integer_value(pNodeEdgeSourceId), pTargetNode, json_integer_value(pNodeEdgeSourceId));
+
+			m_pScene->addItem(pEdge);
 		}
 	}
 
@@ -328,11 +369,11 @@ bool NodeEditorWindow::saveGraph(void)
 				json_array_append(pGraphEdges, pEdge);
 
 				// Source
-				json_t * pEdgeSource = json_integer(uintptr_t(static_cast<GraphicsBezierEdge*>(item)->getSink()->parentItem())); // FIXME
+				json_t * pEdgeSource = json_integer(uintptr_t(static_cast<GraphicsBezierEdge*>(item)->getSource()->parentItem()));
 				json_object_set(pEdge, "source", pEdgeSource);
 
 				// Target
-				json_t * pEdgeTarget = json_integer(uintptr_t(static_cast<GraphicsBezierEdge*>(item)->getSource()->parentItem())); // FIXME
+				json_t * pEdgeTarget = json_integer(uintptr_t(static_cast<GraphicsBezierEdge*>(item)->getSink()->parentItem()));
 				json_object_set(pEdge, "target", pEdgeTarget);
 
 				// Directed
@@ -342,6 +383,12 @@ bool NodeEditorWindow::saveGraph(void)
 				// Metadata
 				json_t * pEdgeMetada = json_object();
 				json_object_set(pEdge, "metadata", pEdgeMetada);
+
+				json_t * pEdgeSourceId = json_integer(static_cast<GraphicsBezierEdge*>(item)->getSource()->getIndex());
+				json_object_set(pEdgeMetada, "source_id", pEdgeSourceId);
+
+				json_t * pEdgeTargetId = json_integer(static_cast<GraphicsBezierEdge*>(item)->getSink()->getIndex());
+				json_object_set(pEdgeMetada, "target_id", pEdgeTargetId);
 			}
 			break;
 
@@ -384,14 +431,20 @@ GraphicsNode * NodeEditorWindow::createNode(const NodeDescriptor & desc)
 
 	n->setTitle(QString(desc.name.c_str()));
 
+	int input_index = 0;
+
 	for (const NodeDescriptor::Input & input : desc.inputs)
 	{
-		n->add_sink(QString(input.name.c_str()));
+		n->add_sink(QString(input.name.c_str()), nullptr, input_index);
+		++input_index;
 	}
+
+	int output_index = 0;
 
 	for (const NodeDescriptor::Output & output : desc.outputs)
 	{
-		n->add_source(QString(output.name.c_str()));
+		n->add_source(QString(output.name.c_str()), nullptr, output_index);
+		++output_index;
 	}
 
 	m_pScene->addItem(n);
