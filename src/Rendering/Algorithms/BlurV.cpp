@@ -4,7 +4,7 @@
  * @brief Constructor
  * @param rendering
  */
-BlurV::BlurV(Rendering & rendering, RHI::Framebuffer & framebuffer) : GraphicsAlgorithm(rendering, framebuffer)
+BlurV::BlurV(Rendering & rendering, RHI::Framebuffer & framebuffer) : GraphicsAlgorithm(rendering, framebuffer), m_pTexture(nullptr)
 {
 	// ...
 }
@@ -98,11 +98,28 @@ bool BlurV::render(RHI::CommandBuffer & commandBuffer)
 	{
 		commandBuffer.Bind(m_pipeline);
 
-		SetTexture(m_pipeline.m_uShaderObject, "texSampler", 0, *(m_rendering.m_mapTargets["bloom2"].getTexture()), m_sampler);
+		SetTexture(m_pipeline.m_uShaderObject, "texSampler", 0, *m_pTexture, m_sampler);
 
 		m_rendering.m_pQuadMesh->draw(commandBuffer);
 	}
 	commandBuffer.EndRenderPass();
 
 	return(true);
+}
+
+/**
+ * @brief BlurV::setParameter
+ * @param name
+ * @param value
+ */
+void BlurV::setParameter(const char * name, const char * value)
+{
+	if (!strcmp("texture", name))
+	{
+		m_pTexture = m_rendering.m_mapTargets[value].getTexture();
+	}
+	else
+	{
+		assert(false);
+	}
 }

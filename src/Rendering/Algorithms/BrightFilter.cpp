@@ -4,7 +4,7 @@
  * @brief Constructor
  * @param rendering
  */
-BrightFilter::BrightFilter(Rendering & rendering, RHI::Framebuffer & framebuffer) : GraphicsAlgorithm(rendering, framebuffer)
+BrightFilter::BrightFilter(Rendering & rendering, RHI::Framebuffer & framebuffer) : GraphicsAlgorithm(rendering, framebuffer), m_pTexture(nullptr)
 {
 	// ...
 }
@@ -98,11 +98,28 @@ bool BrightFilter::render(RHI::CommandBuffer & commandBuffer)
 	{
 		commandBuffer.Bind(m_pipeline);
 
-		SetTexture(m_pipeline.m_uShaderObject, "texSampler", 0, *(m_rendering.m_mapTargets["HDR"].getTexture()), m_sampler);
+		SetTexture(m_pipeline.m_uShaderObject, "texSampler", 0, *m_pTexture, m_sampler);
 
 		m_rendering.m_pQuadMesh->draw(commandBuffer);
 	}
 	commandBuffer.EndRenderPass();
 
 	return(true);
+}
+
+/**
+ * @brief BrightFilter::setParameter
+ * @param name
+ * @param value
+ */
+void BrightFilter::setParameter(const char * name, const char * value)
+{
+	if (!strcmp("texture", name))
+	{
+		m_pTexture = m_rendering.m_mapTargets[value].getTexture();
+	}
+	else
+	{
+		assert(false);
+	}
 }

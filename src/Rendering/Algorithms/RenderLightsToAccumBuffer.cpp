@@ -12,7 +12,7 @@ const mat3x3 XYZ_to_RGB(2.0413690, -0.5649464, -0.3446944, -0.9692660, 1.8760108
  * @brief Constructor
  * @param rendering
  */
-RenderLightsToAccumBuffer::RenderLightsToAccumBuffer(Rendering & rendering, RHI::Framebuffer & framebuffer) : GraphicsAlgorithm(rendering, framebuffer)
+RenderLightsToAccumBuffer::RenderLightsToAccumBuffer(Rendering & rendering, RHI::Framebuffer & framebuffer) : GraphicsAlgorithm(rendering, framebuffer) , m_pDepthTexture(nullptr), m_pNormalsTexture(nullptr)
 {
 	// ...
 }
@@ -128,8 +128,8 @@ bool RenderLightsToAccumBuffer::render(RHI::CommandBuffer & commandBuffer)
 		SetUniform(m_pipelineDirectionalLight.m_uShaderObject, "lightDir", - normalize(m_rendering.m_pLight->GetDirection()));
 		SetUniform(m_pipelineDirectionalLight.m_uShaderObject, "lightColor", RGB_to_XYZ * m_rendering.m_pLight->GetColor());
 
-		SetTexture(m_pipelineDirectionalLight.m_uShaderObject, "depthSampler", 0, *(m_rendering.m_mapTargets["depth"].getTexture()), m_samplerDepth);
-		SetTexture(m_pipelineDirectionalLight.m_uShaderObject, "normalSampler", 1, *(m_rendering.m_mapTargets["normals"].getTexture()), m_samplerNormal);
+		SetTexture(m_pipelineDirectionalLight.m_uShaderObject, "depthSampler", 0, *m_pDepthTexture, m_samplerDepth);
+		SetTexture(m_pipelineDirectionalLight.m_uShaderObject, "normalSampler", 1, *m_pNormalsTexture, m_samplerNormal);
 
 		m_rendering.m_pQuadMesh->draw(commandBuffer);
 
@@ -139,4 +139,25 @@ bool RenderLightsToAccumBuffer::render(RHI::CommandBuffer & commandBuffer)
 	commandBuffer.EndRenderPass();
 
 	return(true);
+}
+
+/**
+ * @brief RenderLightsToAccumBuffer::setParameter
+ * @param name
+ * @param value
+ */
+void RenderLightsToAccumBuffer::setParameter(const char * name, const char * value)
+{
+	if (!strcmp("geometry_depth", name))
+	{
+		m_pDepthTexture = m_rendering.m_mapTargets[value].getTexture();
+	}
+	else if (!strcmp("geometry_normals", name))
+	{
+		m_pNormalsTexture = m_rendering.m_mapTargets[value].getTexture();
+	}
+	else
+	{
+		assert(false);
+	}
 }

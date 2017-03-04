@@ -1,5 +1,7 @@
 #include "Compose.h"
 
+#include <string.h>
+
 #include "../utils.inl"
 
 // sRGB
@@ -14,7 +16,7 @@ const mat3x3 XYZ_to_RGB(2.0413690, -0.5649464, -0.3446944, -0.9692660, 1.8760108
  * @brief Constructor
  * @param rendering
  */
-Compose::Compose(Rendering & rendering, RHI::Framebuffer & framebuffer) : GraphicsAlgorithm(rendering, framebuffer)
+Compose::Compose(Rendering & rendering, RHI::Framebuffer & framebuffer) : GraphicsAlgorithm(rendering, framebuffer), m_pDiffuseLightsTexture(nullptr), m_pSpecularLightsTexture(nullptr)
 {
 	// ...
 }
@@ -137,8 +139,8 @@ bool Compose::render(RHI::CommandBuffer & commandBuffer)
 		mat4x4 mDepthView = _lookAt(vec3(0,0,0), m_rendering.m_pLight->GetDirection(), vec3(0.0f, -1.0f, 0.0f));
 		mat4x4 mDepthViewProjection = m_rendering.m_matShadowMapProjection * mDepthView;
 
-		SetTexture(m_pipeline.m_uShaderObject, "diffuseLightSampler", 0, *(m_rendering.m_mapTargets["lights_diffuse"].getTexture()), m_samplerDiffuseLightSampler);
-		SetTexture(m_pipeline.m_uShaderObject, "specularLightSampler", 1, *(m_rendering.m_mapTargets["lights_specular"].getTexture()), m_samplerSpecularLightSampler);
+		SetTexture(m_pipeline.m_uShaderObject, "diffuseLightSampler", 0, *m_pDiffuseLightsTexture, m_samplerDiffuseLightSampler);
+		SetTexture(m_pipeline.m_uShaderObject, "specularLightSampler", 1, *m_pSpecularLightsTexture, m_samplerSpecularLightSampler);
 		SetTexture(m_pipeline.m_uShaderObject, "shadowMap", 2, *(m_rendering.m_mapTargets["shadow_map"].getTexture()), m_samplerShadowMap);
 
 		SetUniform(m_pipeline.m_uShaderObject, "ambientColor", RGB_to_XYZ * m_rendering.environment.ambient.Color);
@@ -170,4 +172,25 @@ bool Compose::render(RHI::CommandBuffer & commandBuffer)
 	commandBuffer.EndRenderPass();
 
 	return(true);
+}
+
+/**
+ * @brief Compose::setParameter
+ * @param name
+ * @param value
+ */
+void Compose::setParameter(const char * name, const char * value)
+{
+	if (!strcmp("diffuse_lights", name))
+	{
+		m_pDiffuseLightsTexture = m_rendering.m_mapTargets[value].getTexture();
+	}
+	else if (!strcmp("specular_lights", name))
+	{
+		m_pSpecularLightsTexture = m_rendering.m_mapTargets[value].getTexture();
+	}
+	else
+	{
+		assert(false);
+	}
 }

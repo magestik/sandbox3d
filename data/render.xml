@@ -55,15 +55,39 @@
 	<queue>
 		<element type="geometry" framebuffer="normals-earlyZ" />
 		<element type="shadowmap-directional" framebuffer="shadow-map" />
-		<element type="lights" framebuffer="lights" />
-		<element type="lighting" framebuffer="HDR-earlyZ" />
-		<!--<element type="fog" framebuffer="HDR" />-->
-		<element type="bright" framebuffer="bloom_br" />
-		<element type="BlurH" framebuffer="bloom_bh" />
-		<element type="BlurV" framebuffer="bloom_bv" />
-		<element type="tonemapping" framebuffer="LDR" />
-		<element type="FXAA" framebuffer="default" />
-		<element type="compose" framebuffer="default" />
+		<element type="lights" framebuffer="lights" >
+			<param name="geometry_depth" value="depth" />
+			<param name="geometry_normals" value="normals" />
+		</element>
+		<element type="lighting" framebuffer="HDR-earlyZ">
+			<param name="diffuse_lights" value="lights_diffuse" />
+			<param name="specular_lights" value="lights_specular" />
+		</element>
+<!--
+		<element type="fog" framebuffer="HDR">
+			<param name="geometry_depth" value="depth" />
+		</element>
+-->
+		<element type="bright" framebuffer="bloom_br">
+			<param name="texture" value="HDR" />
+		</element>
+		<element type="BlurH" framebuffer="bloom_bh">
+			<param name="texture" value="bloom1" />
+		</element>
+		<element type="BlurV" framebuffer="bloom_bv">
+			<param name="texture" value="bloom2" />
+		</element>
+		<element type="tonemapping" framebuffer="LDR">
+			<param name="texture" value="HDR" />
+			<param name="avLum" value="0.5" />
+			<param name="white2" value="0.5" />
+		</element>
+		<element type="FXAA" framebuffer="default">
+			<param name="texture" value="LDR" />
+		</element>
+		<element type="compose" framebuffer="default">
+			<param name="texture" value="bloom1" />
+		</element>
 	</queue>
 
 </render>

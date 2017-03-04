@@ -1,13 +1,10 @@
 #include "ToneMapping.h"
 
-const float avLum = 0.5f;
-const float white2 = 0.5f;
-
 /**
  * @brief Constructor
  * @param rendering
  */
-ToneMapping::ToneMapping(Rendering & rendering, RHI::Framebuffer & framebuffer) : GraphicsAlgorithm(rendering, framebuffer)
+ToneMapping::ToneMapping(Rendering & rendering, RHI::Framebuffer & framebuffer) : GraphicsAlgorithm(rendering, framebuffer), m_pTexture(nullptr),  m_fAverageLuminance(0.0f), m_fWhite2(0.0f)
 {
 	// ...
 }
@@ -101,14 +98,39 @@ bool ToneMapping::render(RHI::CommandBuffer & commandBuffer)
 	{
 		commandBuffer.Bind(m_pipeline);
 
-		SetTexture(m_pipeline.m_uShaderObject, "texSampler", 0, *(m_rendering.m_mapTargets["HDR"].getTexture()), m_sampler);
+		SetTexture(m_pipeline.m_uShaderObject, "texSampler", 0, *m_pTexture, m_sampler);
 
-		SetUniform(m_pipeline.m_uShaderObject, "avLum", avLum);
-		SetUniform(m_pipeline.m_uShaderObject, "white2", white2);
+		SetUniform(m_pipeline.m_uShaderObject, "avLum", m_fAverageLuminance);
+		SetUniform(m_pipeline.m_uShaderObject, "white2", m_fWhite2);
 
 		m_rendering.m_pQuadMesh->draw(commandBuffer);
 	}
 	commandBuffer.EndRenderPass();
 
 	return(true);
+}
+
+/**
+ * @brief ToneMapping::setParameter
+ * @param name
+ * @param value
+ */
+void ToneMapping::setParameter(const char * name, const char * value)
+{
+	if (!strcmp("texture", name))
+	{
+		m_pTexture = m_rendering.m_mapTargets[value].getTexture();
+	}
+	else if (!strcmp("avLum", name))
+	{
+		m_fAverageLuminance = atof(value);
+	}
+	else if (!strcmp("white2", name))
+	{
+		m_fWhite2 = atof(value);
+	}
+	else
+	{
+		assert(false);
+	}
 }

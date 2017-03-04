@@ -24,6 +24,8 @@ public:
 
 	virtual bool render(RHI::CommandBuffer & commandBuffer) = 0;
 
+	virtual void setParameter(const char * name, const char * value) = 0;
+
 	static GraphicsAlgorithm * Create(const char * szType, Rendering & rendering, RHI::Framebuffer & framebuffer);
 	static void RegisterEverything(void);
 

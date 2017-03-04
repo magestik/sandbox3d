@@ -11,14 +11,15 @@ using namespace tinyxml2;
 //
 // String for parsing
 
-static const char TARGETS_STR []		= "targets";
-static const char TARGET_STR []			= "texture";
+static const char TARGETS_STR []			= "targets";
+static const char TARGET_STR []				= "texture";
 
-static const char FRAMEBUFFERS_STR []	= "framebuffers";
-static const char FRAMEBUFFER_STR []	= "framebuffer";
+static const char FRAMEBUFFERS_STR []		= "framebuffers";
+static const char FRAMEBUFFER_STR []		= "framebuffer";
 
-static const char QUEUE_STR []			= "queue";
-static const char QUEUE_ELMT_STR []		= "element";
+static const char QUEUE_STR []				= "queue";
+static const char QUEUE_ELMT_STR []			= "element";
+static const char QUEUE_ELMT_PARAM_STR []	= "param";
 
 /**
  * @brief Constructor
@@ -58,7 +59,7 @@ RenderXML::~RenderXML(void)
  */
 void RenderXML::initializeTargets(Rendering & rendering)
 {
-	const XMLElement * root = static_cast<XMLDocument*>(m_pData)->RootElement();
+	const XMLElement * root = static_cast<const XMLDocument*>(m_pData)->RootElement();
 	assert(nullptr != root);
 
 	const XMLElement * targets = root->FirstChildElement(TARGETS_STR);
@@ -93,7 +94,7 @@ void RenderXML::initializeTargets(Rendering & rendering)
  */
 void RenderXML::initializeFramebuffers(Rendering & rendering)
 {
-	const XMLElement * root = static_cast<XMLDocument*>(m_pData)->RootElement();
+	const XMLElement * root = static_cast<const XMLDocument*>(m_pData)->RootElement();
 	assert(nullptr != root);
 
 	const XMLElement * framebuffers = root->FirstChildElement(FRAMEBUFFERS_STR);
@@ -143,7 +144,7 @@ void RenderXML::createFramebuffer(const void * pNode, Rendering & rendering)
  */
 void RenderXML::initializeQueue(Rendering & rendering)
 {
-	const XMLElement * root = static_cast<XMLDocument*>(m_pData)->RootElement();
+	const XMLElement * root = static_cast<const XMLDocument*>(m_pData)->RootElement();
 	assert(nullptr != root);
 
 	const XMLElement * queue = root->FirstChildElement(QUEUE_STR);
@@ -161,6 +162,33 @@ void RenderXML::initializeQueue(Rendering & rendering)
 
 		rendering.m_renderQueue.push_back(a);
 
+		setParameters(elmt, a, rendering);
+
 		elmt = elmt->NextSiblingElement(QUEUE_ELMT_STR);
+	}
+}
+
+/**
+ * @brief RenderXML::setParameters
+ * @param pNode
+ * @param pAlgo
+ * @param rendering
+ */
+void RenderXML::setParameters(const void * pNode, GraphicsAlgorithm * pAlgo, Rendering & rendering)
+{
+	const XMLElement * root = static_cast<const XMLElement*>(pNode);
+	assert(nullptr != root);
+
+	const XMLElement * elmt = root->FirstChildElement(QUEUE_ELMT_PARAM_STR);
+
+	while (nullptr != elmt)
+	{
+		const char * name = elmt->Attribute("name");
+
+		const char * value = elmt->Attribute("value");
+
+		pAlgo->setParameter(name, value);
+
+		elmt = elmt->NextSiblingElement(QUEUE_ELMT_PARAM_STR);
 	}
 }

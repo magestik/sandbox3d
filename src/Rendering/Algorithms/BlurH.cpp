@@ -4,7 +4,7 @@
  * @brief Constructor
  * @param rendering
  */
-BlurH::BlurH(Rendering & rendering, RHI::Framebuffer & framebuffer) : GraphicsAlgorithm(rendering, framebuffer)
+BlurH::BlurH(Rendering & rendering, RHI::Framebuffer & framebuffer) : GraphicsAlgorithm(rendering, framebuffer), m_pTexture(nullptr)
 {
 	// ...
 }
@@ -98,7 +98,7 @@ bool BlurH::render(RHI::CommandBuffer & commandBuffer)
 	{
 		commandBuffer.Bind(m_pipeline);
 
-		SetTexture(m_pipeline.m_uShaderObject, "texSampler", 0, *(m_rendering.m_mapTargets["bloom1"].getTexture()), m_sampler);
+		SetTexture(m_pipeline.m_uShaderObject, "texSampler", 0, *m_pTexture, m_sampler);
 
 		m_rendering.m_pQuadMesh->draw(commandBuffer);
 
@@ -106,4 +106,21 @@ bool BlurH::render(RHI::CommandBuffer & commandBuffer)
 	commandBuffer.EndRenderPass();
 
 	return(true);
+}
+
+/**
+ * @brief BlurH::setParameter
+ * @param name
+ * @param value
+ */
+void BlurH::setParameter(const char * name, const char * value)
+{
+	if (!strcmp("texture", name))
+	{
+		m_pTexture = m_rendering.m_mapTargets[value].getTexture();
+	}
+	else
+	{
+		assert(false);
+	}
 }

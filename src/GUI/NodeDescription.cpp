@@ -52,7 +52,11 @@ static bool ImportInputs(json_t * array, std::vector<NodeDescriptor::Input> & in
 
 		json_object_foreach(elmt, key, value)
 		{
-			if (!strcmp(key, "name"))
+			if (!strcmp(key, "id"))
+			{
+				input.identifier = json_string_value(value);
+			}
+			else if (!strcmp(key, "name"))
 			{
 				input.name = json_string_value(value);
 			}

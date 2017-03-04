@@ -16,11 +16,17 @@ public:
 
 	//
 	// override GraphicsAlgorithm
-	virtual bool	init		(void) override;
-	virtual bool	render		(RHI::CommandBuffer & commandBuffer) override;
+	virtual bool	init			(void) override;
+	virtual bool	render			(RHI::CommandBuffer & commandBuffer) override;
+	virtual void	setParameter	(const char * name, const char * value) override;
 
 private:
 
 	RHI::Pipeline m_pipeline;
 	RHI::Sampler m_sampler;
+
+	const GPU::Texture<GL_TEXTURE_2D> * m_pTexture;
+
+	float m_fAverageLuminance;
+	float m_fWhite2;
 };

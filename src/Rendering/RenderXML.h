@@ -21,6 +21,7 @@ public:
 protected:
 
 	void createFramebuffer		(const void * pNode, Rendering & rendering);
+	void setParameters			(const void * pNode, GraphicsAlgorithm * pAlgo, Rendering & rendering);
 
 private:
 

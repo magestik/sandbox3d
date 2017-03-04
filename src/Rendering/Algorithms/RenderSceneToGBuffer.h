@@ -16,8 +16,9 @@ public:
 
 	//
 	// override GraphicsAlgorithm
-	virtual bool	init		(void) override;
-	virtual bool	render		(RHI::CommandBuffer & commandBuffer) override;
+	virtual bool	init			(void) override;
+	virtual bool	render			(RHI::CommandBuffer & commandBuffer) override;
+	virtual void	setParameter	(const char * name, const char * value) override;
 
 private:
 

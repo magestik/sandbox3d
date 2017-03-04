@@ -121,3 +121,13 @@ bool RenderSceneToShadowMap::render(RHI::CommandBuffer & commandBuffer)
 
 	return(true);
 }
+
+/**
+ * @brief RenderSceneToShadowMap::setParameter
+ * @param name
+ * @param value
+ */
+void RenderSceneToShadowMap::setParameter(const char * name, const char * value)
+{
+	assert(false);
+}

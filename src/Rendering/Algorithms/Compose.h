@@ -16,8 +16,9 @@ public:
 
 	//
 	// override GraphicsAlgorithm
-	virtual bool	init		(void) override;
-	virtual bool	render		(RHI::CommandBuffer & commandBuffer) override;
+	virtual bool	init			(void) override;
+	virtual bool	render			(RHI::CommandBuffer & commandBuffer) override;
+	virtual void	setParameter	(const char * name, const char * value) override;
 
 private:
 
@@ -27,4 +28,7 @@ private:
 	RHI::Sampler m_samplerDiffuseLightSampler;
 	RHI::Sampler m_samplerSpecularLightSampler;
 	RHI::Sampler m_samplerShadowMap;
+
+	const GPU::Texture<GL_TEXTURE_2D> * m_pDiffuseLightsTexture;
+	const GPU::Texture<GL_TEXTURE_2D> * m_pSpecularLightsTexture;
 };

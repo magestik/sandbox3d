@@ -25,6 +25,7 @@ struct NodeDescriptor
 
 	struct Input
 	{
+		std::string identifier;
 		std::string name;
 		DataType type;
 	};

@@ -9,7 +9,7 @@
  * @brief Constructor
  * @param rendering
  */
-Fog::Fog(Rendering & rendering, RHI::Framebuffer & framebuffer) : GraphicsAlgorithm(rendering, framebuffer)
+Fog::Fog(Rendering & rendering, RHI::Framebuffer & framebuffer) : GraphicsAlgorithm(rendering, framebuffer), m_pDepthTexture(nullptr)
 {
 	// ...
 }
@@ -80,14 +80,6 @@ bool Fog::init(void)
 	//
 	// Initialize Samplers
 	{
-		RHI::SamplerCreateInfo sampler;
-		sampler.minFilter = RHI::FILTER_NEAREST;
-		sampler.magFilter = RHI::FILTER_NEAREST;
-		sampler.addressModeU = RHI::SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
-		sampler.addressModeV = RHI::SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
-
-		m_sampler = RHI::Sampler(sampler);
-
 		RHI::SamplerCreateInfo sampler2;
 		sampler2.minFilter = RHI::FILTER_NEAREST;
 		sampler2.magFilter = RHI::FILTER_NEAREST;
@@ -117,7 +109,7 @@ bool Fog::render(RHI::CommandBuffer & commandBuffer)
 	{
 		commandBuffer.Bind(m_pipeline);
 
-		SetTexture(m_pipeline.m_uShaderObject, "depthMapSampler", 0, *(m_rendering.m_mapTargets["depth"].getTexture()), m_samplerDepthMap);
+		SetTexture(m_pipeline.m_uShaderObject, "depthMapSampler", 0, *m_pDepthTexture, m_samplerDepthMap);
 
 		SetUniform(m_pipeline.m_uShaderObject, "FogScattering", m_rendering.environment.fog.Scattering);
 		SetUniform(m_pipeline.m_uShaderObject, "FogExtinction", m_rendering.environment.fog.Extinction);
@@ -132,4 +124,21 @@ bool Fog::render(RHI::CommandBuffer & commandBuffer)
 	commandBuffer.EndRenderPass();
 
 	return(true);
+}
+
+/**
+ * @brief Fog::setParameter
+ * @param name
+ * @param value
+ */
+void Fog::setParameter(const char * name, const char * value)
+{
+	if (!strcmp("geometry_depth", name))
+	{
+		m_pDepthTexture = m_rendering.m_mapTargets[value].getTexture();
+	}
+	else
+	{
+		assert(false);
+	}
 }

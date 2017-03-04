@@ -7,7 +7,7 @@ const float white2 = 0.5f;
  * @brief Constructor
  * @param rendering
  */
-FXAA::FXAA(Rendering & rendering, RHI::Framebuffer & framebuffer) : GraphicsAlgorithm(rendering, framebuffer)
+FXAA::FXAA(Rendering & rendering, RHI::Framebuffer & framebuffer) : GraphicsAlgorithm(rendering, framebuffer), m_pTexture(nullptr)
 {
 	// ...
 }
@@ -101,7 +101,7 @@ bool FXAA::render(RHI::CommandBuffer & commandBuffer)
 	{
 		commandBuffer.Bind(m_pipeline);
 
-		SetTexture(m_pipeline.m_uShaderObject, "texSampler", 0, *(m_rendering.m_mapTargets["LDR"].getTexture()), m_sampler);
+		SetTexture(m_pipeline.m_uShaderObject, "texSampler", 0, *m_pTexture, m_sampler);
 
 		SetUniform(m_pipeline.m_uShaderObject, "fxaaQualityRcpFrame", vec2(1.0/m_rendering.GetWidth(), 1.0/m_rendering.GetHeight()));
 
@@ -110,4 +110,21 @@ bool FXAA::render(RHI::CommandBuffer & commandBuffer)
 	commandBuffer.EndRenderPass();
 
 	return(true);
+}
+
+/**
+ * @brief FXAA::setParameter
+ * @param name
+ * @param value
+ */
+void FXAA::setParameter(const char * name, const char * value)
+{
+	if (!strcmp("texture", name))
+	{
+		m_pTexture = m_rendering.m_mapTargets[value].getTexture();
+	}
+	else
+	{
+		assert(false);
+	}
 }

@@ -184,3 +184,13 @@ bool RenderSceneToGBuffer::render(RHI::CommandBuffer & commandBuffer)
 
 	return(true);
 }
+
+/**
+ * @brief RenderSceneToGBuffer::setParameter
+ * @param name
+ * @param value
+ */
+void RenderSceneToGBuffer::setParameter(const char * name, const char * value)
+{
+	assert(false);
+}

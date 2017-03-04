@@ -18,12 +18,16 @@ public:
 
 	//
 	// override GraphicsAlgorithm
-	virtual bool	init		(void) override;
-	virtual bool	render		(RHI::CommandBuffer & commandBuffer) override;
+	virtual bool	init			(void) override;
+	virtual bool	render			(RHI::CommandBuffer & commandBuffer) override;
+	virtual void	setParameter	(const char * name, const char * value) override;
 
 private:
 
 	RHI::Pipeline m_pipelineDirectionalLight;
 	RHI::Sampler m_samplerDepth;
 	RHI::Sampler m_samplerNormal;
+
+	const GPU::Texture<GL_TEXTURE_2D> * m_pDepthTexture;
+	const GPU::Texture<GL_TEXTURE_2D> * m_pNormalsTexture;
 };
