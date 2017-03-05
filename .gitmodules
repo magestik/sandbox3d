@@ -4,3 +4,6 @@
 [submodule "external/qt5-node-editor"]
 	path = external/qt5-node-editor
 	url = git@github.com:magestik/qt5-node-editor.git
+[submodule "external/Remotery"]
+	path = external/Remotery
+	url = https://github.com/Celtoys/Remotery

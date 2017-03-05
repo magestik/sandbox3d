@@ -2,6 +2,8 @@
 
 #include "../utils.inl"
 
+#include "Remotery.h"
+
 /**
  * @brief Constructor
  * @param rendering
@@ -93,6 +95,8 @@ bool RenderSceneToShadowMap::init(void)
  */
 bool RenderSceneToShadowMap::render(RHI::CommandBuffer & commandBuffer)
 {
+	rmt_ScopedOpenGLSample(RenderSceneToShadowMap);
+
 	commandBuffer.BeginRenderPass(m_renderPass, m_framebuffer, ivec2(0, 0), ivec2(SHADOW_MAP_SIZE, SHADOW_MAP_SIZE), 1.0f, 0);
 	{
 		commandBuffer.Bind(m_pipeline);

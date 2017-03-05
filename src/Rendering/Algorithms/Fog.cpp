@@ -2,6 +2,8 @@
 
 #include "../utils.inl"
 
+#include "Remotery.h"
+
 // dst = src.a * dst + 1 * src.rgb
 // src.a : Extinction ; src.rgb = Scattering
 
@@ -104,6 +106,8 @@ bool Fog::init(void)
  */
 bool Fog::render(RHI::CommandBuffer & commandBuffer)
 {
+	rmt_ScopedOpenGLSample(Fog);
+
 	commandBuffer.BeginRenderPass(m_renderPass, m_framebuffer, ivec2(0, 0), ivec2(m_rendering.GetWidth(), m_rendering.GetHeight()));
 
 	{

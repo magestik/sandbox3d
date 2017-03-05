@@ -1,5 +1,7 @@
 #include "ToneMapping.h"
 
+#include "Remotery.h"
+
 /**
  * @brief Constructor
  * @param rendering
@@ -94,6 +96,8 @@ bool ToneMapping::init(void)
  */
 bool ToneMapping::render(RHI::CommandBuffer & commandBuffer)
 {
+	rmt_ScopedOpenGLSample(ToneMapping);
+
 	commandBuffer.BeginRenderPass(m_renderPass, m_framebuffer, ivec2(0, 0), ivec2(m_rendering.GetWidth(), m_rendering.GetHeight()));
 	{
 		commandBuffer.Bind(m_pipeline);

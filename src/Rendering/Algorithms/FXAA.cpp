@@ -1,5 +1,7 @@
 #include "FXAA.h"
 
+#include "Remotery.h"
+
 const float avLum = 0.5f;
 const float white2 = 0.5f;
 
@@ -97,6 +99,8 @@ bool FXAA::init(void)
  */
 bool FXAA::render(RHI::CommandBuffer & commandBuffer)
 {
+	rmt_ScopedOpenGLSample(FXAA);
+
 	commandBuffer.BeginRenderPass(m_renderPass, m_framebuffer, ivec2(0, 0), ivec2(m_rendering.GetWidth(), m_rendering.GetHeight()));
 	{
 		commandBuffer.Bind(m_pipeline);

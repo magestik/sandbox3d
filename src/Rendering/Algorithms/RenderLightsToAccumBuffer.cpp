@@ -1,5 +1,7 @@
 #include "RenderLightsToAccumBuffer.h"
 
+#include "Remotery.h"
+
 // sRGB
 const mat3x3 sRGB_to_XYZ(0.4124564, 0.3575761, 0.1804375, 0.2126729, 0.7151522, 0.0721750, 0.0193339, 0.1191920, 0.9503041);
 const mat3x3 XYZ_to_sRGB(3.2404542, -1.5371385, -0.4985314, -0.9692660, 1.8760108, 0.0415560, 0.0556434, -0.2040259, 1.0572252);
@@ -116,6 +118,8 @@ bool RenderLightsToAccumBuffer::init(void)
  */
 bool RenderLightsToAccumBuffer::render(RHI::CommandBuffer & commandBuffer)
 {
+	rmt_ScopedOpenGLSample(RenderLightsToAccumBuffer);
+
 	commandBuffer.BeginRenderPass(m_renderPass, m_framebuffer, ivec2(0, 0), ivec2(m_rendering.GetWidth(), m_rendering.GetHeight()), vec4(0.0f, 0.0f, 0.0f, 0.0f));
 
 	{

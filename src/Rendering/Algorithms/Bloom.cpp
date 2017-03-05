@@ -1,5 +1,7 @@
 #include "Bloom.h"
 
+#include "Remotery.h"
+
 /**
  * @brief Constructor
  * @param rendering
@@ -98,6 +100,8 @@ bool Bloom::init(void)
  */
 bool Bloom::render(RHI::CommandBuffer & commandBuffer)
 {
+	rmt_ScopedOpenGLSample(Bloom);
+
 	commandBuffer.BeginRenderPass(m_renderPass, m_framebuffer, ivec2(0, 0), ivec2(m_rendering.GetWidth(), m_rendering.GetHeight()));
 	{
 		commandBuffer.Bind(m_pipeline);

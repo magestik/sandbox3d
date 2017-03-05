@@ -1,5 +1,7 @@
 #include "RenderSceneToGBuffer.h"
 
+#include "Remotery.h"
+
 /**
  * @brief Constructor
  * @param rendering
@@ -114,12 +116,16 @@ bool RenderSceneToGBuffer::init(void)
  */
 bool RenderSceneToGBuffer::render(RHI::CommandBuffer & commandBuffer)
 {
+	rmt_ScopedOpenGLSample(RenderSceneToGBuffer);
+
 	commandBuffer.BeginRenderPass(m_renderPass, m_framebuffer, ivec2(0, 0), ivec2(m_rendering.GetWidth(), m_rendering.GetHeight()), vec4(0.0f, 0.0f, 0.0f, 0.0f), 1.0f, 0);
 
 	{
 
 		// OPTIMIZE THIS !!!!!
 		{
+			rmt_ScopedOpenGLSample(Simple);
+
 			commandBuffer.Bind(m_pipelineSimple);
 
 			unsigned int offset = 0;
@@ -149,6 +155,8 @@ bool RenderSceneToGBuffer::render(RHI::CommandBuffer & commandBuffer)
 		}
 
 		{
+			rmt_ScopedOpenGLSample(NormalMap);
+
 			commandBuffer.Bind(m_pipelineNormalMap);
 
 			unsigned int offset = 0;

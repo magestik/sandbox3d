@@ -3,6 +3,7 @@
 #include <QSplashScreen>
 
 #include "GUI/MainWindow.h"
+#include "Remotery.h"
 
 bool setDefaultFormatOpenGL(void)
 {
@@ -24,8 +25,15 @@ int main(int argc, char ** argv)
 		return(-1);
 	}
 
+	Remotery* rmt;
+    rmt_CreateGlobalInstance(&rmt);
+
 	MainWindow w;
 	w.show();
 
-	return(app.exec());
+	int r = app.exec();
+
+    rmt_DestroyGlobalInstance(rmt);
+
+	return(r);
 }

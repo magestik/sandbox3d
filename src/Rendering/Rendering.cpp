@@ -1,5 +1,7 @@
 ﻿#include "Rendering.h"
 
+#include "Remotery.h"
+
 #include <assert.h>
 
 #include <sys/types.h>
@@ -79,7 +81,7 @@ void Rendering::onInitializeComplete()
 		if (dir != nullptr)
 		{
 			struct dirent *ep;
-			while (ep = readdir(dir))
+			while ((ep = readdir(dir)))
 			{
 				std::string filename(ep->d_name);
 
@@ -164,6 +166,8 @@ void Rendering::onInitializeComplete()
 	GPU::realloc(*m_pObjectsBuffer, sizeof(ObjectBlock)*m_aObjects.size(), GL_STREAM_DRAW);
 
 	glBindBufferRange(GL_UNIFORM_BUFFER, BLOCK_BINDING_CAMERA, m_pCameraBuffer->GetObject(), 0, sizeof(CameraBlock));
+
+	rmt_BindOpenGL();
 }
 
 /**
@@ -316,6 +320,9 @@ void Rendering::onResize(int width, int height)
  */
 void Rendering::onUpdate(const mat4x4 & mView, const vec4 & clearColor, bool bWireframe, ERenderType eRenderType, const Mesh::Instance * pSelectedObject)
 {
+	rmt_ScopedCPUSample(Update, 0);
+	rmt_ScopedOpenGLSample(Update);
+
 	updateCameraBuffer(mView);
 
 	const vec4 clearColorXYZ(RGB_to_XYZ * clearColor.xyz, clearColor.w);
@@ -324,8 +331,12 @@ void Rendering::onUpdate(const mat4x4 & mView, const vec4 & clearColor, bool bWi
 	m_matCurrentView = mView;
 	m_vCurrentClearColor = clearColorXYZ;
 
+	rmt_BeginCPUSample(loop, 0);
+
 	for (GraphicsAlgorithm * a : m_renderQueue)
 	{
+		rmt_ScopedCPUSample(iteration, 0)
+
 		RHI::CommandBuffer commandBuffer;
 
 		commandBuffer.Begin();
@@ -334,6 +345,8 @@ void Rendering::onUpdate(const mat4x4 & mView, const vec4 & clearColor, bool bWi
 
 		commandBuffer.End();
 	}
+
+	rmt_EndCPUSample();
 
 	renderPickBuffer();
 

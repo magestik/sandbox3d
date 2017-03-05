@@ -1,5 +1,7 @@
 #include "BlurH.h"
 
+#include "Remotery.h"
+
 /**
  * @brief Constructor
  * @param rendering
@@ -94,6 +96,8 @@ bool BlurH::init(void)
  */
 bool BlurH::render(RHI::CommandBuffer & commandBuffer)
 {
+	rmt_ScopedOpenGLSample(BlurH);
+
 	commandBuffer.BeginRenderPass(m_renderPass, m_framebuffer, ivec2(0, 0), ivec2(m_rendering.GetWidth()/4, m_rendering.GetHeight()/4));
 	{
 		commandBuffer.Bind(m_pipeline);
