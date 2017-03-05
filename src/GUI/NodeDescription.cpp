@@ -5,20 +5,6 @@
 
 #include <jansson.h>
 
-static NodeDescriptor::NodeType NodeTypeFromString(const char * str)
-{
-	if (!strcmp(str, "Renderer"))
-	{
-		return(NodeDescriptor::Renderer);
-	}
-	else if (!strcmp(str, "FullscreenEffect"))
-	{
-		return(NodeDescriptor::FullscreenEffect);
-	}
-
-	return(NodeDescriptor::UnknownNodeType);
-}
-
 static NodeDescriptor::DataType DataTypeFromString(const char * str)
 {
 	if (!strcmp(str, "Texture"))
@@ -118,7 +104,7 @@ static bool ImportOutputs(json_t * array, std::vector<NodeDescriptor::Output> & 
 /**
  * @brief NodeDescriptor::NodeDescriptor
  */
-NodeDescriptor::NodeDescriptor(void) : name("empty"), type(UnknownNodeType)
+NodeDescriptor::NodeDescriptor(void) : name("empty")
 {
 
 }
@@ -151,10 +137,6 @@ bool NodeDescriptor::loadFromFile(const std::string & filename)
 		{
 			name = json_string_value(value);
 		}
-		else if (!strcmp(key, "type"))
-		{
-			type = NodeTypeFromString(json_string_value(value));
-		}
 		else if (!strcmp(key, "inputs"))
 		{
 			ImportInputs(value, inputs);
@@ -169,5 +151,5 @@ bool NodeDescriptor::loadFromFile(const std::string & filename)
 		}
 	}
 
-	return(type != UnknownNodeType);
+	return(true);
 }

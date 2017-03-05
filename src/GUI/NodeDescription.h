@@ -8,14 +8,6 @@ struct NodeDescriptor
 	NodeDescriptor(void);
 	bool loadFromFile(const std::string & filename);
 
-	enum NodeType
-	{
-		UnknownNodeType,
-		Present,
-		Renderer,
-		FullscreenEffect
-	};
-
 	enum DataType
 	{
 		UnknownDataType,
@@ -42,10 +34,9 @@ struct NodeDescriptor
 	}
 
 	std::string identifier;
-
 	std::string name;
-	NodeType type;
 
 	std::vector<Input> inputs;
 	std::vector<Output> outputs;
+
 };

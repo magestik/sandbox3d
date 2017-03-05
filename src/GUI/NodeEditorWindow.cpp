@@ -1,7 +1,8 @@
 #include "NodeEditorWindow.h"
 #include "ui_NodeEditorWindow.h"
 
-#include "NodeCreationWindow.h"
+#include "NodeOperationCreationWindow.h"
+#include "NodeTextureCreationWindow.h"
 
 #include <QVBoxLayout>
 #include <QStatusBar>
@@ -10,6 +11,7 @@
 #include <QAction>
 #include <QDir>
 #include <QMessageBox>
+#include <QLabel>
 
 #include <graphicsnodescene.hpp>
 #include <graphicsnodeview.hpp>
@@ -68,35 +70,30 @@ NodeEditorWindow::NodeEditorWindow(QWidget * pParent)
 	// Load descriptors (to create nodes)
 	{
 		loadNodeDescriptors();
+	}
 
-		NodeDescriptor::Input input;
-		input.identifier = "backbuffer";
-		input.name = "Backbuffer";
-		input.type = NodeDescriptor::Texture;
-
-		m_PresentNodeDescriptor.identifier = "present";
-		m_PresentNodeDescriptor.name = "Present";
-		m_PresentNodeDescriptor.type = NodeDescriptor::Present;
-		m_PresentNodeDescriptor.inputs.push_back(input);
-
-		m_aNodeDescriptors.push_back(m_PresentNodeDescriptor);
-
-		m_pNodeCreationWindow	= new NodeCreationWindow(m_aNodeDescriptors, this);
+	//
+	// Create windows
+	{
+		m_pNodeOperationCreationWindow	= new NodeOperationCreationWindow(m_aNodeDescriptors, this);
+		m_pNodeTextureCreationWindow = new NodeTextureCreationWindow(this);
 	}
 
 	// Actions
 	m_pContextMenuScene->addAction(ui->actionCreateUserDefinedNode);
+	m_pContextMenuScene->addAction(ui->actionCreateTextureNode);
 	m_pContextMenuNode->addAction(ui->actionRemoveNode);
 
 	addAction(ui->actionRemoveNode);
 	addAction(ui->actionSave);
 
-	connect(m_pNodeCreationWindow, SIGNAL(accepted()), this, SLOT(createNodeFromWindow()));
+	connect(m_pNodeOperationCreationWindow, SIGNAL(accepted()), this, SLOT(createOperationNodeFromDialog()));
+	connect(m_pNodeTextureCreationWindow, SIGNAL(accepted()), this, SLOT(createTextureNodeFromDialog()));
 
 	// Load current Render Graph
 	if (!loadGraph())
 	{
-		createDefaultNodes();
+		createPresentNode();
 	}
 }
 
@@ -227,9 +224,7 @@ bool NodeEditorWindow::loadGraph(void)
 
 			// Type
 			json_t * pNodeType = json_object_get(pNode, "type");
-			const char * strId = json_string_value(pNodeType);
-			std::vector<NodeDescriptor>::iterator it = std::find(m_aNodeDescriptors.begin(), m_aNodeDescriptors.end(), strId);
-			assert(it != m_aNodeDescriptors.end());
+			const char * strType = json_string_value(pNodeType);
 
 			// Label
 			json_t * pNodeLabel = json_object_get(pNode, "label");
@@ -246,7 +241,35 @@ bool NodeEditorWindow::loadGraph(void)
 			assert(nullptr != pNodePosY);
 
 			// Create Node
-			GraphicsNode * n = createNode(*it);
+			GraphicsNode * n = nullptr;
+
+			if (!strcmp("operation", strType))
+			{
+				json_t * pNodeSubType = json_object_get(pNodeMetada, "subtype");
+				assert(nullptr != pNodeSubType);
+				const char * strSubType = json_string_value(pNodeSubType);
+
+				std::vector<NodeDescriptor>::iterator it = std::find(m_aNodeDescriptors.begin(), m_aNodeDescriptors.end(), strSubType);
+				assert(it != m_aNodeDescriptors.end());
+
+				n = createOperationNode(*it);
+			}
+			else if (!strcmp("texture", strType))
+			{
+				json_t * pNodeFormat = json_object_get(pNodeMetada, "format");
+				assert(nullptr != pNodeFormat);
+
+				n = createTextureNode(json_integer_value(pNodeFormat), 1024, 1024);
+			}
+			else if (!strcmp("present", strType))
+			{
+				n = createPresentNode();
+			}
+			else
+			{
+				assert(false);
+			}
+
 			n->setPos(json_real_value(pNodePosX), json_real_value(pNodePosY));
 			n->setTitle(json_string_value(pNodeLabel)); // currently useless
 
@@ -294,7 +317,7 @@ bool NodeEditorWindow::loadGraph(void)
 			assert(nullptr != pTargetNode);
 
 			GraphicsDirectedEdge * pEdge = new GraphicsBezierEdge();
-			pEdge->connect(pSourceNode, json_integer_value(pNodeEdgeSourceId), pTargetNode, json_integer_value(pNodeEdgeSourceId));
+			pEdge->connect(pSourceNode, json_integer_value(pNodeEdgeSourceId), pTargetNode, json_integer_value(pNodeEdgeTargetId));
 
 			m_pScene->addItem(pEdge);
 		}
@@ -345,6 +368,8 @@ bool NodeEditorWindow::saveGraph(void)
 				GraphicsNode * pNodeItem = static_cast<GraphicsNode*>(item);
 				assert(nullptr != pNodeItem);
 
+				std::string & strNodeType = m_mapNodeType[pNodeItem];
+
 				json_t * pNode = json_object();
 				json_array_append(pGraphNodes, pNode);
 
@@ -353,7 +378,7 @@ bool NodeEditorWindow::saveGraph(void)
 				json_object_set(pNode, "id", pNodeID);
 
 				// Type
-				json_t * pNodeType = json_string(m_mapNode[pNodeItem]->identifier.c_str());
+				json_t * pNodeType = json_string(m_mapNodeType[pNodeItem].c_str());
 				json_object_set(pNode, "type", pNodeType);
 
 				// Label
@@ -363,6 +388,17 @@ bool NodeEditorWindow::saveGraph(void)
 				// Metadata
 				json_t * pNodeMetada = json_object();
 				json_object_set(pNode, "metadata", pNodeMetada);
+
+				if (strNodeType == "operation")
+				{
+					json_t * pNodeSubType = json_string(m_mapNode[pNodeItem]->identifier.c_str());
+					json_object_set(pNodeMetada, "subtype", pNodeSubType);
+				}
+				else if (strNodeType == "texture")
+				{
+					json_t * pNodeSubType = json_integer(0);
+					json_object_set(pNodeMetada, "format", pNodeSubType);
+				}
 
 				json_t * pNodePosX = json_real(pNodeItem->pos().x());
 				json_object_set(pNodeMetada, "xloc", pNodePosX);
@@ -425,17 +461,26 @@ bool NodeEditorWindow::saveGraph(void)
 /**
  * @brief NodeEditorWindow::createDefaultNodes
  */
-void NodeEditorWindow::createDefaultNodes(void)
+GraphicsNode * NodeEditorWindow::createPresentNode(void)
 {
+	GraphicsNode * n = new GraphicsNode();
 
-	createNode(m_PresentNodeDescriptor);
+	n->setTitle(QString("Present"));
+
+	n->add_sink(QString("Backbuffer"), nullptr, 0);
+
+	m_pScene->addItem(n);
+
+	m_mapNodeType.insert(std::pair<const GraphicsNode*, std::string>(n, "present"));
+
+	return(n);
 }
 
 /**
  * @brief NodeEditorWindow::createNode
  * @param desc
  */
-GraphicsNode * NodeEditorWindow::createNode(const NodeDescriptor & desc)
+GraphicsNode * NodeEditorWindow::createOperationNode(const NodeDescriptor & desc)
 {
 	GraphicsNode * n = new GraphicsNode();
 
@@ -460,6 +505,35 @@ GraphicsNode * NodeEditorWindow::createNode(const NodeDescriptor & desc)
 	m_pScene->addItem(n);
 
 	m_mapNode.insert(std::pair<const GraphicsNode*, const NodeDescriptor*>(n, &desc));
+	m_mapNodeType.insert(std::pair<const GraphicsNode*, std::string>(n, "operation"));
+
+	return(n);
+}
+/**
+ * @brief NodeEditorWindow::createNode
+ * @param desc
+ */
+GraphicsNode * NodeEditorWindow::createTextureNode(unsigned int format, unsigned int width, unsigned int height)
+{
+	GraphicsNode * n = new GraphicsNode();
+
+	n->setTitle(QString("Texture"));
+
+	n->add_sink(QString(), nullptr, 0);
+	n->add_source(QString(), nullptr, 0);
+
+	QPixmap * pPixmap = new QPixmap(128, 128);
+	pPixmap->fill(Qt::red);
+
+	QLabel * pLabel = new QLabel();
+	pLabel->setPixmap(*pPixmap);
+
+	n->setCentralWidget(pLabel);
+
+	m_pScene->addItem(n);
+
+	//m_mapNode.insert(std::pair<const GraphicsNode*, const NodeDescriptor*>(n, &desc));
+	m_mapNodeType.insert(std::pair<const GraphicsNode*, std::string>(n, "texture"));
 
 	return(n);
 }
@@ -467,7 +541,7 @@ GraphicsNode * NodeEditorWindow::createNode(const NodeDescriptor & desc)
 /**
  * @brief NodeEditorWindow::on_actionSave_triggered
  */
-void NodeEditorWindow::on_actionSave_triggered()
+void NodeEditorWindow::on_actionSave_triggered(void)
 {
 	saveGraph();
 }
@@ -475,9 +549,17 @@ void NodeEditorWindow::on_actionSave_triggered()
 /**
  * @brief NodeEditorWindow::actionCreateUserDefinedNode
  */
-void NodeEditorWindow::on_actionCreateUserDefinedNode_triggered()
+void NodeEditorWindow::on_actionCreateUserDefinedNode_triggered(void)
 {
-	m_pNodeCreationWindow->show();
+	m_pNodeOperationCreationWindow->show();
+}
+
+/**
+ * @brief NodeEditorWindow::actionCreateUserDefinedNode
+ */
+void NodeEditorWindow::on_actionCreateTextureNode_triggered(void)
+{
+	m_pNodeTextureCreationWindow->show();
 }
 
 /**
@@ -500,12 +582,22 @@ void NodeEditorWindow::on_actionRemoveNode_triggered(void)
 /**
  * @brief NodeEditorWindow::createNodeFromWindow
  */
-void NodeEditorWindow::createNodeFromWindow()
+void NodeEditorWindow::createOperationNodeFromDialog(void)
 {
-	NodeDescriptor * pDesc = m_pNodeCreationWindow->getCurrentDescriptor();
+	NodeDescriptor * pDesc = m_pNodeOperationCreationWindow->getCurrentDescriptor();
 
 	if (pDesc)
 	{
-		createNode(*pDesc);
+		createOperationNode(*pDesc);
 	}
+}
+
+/**
+ * @brief NodeEditorWindow::createNodeFromWindow
+ */
+void NodeEditorWindow::createTextureNodeFromDialog(void)
+{
+	unsigned int format = m_pNodeTextureCreationWindow->getCurrentFormat();
+
+	createTextureNode(format, 1024, 1024);
 }

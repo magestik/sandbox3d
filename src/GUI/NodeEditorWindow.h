@@ -8,7 +8,8 @@ class QMenuBar;
 class QStatusBar;
 class QMenu;
 
-class NodeCreationWindow;
+class NodeOperationCreationWindow;
+class NodeTextureCreationWindow;
 
 class GraphicsNodeView;
 class GraphicsNodeScene;
@@ -36,8 +37,9 @@ protected:
 
 	bool				loadGraph				(void);
 	bool				saveGraph				(void);
-	void				createDefaultNodes		(void);
-	GraphicsNode *		createNode				(const NodeDescriptor & desc);
+	GraphicsNode *		createPresentNode		(void);
+	GraphicsNode *		createOperationNode		(const NodeDescriptor & desc);
+	GraphicsNode *		createTextureNode		(unsigned int fomat, unsigned int width, unsigned int height);
 
 private:
 
@@ -54,20 +56,23 @@ protected:
 	QMenu *					m_pContextMenuScene;
 	QMenu *					m_pContextMenuNode;
 
-	NodeCreationWindow *	m_pNodeCreationWindow;
+	NodeOperationCreationWindow *	m_pNodeOperationCreationWindow;
+	NodeTextureCreationWindow *		m_pNodeTextureCreationWindow;
 
-	NodeDescriptor					m_PresentNodeDescriptor;
 	std::vector<NodeDescriptor>		m_aNodeDescriptors;
 
 	std::map<const GraphicsNode*, const NodeDescriptor*> m_mapNode;
+	std::map<const GraphicsNode*, std::string> m_mapNodeType;
 
 private slots:
 
 	void on_actionSave_triggered();
 
 	void on_actionCreateUserDefinedNode_triggered();
+	void on_actionCreateTextureNode_triggered();
 	void on_actionRemoveNode_triggered();
 
-	void createNodeFromWindow();
+	void createOperationNodeFromDialog();
+	void createTextureNodeFromDialog();
 
 };
