@@ -37,42 +37,6 @@ private:
 };
 
 template<GLenum T>
-class Shader
-{
-public:
-
-	Shader (const Shader<T> &) = delete;
-
-	explicit Shader(void)
-	{
-		m_uObject = glCreateShader(T);
-	}
-
-	~Shader(void)
-	{
-		glDeleteShader(m_uObject);
-	}
-
-	bool compileFromSource(const char * source)
-	{
-		glShaderSource(m_uObject, 1, &source, NULL);
-		glCompileShader(m_uObject);
-		GLint isCompiled = 0;
-		glGetShaderiv(m_uObject, GL_COMPILE_STATUS, &isCompiled);
-		return(GL_TRUE == isCompiled);
-	}
-
-	GLuint	GetObject (void) const { return(m_uObject); }
-
-private:
-
-	Shader<T> & operator = (const Shader<T> &) { /* ... */ }
-
-	GLuint m_uObject;
-
-};
-
-template<GLenum T>
 class Texture
 {
 public:
