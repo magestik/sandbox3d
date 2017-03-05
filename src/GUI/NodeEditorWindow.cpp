@@ -69,6 +69,18 @@ NodeEditorWindow::NodeEditorWindow(QWidget * pParent)
 	{
 		loadNodeDescriptors();
 
+		NodeDescriptor::Input input;
+		input.identifier = "backbuffer";
+		input.name = "Backbuffer";
+		input.type = NodeDescriptor::Texture;
+
+		m_PresentNodeDescriptor.identifier = "present";
+		m_PresentNodeDescriptor.name = "Present";
+		m_PresentNodeDescriptor.type = NodeDescriptor::Present;
+		m_PresentNodeDescriptor.inputs.push_back(input);
+
+		m_aNodeDescriptors.push_back(m_PresentNodeDescriptor);
+
 		m_pNodeCreationWindow	= new NodeCreationWindow(m_aNodeDescriptors, this);
 	}
 
@@ -330,50 +342,56 @@ bool NodeEditorWindow::saveGraph(void)
 		{
 			case GraphicsNodeItemTypes::TypeNode:
 			{
+				GraphicsNode * pNodeItem = static_cast<GraphicsNode*>(item);
+				assert(nullptr != pNodeItem);
+
 				json_t * pNode = json_object();
 				json_array_append(pGraphNodes, pNode);
 
 				// ID
-				json_t * pNodeID = json_integer(uintptr_t(item));
+				json_t * pNodeID = json_integer(uintptr_t(pNodeItem));
 				json_object_set(pNode, "id", pNodeID);
 
 				// Type
-				json_t * pNodeType = json_string(m_mapNode[static_cast<GraphicsNode*>(item)]->identifier.c_str());
+				json_t * pNodeType = json_string(m_mapNode[pNodeItem]->identifier.c_str());
 				json_object_set(pNode, "type", pNodeType);
 
 				// Label
-				json_t * pNodeLabel = json_string(static_cast<GraphicsNode*>(item)->getTitle().toLocal8Bit());
+				json_t * pNodeLabel = json_string(pNodeItem->getTitle().toLocal8Bit());
 				json_object_set(pNode, "label", pNodeLabel);
 
 				// Metadata
 				json_t * pNodeMetada = json_object();
 				json_object_set(pNode, "metadata", pNodeMetada);
 
-				json_t * pNodePosX = json_real(static_cast<GraphicsNode*>(item)->pos().x());
+				json_t * pNodePosX = json_real(pNodeItem->pos().x());
 				json_object_set(pNodeMetada, "xloc", pNodePosX);
 
-				json_t * pNodePosY = json_real(static_cast<GraphicsNode*>(item)->pos().y());
+				json_t * pNodePosY = json_real(pNodeItem->pos().y());
 				json_object_set(pNodeMetada, "yloc", pNodePosY);
 
-				json_t * pNodeSizeX = json_real(static_cast<GraphicsNode*>(item)->width());
+				json_t * pNodeSizeX = json_real(pNodeItem->width());
 				json_object_set(pNodeMetada, "width", pNodeSizeX);
 
-				json_t * pNodeSizeY = json_real(static_cast<GraphicsNode*>(item)->height());
+				json_t * pNodeSizeY = json_real(pNodeItem->height());
 				json_object_set(pNodeMetada, "height", pNodeSizeY);
 			}
 			break;
 
 			case GraphicsNodeItemTypes::TypeBezierEdge:
 			{
+				GraphicsBezierEdge * pEdgeItem = static_cast<GraphicsBezierEdge*>(item);
+				assert(nullptr != pEdgeItem);
+
 				json_t * pEdge = json_object();
 				json_array_append(pGraphEdges, pEdge);
 
 				// Source
-				json_t * pEdgeSource = json_integer(uintptr_t(static_cast<GraphicsBezierEdge*>(item)->getSource()->parentItem()));
+				json_t * pEdgeSource = json_integer(uintptr_t(pEdgeItem->getSource()->parentItem()));
 				json_object_set(pEdge, "source", pEdgeSource);
 
 				// Target
-				json_t * pEdgeTarget = json_integer(uintptr_t(static_cast<GraphicsBezierEdge*>(item)->getSink()->parentItem()));
+				json_t * pEdgeTarget = json_integer(uintptr_t(pEdgeItem->getSink()->parentItem()));
 				json_object_set(pEdge, "target", pEdgeTarget);
 
 				// Directed
@@ -384,10 +402,10 @@ bool NodeEditorWindow::saveGraph(void)
 				json_t * pEdgeMetada = json_object();
 				json_object_set(pEdge, "metadata", pEdgeMetada);
 
-				json_t * pEdgeSourceId = json_integer(static_cast<GraphicsBezierEdge*>(item)->getSource()->getIndex());
+				json_t * pEdgeSourceId = json_integer(pEdgeItem->getSource()->getIndex());
 				json_object_set(pEdgeMetada, "source_id", pEdgeSourceId);
 
-				json_t * pEdgeTargetId = json_integer(static_cast<GraphicsBezierEdge*>(item)->getSink()->getIndex());
+				json_t * pEdgeTargetId = json_integer(pEdgeItem->getSink()->getIndex());
 				json_object_set(pEdgeMetada, "target_id", pEdgeTargetId);
 			}
 			break;
@@ -409,16 +427,8 @@ bool NodeEditorWindow::saveGraph(void)
  */
 void NodeEditorWindow::createDefaultNodes(void)
 {
-	NodeDescriptor::Input input;
-	input.name = "input";
-	input.type = NodeDescriptor::Texture;
 
-	NodeDescriptor ScreenDescriptor;
-	ScreenDescriptor.type = NodeDescriptor::FinalNode;
-	ScreenDescriptor.name = "Screen";
-	ScreenDescriptor.inputs.push_back(input);
-
-	createNode(ScreenDescriptor);
+	createNode(m_PresentNodeDescriptor);
 }
 
 /**

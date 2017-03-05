@@ -56,7 +56,8 @@ protected:
 
 	NodeCreationWindow *	m_pNodeCreationWindow;
 
-	std::vector<NodeDescriptor> m_aNodeDescriptors;
+	NodeDescriptor					m_PresentNodeDescriptor;
+	std::vector<NodeDescriptor>		m_aNodeDescriptors;
 
 	std::map<const GraphicsNode*, const NodeDescriptor*> m_mapNode;
 
