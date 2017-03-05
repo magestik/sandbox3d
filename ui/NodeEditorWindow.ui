@@ -81,6 +81,14 @@
     <string>Ctrl+S</string>
    </property>
   </action>
+  <action name="actionCreateTextureNode">
+   <property name="text">
+    <string>Create Texture Node</string>
+   </property>
+   <property name="toolTip">
+    <string>Create a texture node</string>
+   </property>
+  </action>
  </widget>
  <resources/>
  <connections/>
