@@ -56,7 +56,6 @@ protected:
 
 private:
 
-	void	loadShaders			(void);
 	void	loadSprites			(void);
 
 	GPU::Texture<GL_TEXTURE_2D> * loadTexture(const QString & filepath);
