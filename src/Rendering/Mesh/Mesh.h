@@ -9,7 +9,7 @@
 
 #include <vector>
 
-#include "../RHI/RHI.h"
+#include "RHI/RHI.h"
 
 class SubMesh;
 

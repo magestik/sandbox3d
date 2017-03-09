@@ -7,7 +7,7 @@
 #include <Vector.h>
 #include <Matrix.h>
 
-#include "../RHI/RHI.h"
+#include "RHI/RHI.h"
 
 class AverageLuminance : public Subpass
 {
