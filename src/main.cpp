@@ -7,12 +7,16 @@
 
 bool setDefaultFormatOpenGL(void)
 {
+#if (QT_VERSION >= QT_VERSION_CHECK(5, 4, 0))
 	QSurfaceFormat format;
 	format.setVersion(3, 3);
 	format.setProfile(QSurfaceFormat::CoreProfile);
 	QSurfaceFormat::setDefaultFormat(format);
 
 	return(true);
+#else
+	return(false);
+#endif // (QT_VERSION >= QT_VERSION_CHECK(5, 4, 0))
 }
 
 int main(int argc, char ** argv)
