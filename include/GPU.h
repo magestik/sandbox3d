@@ -1,6 +1,7 @@
 ﻿#pragma once
 
 #if HAVE_GL_GLCOREARB_H
+#	define GL_GLEXT_PROTOTYPES
 #	include <GL/glcorearb.h>
 #elif HAVE_GL_GL3_H
 #	include <GL/gl3.h>
