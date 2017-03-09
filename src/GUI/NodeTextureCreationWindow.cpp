@@ -1,7 +1,7 @@
 #include "NodeTextureCreationWindow.h"
 #include "ui_NodeTextureCreationWindow.h"
 
-#include <GL/glcorearb.h>
+#include <QtOpenGL>
 
 /**
  * @brief NodeTextureCreationWindow::NodeTextureCreationWindow
