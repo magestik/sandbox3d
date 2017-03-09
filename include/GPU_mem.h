@@ -1,6 +1,5 @@
 #pragma once
 
-#include <GL/glcorearb.h>
 #include <GPU.h>
 #include <string.h>
 
