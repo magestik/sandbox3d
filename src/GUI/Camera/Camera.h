@@ -1,7 +1,5 @@
 #pragma once
 
-#include <GPU.h>
-
 #include <Vector.h>
 #include <Matrix.h>
 
