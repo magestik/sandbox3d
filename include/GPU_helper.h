@@ -1,7 +1,5 @@
 #pragma once
 
-#include <GL/glcorearb.h>
-
 #include <assert.h>
 
 namespace GPU
