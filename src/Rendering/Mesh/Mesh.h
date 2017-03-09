@@ -1,5 +1,7 @@
 ﻿#pragma once
 
+#include "config.h"
+
 #include <GPU.h>
 
 #include <Vector.h>

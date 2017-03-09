@@ -1,5 +1,7 @@
 #pragma once
 
+#include "config.h"
+
 #if HAVE_OPENGL
 #	define GL_GLEXT_PROTOTYPES
 #	if HAVE_GL_GLCOREARB_H
