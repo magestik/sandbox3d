@@ -297,7 +297,7 @@ bool NodeEditorWindow::loadGraph(void)
 
 			// Directed
 			json_t * pNodeEdgeDirected = json_object_get(pNode, "directed");
-			assert(json_boolean_value(pNodeEdgeDirected));
+			assert(json_is_true(pNodeEdgeDirected));
 
 			// Metadata
 			json_t * pNodeEdgeMetada = json_object_get(pNode, "metadata");
