@@ -9,6 +9,7 @@ compiler:
 before_install:
     - sudo apt-get -qq update
     - sudo apt-get install -y qtbase5-dev
+    - sudo apt-get install -y assimp-dev
 
 before_script:
     - mkdir build
