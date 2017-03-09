@@ -7,6 +7,8 @@
 #include <QMouseEvent>
 #include <QFileSystemWatcher>
 
+#include <QGLWidget> // for convertToGLFormat
+
 #include <QDebug>
 
 #include <assimp/Importer.hpp>
