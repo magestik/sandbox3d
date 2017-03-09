@@ -13,7 +13,7 @@
 #	endif
 #endif // HAVE_OPENGL
 
-#if HAVE_VULKAN || 1
+#if HAVE_VULKAN
 #	include <vulkan/vulkan.h>
 #endif // HAVE_VULKAN
 
