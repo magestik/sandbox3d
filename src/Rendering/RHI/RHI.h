@@ -9,7 +9,7 @@
 #       elif HAVE_GL_GL_H
 #               include <GL/gl.h>
 #	elif HAVE_OPENGL_GL_H
-#               include <GL/gl.h>
+#               include <OpenGL/gl.h>
 #	endif
 #endif // HAVE_OPENGL
 
