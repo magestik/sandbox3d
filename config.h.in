@@ -1,4 +1,4 @@
-#cmakedefine HAVE_GL_GLCOREARB_H
-#cmakedefine HAVE_GL_GL3_H
-#cmakedefine HAVE_GL_GL_H
-#cmakedefine HAVE_OPENGL_GL_H
+#cmakedefine01 HAVE_GL_GLCOREARB_H
+#cmakedefine01 HAVE_GL_GL3_H
+#cmakedefine01 HAVE_GL_GL_H
+#cmakedefine01 HAVE_OPENGL_GL_H
