@@ -68,6 +68,11 @@ else (USE_VULKAN)
 
 	add_definitions(-DHAVE_OPENGL=1 -DHAVE_VULKAN=0)
 
+	CHECK_INCLUDE_FILES (GL/glcorearb.h HAVE_GL_GLCOREARB_H)
+	CHECK_INCLUDE_FILES (GL/gl3.h HAVE_GL_GL3_H)
+	CHECK_INCLUDE_FILES (GL/gl.h HAVE_GL_GL_H)
+	CHECK_INCLUDE_FILES (OpenGL/gl.h HAVE_OPENGL_GL_H)
+	
 endif (USE_VULKAN)
 
 # Assimp
@@ -80,9 +85,13 @@ find_package(TinyXML2 REQUIRED)
 # Jansson
 find_library(JANSSON_LIBRARY jansson)
 
+# generate config header
+configure_file(config.h.in "${CMAKE_CURRENT_BINARY_DIR}/config.h" @ONLY)
+
 # Compile application
 add_executable(${PROJECT_NAME} ${SRC_FILES} ${UI_FILES} ${SHADERS_FILES})
 
+set_target_properties(${PROJECT_NAME} PROPERTIES PUBLIC_HEADER "${CMAKE_CURRENT_BINARY_DIR}/config.h")
 
 IF(CMAKE_BUILD_TYPE MATCHES Debug)
 	target_link_libraries(${PROJECT_NAME} glBreak)

@@ -2,7 +2,15 @@
 
 #if HAVE_OPENGL
 #	define GL_GLEXT_PROTOTYPES
-#	include <GL/glcorearb.h>
+#	if HAVE_GL_GLCOREARB_H
+#		include <GL/glcorearb.h>
+#	elif HAVE_GL_GL3_H
+#               include <GL/gl3.h>
+#       elif HAVE_GL_GL_H
+#               include <GL/gl.h>
+#	elif HAVE_OPENGL_GL_H
+#               include <GL/gl.h>
+#	endif
 #endif // HAVE_OPENGL
 
 #if HAVE_VULKAN || 1
