@@ -28,7 +28,11 @@
  * @param parent
  */
 DrawableSurface::DrawableSurface(QWidget *parent)
+#if (QT_VERSION >= QT_VERSION_CHECK(5, 4, 0))
 : QOpenGLWidget(parent)
+#else
+: QGLWidget(parent)
+#endif // (QT_VERSION >= QT_VERSION_CHECK(5, 4, 0))
 , m_camera()
 , m_vLastPos(0, 0)
 , m_eRenderType(Rendering::FINAL)
@@ -39,7 +43,9 @@ DrawableSurface::DrawableSurface(QWidget *parent)
 {
 	setAutoFillBackground(false);
 	setFocusPolicy(Qt::StrongFocus);
+#if (QT_VERSION >= QT_VERSION_CHECK(5, 4, 0))
 	connect(this, &QOpenGLWidget::resized, this, &DrawableSurface::onResized);
+#endif // (QT_VERSION >= QT_VERSION_CHECK(5, 4, 0))
 }
 
 /**
@@ -213,7 +219,9 @@ void DrawableSurface::paintGL(void)
  */
 void DrawableSurface::onResized(void)
 {
+#if (QT_VERSION >= QT_VERSION_CHECK(5, 4, 0))
 	m_renderer.SetDefaultFramebuffer(defaultFramebufferObject());
+#endif // (QT_VERSION >= QT_VERSION_CHECK(5, 4, 0))
 }
 
 /**
