@@ -6,7 +6,7 @@
 
 #if (QT_VERSION < QT_VERSION_CHECK(5, 4, 0))
 #include <QGLWidget>
-typedef QOpenGLWidget QGLWidget;
+typedef QGLWidget QOpenGLWidget;
 #endif // (QT_VERSION < QT_VERSION_CHECK(5, 4, 0))
 
 #include "Camera/Camera.h"
