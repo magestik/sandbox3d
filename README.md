@@ -1,6 +1,8 @@
 sandbox3d
 =========
 
+[![Build Status](https://travis-ci.org/magestik/sandbox3d.svg?branch=master)](https://travis-ci.org/magestik/sandbox3d)
+
 ### Introduction
 
 A sandbox that I use to test some graphic techniques.
@@ -19,7 +21,13 @@ TODO :
 - Ray of God,
 - Ambient Occlusion,
 - Depth of Field,
-- PBR.
+- PBR,
+- Cel Shading,
+- VXGI (https://developer.nvidia.com/vxgi),
+- Visibility buffer (http://www.confettispecialfx.com/gdce-2016-the-filtered-and-culled-visibility-buffer-2/),
+- Raytraced shadow maps,
+- Cascaded shadow maps,
+- AXAA (http://dl.acm.org/citation.cfm?id=2945129)
 
 ### Build
 
@@ -37,9 +45,10 @@ This project is designed to run on GNU/Linux and does not support Windows (maybe
 
 Libraries needed :
 - Qt 5
-- OpenGL 3.3 / Vulkan 1.0.4
 - Assimp
 - TinyXML2
+- jansson
+- OpenGL 3.3 / Vulkan 1.0.4
 
 Other requierements :
 - glslc (to preprocess shaders)
