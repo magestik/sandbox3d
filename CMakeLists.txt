@@ -15,7 +15,7 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 # My Sources
 include_directories(include)
 
-include_directories(external/linear-algebra/include external/qt5-node-editor/src)
+include_directories(external/qt5-node-editor/src)
 
 add_subdirectory(external)
 

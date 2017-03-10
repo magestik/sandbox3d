@@ -51,7 +51,7 @@ else (USE_VULKAN)
 	CHECK_INCLUDE_FILES (GL/gl3.h HAVE_GL_GL3_H)
 	CHECK_INCLUDE_FILES (GL/gl.h HAVE_GL_GL_H)
 	CHECK_INCLUDE_FILES (OpenGL/gl.h HAVE_OPENGL_GL_H)
-	
+
 endif (USE_VULKAN)
 
 # Assimp
@@ -77,7 +77,7 @@ ENDIF()
 
 target_link_libraries(${PROJECT_NAME} "rt")
 
-target_link_libraries(${PROJECT_NAME} ${OPENGL_LIBRARIES} ${assimp_LIBRARIES} ${TINYXML2_LIBRARY} ${JANSSON_LIBRARY} Remotery Qt5::Core Qt5::Widgets Qt5::Gui Qt5::OpenGL Qt5NodeEditor)
+target_link_libraries(${PROJECT_NAME} linear-algebra ${OPENGL_LIBRARIES} ${assimp_LIBRARIES} ${TINYXML2_LIBRARY} ${JANSSON_LIBRARY} Remotery Qt5::Core Qt5::Widgets Qt5::Gui Qt5::OpenGL Qt5NodeEditor)
 
 add_custom_target(deploy_shaders ALL COMMAND ${PROJECT_SOURCE_DIR}/../scripts/deploy_shaders.sh WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})
 
