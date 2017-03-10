@@ -2,13 +2,12 @@
 
 #include "../Rendering/Rendering.h"
 
-#include <QtGlobal>
+#include <QOpenGLWidget>
 
-#if (QT_VERSION >= QT_VERSION_CHECK(5, 4, 0))
-#	include <QOpenGLWidget>
-#else
-#	include <QGLWidget>
-#endif // (QT_VERSION >= QT_VERSION_CHECK(5, 4, 0))
+#if (QT_VERSION < QT_VERSION_CHECK(5, 4, 0))
+#include <QGLWidget>
+typedef QOpenGLWidget QGLWidget;
+#endif // (QT_VERSION < QT_VERSION_CHECK(5, 4, 0))
 
 #include "Camera/Camera.h"
 
@@ -22,11 +21,7 @@ class aiNode;
 
 class Mesh::Instance;
 
-#if (QT_VERSION >= QT_VERSION_CHECK(5, 4, 0))
 class DrawableSurface : public QOpenGLWidget
-#else
-class DrawableSurface : public QGLWidget
-#endif // (QT_VERSION >= QT_VERSION_CHECK(5, 4, 0))
 {
 	Q_OBJECT
 

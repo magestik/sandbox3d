@@ -30,11 +30,7 @@
  * @param parent
  */
 DrawableSurface::DrawableSurface(QWidget *parent)
-#if (QT_VERSION >= QT_VERSION_CHECK(5, 4, 0))
 : QOpenGLWidget(parent)
-#else
-: QGLWidget(parent)
-#endif // (QT_VERSION >= QT_VERSION_CHECK(5, 4, 0))
 , m_camera()
 , m_vLastPos(0, 0)
 , m_eRenderType(Rendering::FINAL)
