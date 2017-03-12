@@ -15,8 +15,6 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 # My Sources
 include_directories(include)
 
-include_directories(external/qt5-node-editor/src)
-
 add_subdirectory(external)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wshadow -Werror=return-local-addr -Werror=return-type")

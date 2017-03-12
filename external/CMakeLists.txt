@@ -1,6 +1,5 @@
 add_subdirectory(glBreak)
 add_subdirectory(linear-algebra)
-add_subdirectory(qt5-node-editor)
 
 find_package(Threads)
 add_library(Remotery STATIC Remotery/lib/Remotery.c)

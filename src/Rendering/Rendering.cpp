@@ -5,8 +5,10 @@
 #include <assert.h>
 
 #include <sys/types.h>
+#include <sys/stat.h>
 #include <dirent.h>
-#include <QFile> // TODO : remove this
+#include <fcntl.h>
+#include <unistd.h>
 
 #include "utils.inl"
 
@@ -102,19 +104,28 @@ void Rendering::onInitializeComplete()
 
 				if (0 != stage)
 				{
-					QFile f(QString("data/shaders/") + ep->d_name);
-					f.open(QFile::ReadOnly);
-					QByteArray source = f.readAll();
+					std::string strFilePath = std::string("data/shaders/") + ep->d_name;
+					int fd = open(strFilePath.c_str(), O_RDONLY);
+
+					struct stat buf;
+					fstat(fd, &buf);
+
+					const unsigned int length = buf.st_size;
+					char * data = new char [length];
+
+					read(fd, (void*)data, length);
 
 					RHI::ShaderModuleCreateInfo createInfo;
 					createInfo.stage = stage;
-					createInfo.pCode = source.data();
-					createInfo.codeSize = source.length();
+					createInfo.pCode = data;
+					createInfo.codeSize = length;
 
 					RHI::ShaderModule module(createInfo);
 					m_mapShaderModules.insert(std::pair<std::string, RHI::ShaderModule>(filename, module));
 
-					f.close();
+					delete [] data;
+
+					close(fd);
 				}
 			}
 
