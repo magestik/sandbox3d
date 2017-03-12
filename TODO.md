@@ -1,3 +1,6 @@
+TODO
+=========
+
 Global Illumination :
 - SSAO,
 - HBAO (http://www.nvidia.com/object/siggraph-2008-HBAO.html),
@@ -15,8 +18,12 @@ Optimizations :
 - Visibility buffer (http://www.confettispecialfx.com/gdce-2016-the-filtered-and-culled-visibility-buffer-2/),
 - Hierarchical Z-buffer (http://www.nickdarnell.com/hierarchical-z-buffer-occlusion-culling/).
 
+Lens simulation :
+- Depth of Field,
+- Lens Flare,
+- Chromatic aberration.
+
 Other :
 - Ray of God,
-- Depth of Field,
 - Physically Based Rendering (PBR).
 
