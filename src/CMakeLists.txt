@@ -29,13 +29,8 @@ endif (USE_VULKAN)
 # TinyXML
 find_package(TinyXML2 REQUIRED)
 
-# generate config header
-configure_file(config.h.in "${CMAKE_CURRENT_BINARY_DIR}/config.h" @ONLY)
-
 # Compile application
 add_library(${PROJECT_NAME} ${SRC_FILES} ${UI_FILES} ${SHADERS_FILES})
-
-set_target_properties(${PROJECT_NAME} PROPERTIES PUBLIC_HEADER "${CMAKE_CURRENT_BINARY_DIR}/config.h")
 
 target_include_directories(${PROJECT_NAME} PUBLIC . ../include/)
 
