@@ -14,6 +14,7 @@
 		<texture name="bloom2" format="GL_R11F_G11F_B10F" size_divisor="4" />
 		<texture name="luminance1" format="GL_RG16F" />
 		<texture name="luminance2" format="GL_RG16F" />
+		<texture name="edges" format="GL_R8" />
 	</targets>
 
 	<framebuffers>
@@ -50,6 +51,9 @@
 		<framebuffer name="luminance">
 			<output texture="luminance1" />
 		</framebuffer>
+		<framebuffer name="edges">
+			<output texture="edges" />
+		</framebuffer>
 	</framebuffers>
 
 	<queue>
@@ -77,11 +81,20 @@
 		<element type="BlurV" framebuffer="bloom_bv">
 			<param name="texture" value="bloom2" />
 		</element>
-		<element type="tonemapping" framebuffer="LDR">
+		<element type="tone-mapping" framebuffer="LDR">
 			<param name="texture" value="HDR" />
 			<param name="avLum" value="0.5" />
 			<param name="white2" value="0.5" />
 		</element>
+<!--
+		<element type="sobel" framebuffer="edges">
+			<param name="texture" value="depth" />
+		</element>
+		<element type="cel-shading" framebuffer="default">
+			<param name="edges" value="edges" />
+			<param name="color" value="LDR" />
+		</element>
+-->
 		<element type="FXAA" framebuffer="default">
 			<param name="texture" value="LDR" />
 		</element>
