@@ -11,6 +11,8 @@
 #include "Algorithms/BlurH.h"
 #include "Algorithms/BlurV.h"
 #include "Algorithms/Bloom.h"
+#include "Algorithms/SobelFilter.h"
+#include "Algorithms/CelShading.h"
 
 std::map<std::string, GraphicsAlgorithmFactory> GraphicsAlgorithm::m_FactoryMap;
 
@@ -60,5 +62,7 @@ void GraphicsAlgorithm::RegisterEverything(void)
 	m_FactoryMap["lights"]					= RenderLightsToAccumBuffer::Create;
 	m_FactoryMap["geometry"]				= RenderSceneToGBuffer::Create;
 	m_FactoryMap["shadowmap-directional"]	= RenderSceneToShadowMap::Create;
-	m_FactoryMap["tonemapping"]				= ToneMapping::Create;
+	m_FactoryMap["sobel"]					= SobelFilter::Create;
+	m_FactoryMap["tone-mapping"]			= ToneMapping::Create;
+	m_FactoryMap["cel-shading"]				= CelShading::Create;
 }
