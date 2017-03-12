@@ -6,7 +6,7 @@
  * @brief Constructor
  * @param rendering
  */
-CelShading::CelShading(Rendering & rendering, RHI::Framebuffer & framebuffer) : GraphicsAlgorithm(rendering, framebuffer), m_pEdgesTexture(nullptr), m_pColorTexture(nullptr)
+CelShading::CelShading(Rendering & rendering, RHI::Framebuffer & framebuffer) : GraphicsAlgorithm(rendering, framebuffer), m_pEdgesTexture(nullptr), m_pColorTexture(nullptr), m_fThreshold(0.5f)
 {
 	// ...
 }
@@ -104,6 +104,7 @@ bool CelShading::render(RHI::CommandBuffer & commandBuffer)
 
 		SetTexture(m_pipeline.m_uShaderObject, "edgeSampler", 0, *m_pEdgesTexture, m_sampler);
 		SetTexture(m_pipeline.m_uShaderObject, "colorSampler", 1, *m_pColorTexture, m_sampler);
+		SetUniform(m_pipeline.m_uShaderObject, "threshold", m_fThreshold);
 
 		m_rendering.m_pQuadMesh->draw(commandBuffer);
 	}
@@ -126,6 +127,10 @@ void CelShading::setParameter(const char * name, const char * value)
 	else if (!strcmp("color", name))
 	{
 		m_pColorTexture = m_rendering.m_mapTargets[value].getTexture();
+	}
+	else if (!strcmp("threshold", name))
+	{
+		m_fThreshold = atof(value);
 	}
 	else
 	{

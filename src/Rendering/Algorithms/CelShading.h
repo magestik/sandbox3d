@@ -28,4 +28,5 @@ private:
 	const GPU::Texture<GL_TEXTURE_2D> * m_pEdgesTexture;
 	const GPU::Texture<GL_TEXTURE_2D> * m_pColorTexture;
 
+	float m_fThreshold;
 };

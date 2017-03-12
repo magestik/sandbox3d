@@ -9,12 +9,12 @@ struct VS_OUTPUT
 
 uniform sampler2D edgeSampler;
 uniform sampler2D colorSampler; // a = luminance
+uniform float threshold = 0.01;
 
 in VS_OUTPUT vsOut;
 
 out vec3 outColor;
 
-const float threshold = 0.01;
 
 //
 // TODO : use a ramp texture instead
