@@ -1,5 +1,6 @@
 #include "GraphicsAlgorithm.h"
 
+#include "Algorithms/RenderDepthOnly.h"
 #include "Algorithms/RenderSceneToGBuffer.h"
 #include "Algorithms/RenderSceneToShadowMap.h"
 #include "Algorithms/RenderLightsToAccumBuffer.h"
@@ -52,6 +53,11 @@ GraphicsAlgorithm * GraphicsAlgorithm::Create(const char * szType, Rendering & r
  */
 void GraphicsAlgorithm::RegisterEverything(void)
 {
+	m_FactoryMap["depth-only"]				= RenderDepthOnly::Create;
+	m_FactoryMap["geometry"]				= RenderSceneToGBuffer::Create;
+	m_FactoryMap["lights"]					= RenderLightsToAccumBuffer::Create;
+	m_FactoryMap["shadowmap-directional"]	= RenderSceneToShadowMap::Create;
+
 	m_FactoryMap["compose"]					= Bloom::Create;
 	m_FactoryMap["BlurH"]					= BlurH::Create;
 	m_FactoryMap["BlurV"]					= BlurV::Create;
@@ -59,9 +65,6 @@ void GraphicsAlgorithm::RegisterEverything(void)
 	m_FactoryMap["lighting"]				= Compose::Create;
 	m_FactoryMap["fog"]						= Fog::Create;
 	m_FactoryMap["FXAA"]					= FXAA::Create;
-	m_FactoryMap["lights"]					= RenderLightsToAccumBuffer::Create;
-	m_FactoryMap["geometry"]				= RenderSceneToGBuffer::Create;
-	m_FactoryMap["shadowmap-directional"]	= RenderSceneToShadowMap::Create;
 	m_FactoryMap["sobel"]					= SobelFilter::Create;
 	m_FactoryMap["tone-mapping"]			= ToneMapping::Create;
 	m_FactoryMap["cel-shading"]				= CelShading::Create;
