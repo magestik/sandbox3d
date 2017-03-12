@@ -15,21 +15,8 @@ Implemented :
 - Tone Mapping (the scene is first rendered in HDR format),
 - Bloom,
 - FXAA (just plugged Timothy Lottes implementation),
-- Pick Buffer.
-
-TODO :
-- Ray of God,
-- Ambient Occlusion,
-- Depth of Field,
-- PBR,
 - Cel Shading,
-- VXGI (https://developer.nvidia.com/vxgi),
-- Visibility buffer (http://www.confettispecialfx.com/gdce-2016-the-filtered-and-culled-visibility-buffer-2/),
-- Hierarchical Z-buffer (http://www.nickdarnell.com/hierarchical-z-buffer-occlusion-culling/)
-- Raytraced shadow maps,
-- Cascaded shadow maps,
-- AXAA (http://dl.acm.org/citation.cfm?id=2945129).
-
+- Pick Buffer.
 
 ### Build
 
