@@ -24,8 +24,8 @@ void main(void)
 	float px8 = textureOffset(texSampler, vsOut.texCoord, ivec2( 0, -1)).r;
 	float px9 = textureOffset(texSampler, vsOut.texCoord, ivec2(+1, -1)).r;
 
-	float Gx = ((-1 * px1) + /*(0 * px2) + */ (1 * px3) + (-2 * px4) + /*(0 * px5) + */ (2 * px6) + (-1 * px7) + /*(0 * px8) + */ (1 * px9));
-	float Gy = ((-1 * px1) + (-2 * px2) + (-1 * px3) + /*(0 * px4) + (0 * px5) + (0 * px6) +*/ (1 * px7) + (2 * px8) + (1 * px9));
+	float Gx = ((-1.0 * px1) + /*(0.0 * px2) + */ (1.0 * px3) + (-2.0 * px4) + /*(0.0 * px5) + */ (2.0 * px6) + (-1.0 * px7) + /*(0.0 * px8) + */ (1.0 * px9));
+	float Gy = ((-1.0 * px1) + (-2.0 * px2) + (-1.0 * px3) + /*(0.0 * px4) + (0.0 * px5) + (0.0 * px6) +*/ (1.0 * px7) + (2.0 * px8) + (1.0 * px9));
 
 	outColor = sqrt((Gx*Gx)+(Gy*Gy));
 }
