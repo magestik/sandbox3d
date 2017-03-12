@@ -33,9 +33,7 @@ RenderXML::RenderXML(const char * filename)
 		return;
 	}
 
-	XMLError err = doc->LoadFile(filename);
-
-	if (XML_SUCCESS != err)
+	if (XML_SUCCESS != doc->LoadFile(filename))
 	{
 		delete doc;
 		return;
