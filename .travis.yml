@@ -8,10 +8,7 @@ compiler:
 
 before_install:
     - sudo apt-get -qq update
-    - sudo apt-get install -y qtbase5-dev
-    - sudo apt-get install -y libassimp-dev
     - sudo apt-get install -y libtinyxml2-dev
-    - sudo apt-get install -y libjansson-dev
 
 before_script:
     - mkdir build
