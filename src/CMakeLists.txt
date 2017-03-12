@@ -4,7 +4,7 @@ project(Sandbox3D)
 
 INCLUDE(CheckIncludeFiles)
 
-file(GLOB_RECURSE SHADERS_FILES src/*.frag src/*.vert src/*.geom)
+file(GLOB_RECURSE SHADERS_FILES *.frag *.vert *.geom)
 file(GLOB_RECURSE UI_FILES ../ui/*.ui)
 file(GLOB_RECURSE SRC_FILES *.cpp *.h *.inl ../include/*.h ../include/*.inl)
 
@@ -79,7 +79,7 @@ target_link_libraries(${PROJECT_NAME} "rt")
 
 target_link_libraries(${PROJECT_NAME} linear-algebra ${OPENGL_LIBRARIES} ${assimp_LIBRARIES} ${TINYXML2_LIBRARY} ${JANSSON_LIBRARY} Remotery Qt5::Core Qt5::Widgets Qt5::Gui Qt5::OpenGL Qt5NodeEditor)
 
-add_custom_target(deploy_shaders ALL COMMAND ${PROJECT_SOURCE_DIR}/../scripts/deploy_shaders.sh WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})
+add_custom_target(deploy_shaders ALL COMMAND "${PROJECT_SOURCE_DIR}/../scripts/deploy_shaders.sh" WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}/../")
 
-add_test(NAME check_shaders COMMAND ${PROJECT_SOURCE_DIR}/../scripts/check_shaders.sh WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/data/shaders)
-add_test(NAME check_renderer COMMAND xmllint --noout --valid render.xml WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/data)
+add_test(NAME check_shaders COMMAND "${PROJECT_SOURCE_DIR}/../scripts/check_shaders.sh" WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}/data/shaders")
+add_test(NAME check_renderer COMMAND xmllint --noout --valid render.xml WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}/../data")
