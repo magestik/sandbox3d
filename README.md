@@ -33,11 +33,8 @@ $ make
 This project is designed to run on GNU/Linux and does not support Windows (maybe using GLEW would be enough to make it work).
 
 Libraries needed :
-- Qt 5
-- Assimp
-- TinyXML2
-- jansson
 - OpenGL 3.3 / Vulkan 1.0.4
+- TinyXML2
 
 Other requierements :
 - glslc (to preprocess shaders)

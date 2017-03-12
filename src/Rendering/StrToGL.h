@@ -1,7 +1,5 @@
 #pragma once
 
-#include "config.h"
-
 #include <GPU.h>
 
 GLenum strToShaderType		(const char * strShaderType);

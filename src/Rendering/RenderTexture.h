@@ -1,7 +1,5 @@
 #pragma once
 
-#include "config.h"
-
 #include <GPU.h>
 
 #include <assert.h>
