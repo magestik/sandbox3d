@@ -3,15 +3,7 @@ cmake_minimum_required(VERSION 2.8.12)
 INCLUDE(CheckIncludeFiles)
 
 file(GLOB_RECURSE SHADERS_FILES *.frag *.vert *.geom)
-file(GLOB_RECURSE UI_FILES ../ui/*.ui)
 file(GLOB_RECURSE SRC_FILES *.cpp *.h *.inl ../include/*.h ../include/*.inl)
-
-# Qt
-set(CMAKE_AUTOMOC ON)
-
-set(QT_USE_OPENGL TRUE)
-
-ADD_DEFINITIONS(${QT_DEFINITIONS})
 
 if (USE_VULKAN)
 
@@ -44,6 +36,8 @@ configure_file(config.h.in "${CMAKE_CURRENT_BINARY_DIR}/config.h" @ONLY)
 add_library(${PROJECT_NAME} ${SRC_FILES} ${UI_FILES} ${SHADERS_FILES})
 
 set_target_properties(${PROJECT_NAME} PROPERTIES PUBLIC_HEADER "${CMAKE_CURRENT_BINARY_DIR}/config.h")
+
+target_include_directories(${PROJECT_NAME} PUBLIC . ../include/)
 
 IF(CMAKE_BUILD_TYPE MATCHES Debug)
 	target_link_libraries(${PROJECT_NAME} PUBLIC glBreak)
