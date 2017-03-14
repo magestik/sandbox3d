@@ -22,13 +22,13 @@ float ramp(float value)
 {
 	float intensity = 1.0;
 
-	if (value > 0.66)
-	{
-		intensity = 0.66;
-	}
-	else if (value < 0.33)
+	if (value < 0.33)
 	{
 		intensity = 0.33;
+	}
+	else if (value < 0.66)
+	{
+		intensity = 0.66;
 	}
 
 	return(intensity);
