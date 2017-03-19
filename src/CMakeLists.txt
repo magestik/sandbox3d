@@ -38,7 +38,7 @@ IF(CMAKE_BUILD_TYPE MATCHES Debug)
 	target_link_libraries(${PROJECT_NAME} PUBLIC glBreak)
 ENDIF()
 
-target_link_libraries(${PROJECT_NAME} PUBLIC "rt")
+target_link_libraries(${PROJECT_NAME} PUBLIC "rt" "dl")
 
 target_link_libraries(${PROJECT_NAME} PUBLIC linear-algebra ${OPENGL_LIBRARIES} ${TINYXML2_LIBRARY} Remotery)
 
