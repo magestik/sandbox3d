@@ -8,7 +8,8 @@ Global Illumination :
 
 Anti-aliasing :
 - SMAA (http://www.iryoku.com/smaa/),
-- AXAA (http://dl.acm.org/citation.cfm?id=2945129).
+- AXAA (http://dl.acm.org/citation.cfm?id=2945129),
+- Temporal Anti-aliasing.
 
 Shadows :
 - Cascaded shadow maps,
