@@ -121,26 +121,13 @@ class Rendering
 
 public:
 
-	enum ERenderType
-	{
-		FINAL,
-		SPECULAR_LIGHTS,
-		DIFFUSE_LIGHTS,
-		NORMAL_BUFFER,
-		DEPTH,
-		SHADOWS,
-		LUMINANCE1,
-		LUMINANCE2,
-		BLOOM
-	};
-
 	explicit Rendering		(void);
 
 	void	onInitializeComplete	(void);
 
 	void	onResize				(int width, int height);
 
-	void	onUpdate				(const mat4x4 & mView, const vec4 & clearColor, bool bWireframe, ERenderType eRenderType = FINAL, const Mesh::Instance * pSelected = nullptr);
+	void	onUpdate				(const mat4x4 & mView, const vec4 & clearColor, const Mesh::Instance * pSelected = nullptr);
 
 	void	onCreate				(const Mesh::Instance & instance);
 
@@ -177,8 +164,6 @@ protected:
 	void    updateObjectsBuffer         (void);
 
 	void    computeAverageLum           (void);
-
-	void	renderIntermediateToScreen	(ERenderType eRenderType);
 
 	void	initPickBuffer				(void);
 	void	renderPickBuffer			(void);
