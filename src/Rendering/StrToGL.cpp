@@ -88,18 +88,37 @@ GLenum strToFormat(const char * str)
 		X(GL_R8), \
 		X(GL_RG8), \
 		X(GL_RGBA8), \
+		X(GL_R16), \
+		X(GL_RG16), \
+		X(GL_RGBA16), \
 		X(GL_R16F), \
 		X(GL_RG16F), \
 		X(GL_RGBA16F), \
 		X(GL_R32F), \
 		X(GL_RG32F), \
 		X(GL_RGBA32F), \
+		X(GL_R8I), \
+		X(GL_RG8I), \
+		X(GL_RGBA8I), \
+		X(GL_R16I), \
+		X(GL_RG16I), \
+		X(GL_RGBA16I), \
+		X(GL_R32I), \
+		X(GL_RG32I), \
+		X(GL_RGBA32I), \
+		X(GL_R8UI), \
+		X(GL_RG8UI), \
+		X(GL_RGBA8UI), \
+		X(GL_R16UI), \
+		X(GL_RG16UI), \
+		X(GL_RGBA16UI), \
 		X(GL_R32UI), \
 		X(GL_RG32UI), \
 		X(GL_RGBA32UI), \
 		X(GL_RGB10_A2), \
 		X(GL_RGB10_A2UI), \
 		X(GL_R11F_G11F_B10F), \
+		X(GL_SRGB8_ALPHA8), \
 		X(GL_DEPTH_COMPONENT16), \
 		X(GL_DEPTH_COMPONENT24), \
 		X(GL_DEPTH_COMPONENT32F), \
