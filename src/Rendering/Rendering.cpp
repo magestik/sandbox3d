@@ -26,6 +26,8 @@
 #include "Algorithms/BlurV.h"
 #include "Algorithms/Bloom.h"
 
+#define ENABLE_PICKBUFFER 1
+
 inline bool ends_with(std::string const & value, std::string const & ending)
 {
     if (ending.size() > value.size()) return false;
@@ -59,81 +61,57 @@ static inline unsigned int toPOT(unsigned int v)
 /**
  * @brief Rendering::onInitialize
  */
-Rendering::Rendering()
+Rendering::Rendering(void)
 : m_uWidth(1280)
 , m_uHeight(720)
 , m_pQuadMesh(nullptr)
 , m_pCameraBuffer(nullptr)
 , m_pObjectsBuffer(nullptr)
 , m_mapTargets()
+, m_bInitialized(false)
 {
 	GraphicsAlgorithm::RegisterEverything();
 }
 
 /**
- * @brief Rendering::onInitializeComplete
+ * @brief Rendering::onReady
  */
-void Rendering::onInitializeComplete()
+void Rendering::onReady(void)
 {
+	initShaders();
+
 	//
-	// Create Shaders
+	//
+	m_pLight = new Light::Directionnal(vec3(-20.0f, -20.0f, -20.0f));
+
+	//
+	// Generate Meshes
+	generateMeshes();
+
+	//
+	// Initialize Uniform blocks
+	m_pCameraBuffer = new GPU::Buffer<GL_UNIFORM_BUFFER>();
+	GPU::realloc(*m_pCameraBuffer, sizeof(CameraBlock), GL_STREAM_DRAW);
+
+	m_pObjectsBuffer = new GPU::Buffer<GL_UNIFORM_BUFFER>();
+	GPU::realloc(*m_pObjectsBuffer, sizeof(ObjectBlock)*m_aObjects.size(), GL_STREAM_DRAW);
+
+	glBindBufferRange(GL_UNIFORM_BUFFER, BLOCK_BINDING_CAMERA, m_pCameraBuffer->GetObject(), 0, sizeof(CameraBlock));
+
+	rmt_BindOpenGL();
+}
+
+/**
+ * @brief Rendering::initQueue
+ */
+void Rendering::initQueue(const char * szFilename)
+{
+	if (m_bInitialized)
 	{
-		DIR * dir = opendir("data/shaders");
-
-		if (dir != nullptr)
-		{
-			struct dirent *ep;
-			while ((ep = readdir(dir)))
-			{
-				std::string filename(ep->d_name);
-
-				RHI::ShaderStage stage = RHI::ShaderStage(0);
-
-				if (ends_with(filename, "vert"))
-				{
-					stage = RHI::SHADER_STAGE_VERTEX;
-				}
-				else if (ends_with(filename, "frag"))
-				{
-					stage = RHI::SHADER_STAGE_FRAGMENT;
-				}
-				else if (ends_with(filename, "geom"))
-				{
-					stage = RHI::SHADER_STAGE_GEOMETRY;
-				}
-
-				if (0 != stage)
-				{
-					std::string strFilePath = std::string("data/shaders/") + ep->d_name;
-					int fd = open(strFilePath.c_str(), O_RDONLY);
-
-					struct stat buf;
-					fstat(fd, &buf);
-
-					const unsigned int length = buf.st_size;
-					char * data = new char [length];
-
-					read(fd, (void*)data, length);
-
-					RHI::ShaderModuleCreateInfo createInfo;
-					createInfo.stage = stage;
-					createInfo.pCode = data;
-					createInfo.codeSize = length;
-
-					RHI::ShaderModule module(createInfo);
-					m_mapShaderModules.insert(std::pair<std::string, RHI::ShaderModule>(filename, module));
-
-					delete [] data;
-
-					close(fd);
-				}
-			}
-
-			closedir(dir);
-		}
+		releaseQueue();
 	}
 
-	RenderXML renderXML("data/render.xml");
+	RenderXML renderXML(szFilename);
 
 	renderXML.initializeTargets(*this);
 
@@ -160,25 +138,89 @@ void Rendering::onInitializeComplete()
 		qElmt->init();
 	}
 
-	//
-	//
-	m_pLight = new Light::Directionnal(vec3(-20.0f, -20.0f, -20.0f));
+	m_bInitialized = true;
+}
 
-	//
-	// Generate Meshes
-	generateMeshes();
+/**
+ * @brief Rendering::initQueue
+ */
+void Rendering::releaseQueue(void)
+{
+	for (GraphicsAlgorithm * qElmt : m_renderQueue)
+	{
+		qElmt->release();
+		delete qElmt;
+	}
 
-	//
-	// Initialize Uniform blocks
-	m_pCameraBuffer = new GPU::Buffer<GL_UNIFORM_BUFFER>();
-	GPU::realloc(*m_pCameraBuffer, sizeof(CameraBlock), GL_STREAM_DRAW);
+	m_renderQueue.clear();
 
-	m_pObjectsBuffer = new GPU::Buffer<GL_UNIFORM_BUFFER>();
-	GPU::realloc(*m_pObjectsBuffer, sizeof(ObjectBlock)*m_aObjects.size(), GL_STREAM_DRAW);
+	// TODO : delete framebuffers
 
-	glBindBufferRange(GL_UNIFORM_BUFFER, BLOCK_BINDING_CAMERA, m_pCameraBuffer->GetObject(), 0, sizeof(CameraBlock));
+	m_mapFramebuffer.clear();
 
-	rmt_BindOpenGL();
+	// TODO : delete targets
+
+	m_mapTargets.clear();
+}
+
+/**
+ * @brief Rendering::initShaders
+ */
+void Rendering::initShaders(void)
+{
+	DIR * dir = opendir("data/shaders");
+
+	if (dir != nullptr)
+	{
+		struct dirent *ep;
+		while ((ep = readdir(dir)))
+		{
+			std::string filename(ep->d_name);
+
+			RHI::ShaderStage stage = RHI::ShaderStage(0);
+
+			if (ends_with(filename, "vert"))
+			{
+				stage = RHI::SHADER_STAGE_VERTEX;
+			}
+			else if (ends_with(filename, "frag"))
+			{
+				stage = RHI::SHADER_STAGE_FRAGMENT;
+			}
+			else if (ends_with(filename, "geom"))
+			{
+				stage = RHI::SHADER_STAGE_GEOMETRY;
+			}
+
+			if (0 != stage)
+			{
+				std::string strFilePath = std::string("data/shaders/") + ep->d_name;
+				int fd = open(strFilePath.c_str(), O_RDONLY);
+
+				struct stat buf;
+				fstat(fd, &buf);
+
+				const unsigned int length = buf.st_size;
+				char * data = new char [length];
+
+				read(fd, (void*)data, length);
+
+				RHI::ShaderModuleCreateInfo createInfo;
+				createInfo.stage = stage;
+				createInfo.pCode = data;
+				createInfo.codeSize = length;
+
+				RHI::ShaderModule module(createInfo);
+				m_mapShaderModules.insert(std::pair<std::string, RHI::ShaderModule>(filename, module));
+
+				delete [] data;
+
+				close(fd);
+			}
+		}
+
+		closedir(dir);
+	}
 }
 
 /**
@@ -359,7 +401,9 @@ void Rendering::onUpdate(const mat4x4 & mView, const vec4 & clearColor, const Me
 
 	rmt_EndCPUSample();
 
+#if ENABLE_PICKBUFFER
 	renderPickBuffer();
+#endif // ENABLE_PICKBUFFER
 
 	if (nullptr != pSelectedObject)
 	{
@@ -573,7 +617,7 @@ void Rendering::renderBoundingBox(const Mesh::Instance * pSelectedObject)
 
 	commandBuffer.Begin();
 
-	RHI::Framebuffer & DefaultFramebuffer = m_mapFramebuffer["default"];
+	RHI::Framebuffer & DefaultFramebuffer = m_defaultFramebuffer;
 
 	commandBuffer.BeginRenderPass(m_boundingBoxRenderPass, DefaultFramebuffer, ivec2(0, 0), ivec2(m_uWidth, m_uHeight));
 	{

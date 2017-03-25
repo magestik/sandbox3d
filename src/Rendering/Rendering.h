@@ -123,7 +123,7 @@ public:
 
 	explicit Rendering		(void);
 
-	void	onInitializeComplete	(void);
+	void	onReady					(void);
 
 	void	onResize				(int width, int height);
 
@@ -135,6 +135,8 @@ public:
 
 	Mesh::Instance * getObjectAtPos	(const ivec2 & pos);
 
+	void initQueue					(const char * szFilename);
+	void releaseQueue				(void);
 
 	unsigned int GetWidth(void) const
 	{
@@ -148,15 +150,24 @@ public:
 
 	const GPU::Texture<GL_TEXTURE_2D> * GetRenderTexture(const char * name) const
 	{
-		return(m_mapTargets.at(name).getTexture());
+		std::map<std::string, RenderTexture>::const_iterator it = m_mapTargets.find(name);
+
+		if (it != m_mapTargets.end())
+		{
+			return((*it).second.getTexture());
+		}
+
+		return(nullptr);
 	}
 
 	void SetDefaultFramebuffer(GLuint framebuffer)
 	{
-		m_mapFramebuffer["default"] = RHI::Framebuffer(framebuffer);
+		m_defaultFramebuffer = RHI::Framebuffer(framebuffer);
 	}
 
 protected:
+
+	void	initShaders					(void);
 
 	void	generateMeshes				(void);
 
@@ -209,6 +220,7 @@ public:
 
 	std::map<std::string, RHI::ShaderModule> m_mapShaderModules;
 	std::map<std::string, RHI::Framebuffer>	m_mapFramebuffer;
+	RHI::Framebuffer m_defaultFramebuffer;
 
 	std::vector<GraphicsAlgorithm*> m_renderQueue;
 
@@ -224,6 +236,8 @@ public:
 
 	RHI::Pipeline m_boundingBoxPipeline;
 	RHI::RenderPass m_boundingBoxRenderPass;
+
+	bool m_bInitialized;
 
 public:
 
