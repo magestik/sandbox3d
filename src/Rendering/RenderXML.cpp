@@ -24,7 +24,7 @@ static const char QUEUE_ELMT_PARAM_STR []	= "param";
 /**
  * @brief Constructor
  */
-RenderXML::RenderXML(const char * filename)
+RenderXML::RenderXML(const char * filename) : m_pData(nullptr)
 {
 	XMLDocument * doc = new XMLDocument;
 
@@ -57,6 +57,11 @@ RenderXML::~RenderXML(void)
  */
 void RenderXML::initializeTargets(Rendering & rendering)
 {
+	if (nullptr == m_pData)
+	{
+		return;
+	}
+
 	const XMLElement * root = static_cast<const XMLDocument*>(m_pData)->RootElement();
 	assert(nullptr != root);
 
@@ -92,6 +97,11 @@ void RenderXML::initializeTargets(Rendering & rendering)
  */
 void RenderXML::initializeFramebuffers(Rendering & rendering)
 {
+	if (nullptr == m_pData)
+	{
+		return;
+	}
+
 	const XMLElement * root = static_cast<const XMLDocument*>(m_pData)->RootElement();
 	assert(nullptr != root);
 
@@ -142,6 +152,11 @@ void RenderXML::createFramebuffer(const void * pNode, Rendering & rendering)
  */
 void RenderXML::initializeQueue(Rendering & rendering)
 {
+	if (nullptr == m_pData)
+	{
+		return;
+	}
+
 	const XMLElement * root = static_cast<const XMLDocument*>(m_pData)->RootElement();
 	assert(nullptr != root);
 
