@@ -100,7 +100,16 @@ bool Fog::init(void)
 }
 
 /**
- * @brief RenderFogAlgorithm::render
+ * @brief Fog::release
+ * @return
+ */
+bool Fog::release(void)
+{
+	return(false); // TODO
+}
+
+/**
+ * @brief Fog::render
  * @param commandBuffer
  * @return
  */

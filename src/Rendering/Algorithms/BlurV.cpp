@@ -90,6 +90,15 @@ bool BlurV::init(void)
 }
 
 /**
+ * @brief BlurV::release
+ * @return
+ */
+bool BlurV::release(void)
+{
+	return(false); // TODO
+}
+
+/**
  * @brief BlurV::render
  * @param commandBuffer
  * @return

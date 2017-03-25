@@ -110,7 +110,16 @@ bool RenderSceneToGBuffer::init(void)
 }
 
 /**
- * @brief RenderSceneToGBufferAlgorithm::render
+ * @brief RenderSceneToGBuffer::release
+ * @return
+ */
+bool RenderSceneToGBuffer::release(void)
+{
+	return(false); // TODO
+}
+
+/**
+ * @brief RenderSceneToGBuffer::render
  * @param commandBuffer
  * @return
  */

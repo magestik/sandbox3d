@@ -90,6 +90,15 @@ bool BrightFilter::init(void)
 }
 
 /**
+ * @brief BrightFilter::release
+ * @return
+ */
+bool BrightFilter::release(void)
+{
+	return(false); // TODO
+}
+
+/**
  * @brief BrightFilter::render
  * @param commandBuffer
  * @return

@@ -89,6 +89,15 @@ bool RenderSceneToShadowMap::init(void)
 }
 
 /**
+ * @brief RenderSceneToShadowMap::release
+ * @return
+ */
+bool RenderSceneToShadowMap::release(void)
+{
+	return(false); // TODO
+}
+
+/**
  * @brief RenderSceneToShadowMap::render
  * @param commandBuffer
  * @return

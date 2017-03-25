@@ -90,6 +90,15 @@ bool CelShading::init(void)
 }
 
 /**
+ * @brief CelShading::release
+ * @return
+ */
+bool CelShading::release(void)
+{
+	return(false); // TODO
+}
+
+/**
  * @brief CelShading::render
  * @param commandBuffer
  * @return

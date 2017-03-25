@@ -94,6 +94,15 @@ bool Bloom::init(void)
 }
 
 /**
+ * @brief Bloom::release
+ * @return
+ */
+bool Bloom::release(void)
+{
+	return(false); // TODO
+}
+
+/**
  * @brief Bloom::render
  * @param commandBuffer
  * @return

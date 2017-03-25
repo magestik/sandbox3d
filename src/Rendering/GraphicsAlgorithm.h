@@ -21,6 +21,7 @@ public:
 	~GraphicsAlgorithm();
 
 	virtual bool init(void) = 0;
+	virtual bool release(void) = 0;
 
 	virtual bool render(RHI::CommandBuffer & commandBuffer) = 0;
 

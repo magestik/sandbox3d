@@ -89,7 +89,16 @@ bool RenderDepthOnly::init(void)
 }
 
 /**
- * @brief RenderDepthOnlyAlgorithm::render
+ * @brief RenderDepthOnly::release
+ * @return
+ */
+bool RenderDepthOnly::release(void)
+{
+	return(false); // TODO
+}
+
+/**
+ * @brief RenderDepthOnly::render
  * @param commandBuffer
  * @return
  */

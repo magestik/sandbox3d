@@ -127,7 +127,16 @@ bool Compose::init(void)
 }
 
 /**
- * @brief ComposeAlgorithm::render
+ * @brief Compose::release
+ * @return
+ */
+bool Compose::release(void)
+{
+	return(false); // TODO
+}
+
+/**
+ * @brief Compose::render
  * @param commandBuffer
  * @return
  */
@@ -143,9 +152,21 @@ bool Compose::render(RHI::CommandBuffer & commandBuffer)
 		mat4x4 mDepthView = _lookAt(vec3(0,0,0), m_rendering.m_pLight->GetDirection(), vec3(0.0f, -1.0f, 0.0f));
 		mat4x4 mDepthViewProjection = m_rendering.m_matShadowMapProjection * mDepthView;
 
-		SetTexture(m_pipeline.m_uShaderObject, "diffuseLightSampler", 0, *m_pDiffuseLightsTexture, m_samplerDiffuseLightSampler);
-		SetTexture(m_pipeline.m_uShaderObject, "specularLightSampler", 1, *m_pSpecularLightsTexture, m_samplerSpecularLightSampler);
-		SetTexture(m_pipeline.m_uShaderObject, "shadowMap", 2, *(m_rendering.m_mapTargets["shadow_map"].getTexture()), m_samplerShadowMap);
+		if (m_pDiffuseLightsTexture)
+		{
+			SetTexture(m_pipeline.m_uShaderObject, "diffuseLightSampler", 0, *m_pDiffuseLightsTexture, m_samplerDiffuseLightSampler);
+		}
+
+		if (m_pSpecularLightsTexture)
+		{
+			SetTexture(m_pipeline.m_uShaderObject, "specularLightSampler", 1, *m_pSpecularLightsTexture, m_samplerSpecularLightSampler);
+		}
+
+		const GPU::Texture<GL_TEXTURE_2D> * pShadowMap = m_rendering.GetRenderTexture("shadow_map");
+		if (pShadowMap)
+		{
+			SetTexture(m_pipeline.m_uShaderObject, "shadowMap", 2, *pShadowMap, m_samplerShadowMap);
+		}
 
 		SetUniform(m_pipeline.m_uShaderObject, "ambientColor", RGB_to_XYZ * m_rendering.environment.ambient.Color);
 		SetUniform(m_pipeline.m_uShaderObject, "DepthTransformation", mDepthViewProjection);

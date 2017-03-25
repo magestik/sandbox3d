@@ -90,6 +90,15 @@ bool SobelFilter::init(void)
 }
 
 /**
+ * @brief SobelFilter::release
+ * @return
+ */
+bool SobelFilter::release(void)
+{
+	return(false); // TODO
+}
+
+/**
  * @brief SobelFilter::render
  * @param commandBuffer
  * @return

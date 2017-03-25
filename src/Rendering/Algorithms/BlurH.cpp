@@ -90,6 +90,15 @@ bool BlurH::init(void)
 }
 
 /**
+ * @brief BlurH::release
+ * @return
+ */
+bool BlurH::release(void)
+{
+	return(false); // TODO
+}
+
+/**
  * @brief BlurH::render
  * @param commandBuffer
  * @return

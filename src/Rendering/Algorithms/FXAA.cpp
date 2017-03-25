@@ -93,6 +93,15 @@ bool FXAA::init(void)
 }
 
 /**
+ * @brief FXAA::release
+ * @return
+ */
+bool FXAA::release(void)
+{
+	return(false); // TODO
+}
+
+/**
  * @brief FXAA::render
  * @param commandBuffer
  * @return

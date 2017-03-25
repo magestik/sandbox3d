@@ -112,7 +112,16 @@ bool RenderLightsToAccumBuffer::init(void)
 }
 
 /**
- * @brief RenderLightsToAccumBufferAlgorithm::render
+ * @brief RenderLightsToAccumBuffer::release
+ * @return
+ */
+bool RenderLightsToAccumBuffer::release(void)
+{
+	return(false); // TODO
+}
+
+/**
+ * @brief RenderLightsToAccumBuffer::render
  * @param commandBuffer
  * @return
  */
@@ -132,8 +141,15 @@ bool RenderLightsToAccumBuffer::render(RHI::CommandBuffer & commandBuffer)
 		SetUniform(m_pipelineDirectionalLight.m_uShaderObject, "lightDir", - normalize(m_rendering.m_pLight->GetDirection()));
 		SetUniform(m_pipelineDirectionalLight.m_uShaderObject, "lightColor", RGB_to_XYZ * m_rendering.m_pLight->GetColor());
 
-		SetTexture(m_pipelineDirectionalLight.m_uShaderObject, "depthSampler", 0, *m_pDepthTexture, m_samplerDepth);
-		SetTexture(m_pipelineDirectionalLight.m_uShaderObject, "normalSampler", 1, *m_pNormalsTexture, m_samplerNormal);
+		if (m_pDepthTexture)
+		{
+			SetTexture(m_pipelineDirectionalLight.m_uShaderObject, "depthSampler", 0, *m_pDepthTexture, m_samplerDepth);
+		}
+
+		if (m_pNormalsTexture)
+		{
+			SetTexture(m_pipelineDirectionalLight.m_uShaderObject, "normalSampler", 1, *m_pNormalsTexture, m_samplerNormal);
+		}
 
 		m_rendering.m_pQuadMesh->draw(commandBuffer);
 

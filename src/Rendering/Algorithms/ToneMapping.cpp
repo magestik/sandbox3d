@@ -6,7 +6,7 @@
  * @brief Constructor
  * @param rendering
  */
-ToneMapping::ToneMapping(Rendering & rendering, RHI::Framebuffer & framebuffer) : GraphicsAlgorithm(rendering, framebuffer), m_pTexture(nullptr),  m_fAverageLuminance(0.0f), m_fWhite2(0.0f)
+ToneMapping::ToneMapping(Rendering & rendering, RHI::Framebuffer & framebuffer) : GraphicsAlgorithm(rendering, framebuffer), m_pTexture(nullptr),  m_fAverageLuminance(0.5f), m_fWhite2(0.5f)
 {
 	// ...
 }
@@ -87,6 +87,15 @@ bool ToneMapping::init(void)
 	SetUniformBlockBinding(m_pipeline.m_uShaderObject, "ObjectBlock", Rendering::BLOCK_BINDING_OBJECT);
 
 	return(true);
+}
+
+/**
+ * @brief ToneMapping::release
+ * @return
+ */
+bool ToneMapping::release(void)
+{
+	return(false); // TODO
 }
 
 /**
