@@ -107,7 +107,9 @@ bool BlurV::render(RHI::CommandBuffer & commandBuffer)
 {
 	rmt_ScopedOpenGLSample(BlurV);
 
-	commandBuffer.BeginRenderPass(m_renderPass, m_framebuffer, ivec2(0, 0), ivec2(m_rendering.GetWidth()/4, m_rendering.GetHeight()/4));
+	ivec2 viewport(m_rendering.GetWidth(), m_rendering.GetHeight()); // FIXME : m_pTexture H/W
+
+	commandBuffer.BeginRenderPass(m_renderPass, m_framebuffer, ivec2(0, 0), viewport);
 	{
 		commandBuffer.Bind(m_pipeline);
 
