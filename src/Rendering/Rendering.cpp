@@ -68,6 +68,7 @@ Rendering::Rendering(void)
 , m_pCameraBuffer(nullptr)
 , m_pObjectsBuffer(nullptr)
 , m_mapTargets()
+, m_bReady(false)
 , m_bInitialized(false)
 {
 	GraphicsAlgorithm::RegisterEverything();
@@ -78,6 +79,8 @@ Rendering::Rendering(void)
  */
 void Rendering::onReady(void)
 {
+	assert(!m_bReady);
+
 	initShaders();
 
 	//
@@ -99,6 +102,8 @@ void Rendering::onReady(void)
 	glBindBufferRange(GL_UNIFORM_BUFFER, BLOCK_BINDING_CAMERA, m_pCameraBuffer->GetObject(), 0, sizeof(CameraBlock));
 
 	rmt_BindOpenGL();
+
+	m_bReady = true;
 }
 
 /**
@@ -106,6 +111,11 @@ void Rendering::onReady(void)
  */
 void Rendering::initQueue(const char * szFilename)
 {
+	if (!m_bReady)
+	{
+		return;
+	}
+
 	if (m_bInitialized)
 	{
 		releaseQueue();

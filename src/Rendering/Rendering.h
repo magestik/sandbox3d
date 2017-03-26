@@ -237,6 +237,7 @@ public:
 	RHI::Pipeline m_boundingBoxPipeline;
 	RHI::RenderPass m_boundingBoxRenderPass;
 
+	bool m_bReady;
 	bool m_bInitialized;
 
 public:
