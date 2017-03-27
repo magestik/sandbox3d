@@ -173,8 +173,6 @@ protected:
 	void    updateCameraBuffer          (const mat4x4 & matView);
 	void    updateObjectsBuffer         (void);
 
-	void    computeAverageLum           (void);
-
 	void	initPickBuffer				(void);
 	void	renderPickBuffer			(void);
 
@@ -188,6 +186,9 @@ public:
 
 	unsigned int m_uWidth;
 	unsigned int m_uHeight;
+
+	float m_fMinZ;
+	float m_fMaxZ;
 
 	mat4x4 m_matProjection;
 	mat4x4 m_matShadowMapProjection;

@@ -26,6 +26,8 @@
 #include "Algorithms/BlurV.h"
 #include "Algorithms/Bloom.h"
 
+#define MIN_Z 0.0001f
+
 #define ENABLE_PICKBUFFER 1
 
 inline bool ends_with(std::string const & value, std::string const & ending)
@@ -64,6 +66,8 @@ static inline unsigned int toPOT(unsigned int v)
 Rendering::Rendering(void)
 : m_uWidth(1280)
 , m_uHeight(720)
+, m_fMinZ(1.0f)
+, m_fMaxZ(1000.0f)
 , m_pQuadMesh(nullptr)
 , m_pCameraBuffer(nullptr)
 , m_pObjectsBuffer(nullptr)
@@ -286,6 +290,54 @@ void Rendering::generateMeshes()
  */
 void Rendering::updateCameraBuffer(const mat4x4 & matView)
 {
+	//
+	// compute minZ / maxZ
+	{
+		m_fMinZ = INFINITY;
+		m_fMaxZ = 0.0f;
+
+		for (const Object & object : m_scene.getObjects())
+		{
+			const mat4x4 mMVP = matView * object.transformation;
+
+			vec4 centerInViewProjected = vec4(object.mesh->m_BoundingSphere.center, 1.0f) * mMVP;
+			vec3 centerInView = centerInViewProjected.xyz / centerInViewProjected.w;
+
+			vec4 radiusPointViewProjected = vec4(object.mesh->m_BoundingSphere.center.xy, object.mesh->m_BoundingSphere.center.z + object.mesh->m_BoundingSphere.radius, 1.0f) * mMVP;
+			vec3 radiusPointView = radiusPointViewProjected.xyz / radiusPointViewProjected.w;
+
+			float fRadiusInView = distance(centerInView, radiusPointView);
+
+			{
+				float maxZ = -centerInView.z + fRadiusInView;
+
+				if (maxZ > m_fMaxZ)
+				{
+					m_fMaxZ = maxZ;
+				}
+
+				float minZ = -centerInView.z - fRadiusInView;
+
+				if (minZ > MIN_Z)
+				{
+					if (minZ < m_fMinZ)
+					{
+						m_fMinZ = minZ;
+					}
+				}
+			}
+		}
+	}
+
+	if (m_fMinZ < MIN_Z)
+	{
+		m_fMinZ = MIN_Z;
+	}
+
+	// Compute the new Projection Matrix
+	float ratio = m_uWidth/(float)m_uHeight;
+	m_matProjection = _perspective(75.0f, ratio, m_fMinZ, m_fMaxZ);
+
 	CameraBlock cam;
 	cam.ViewProjection = m_matProjection * matView;
 	cam.View = matView;
@@ -320,9 +372,6 @@ void Rendering::onResize(int width, int height)
 {
 	m_uWidth        = width;
 	m_uHeight       = height;
-
-	float ratio = m_uWidth/(float)m_uHeight;
-	m_matProjection = _perspective(75.0f, ratio, 1.0f, 1000.0f);
 
 	//m_matShadowMapProjection = _perspective(45.0f, 1.0f, 1.0f, 100.0f); // FIXME : spot light 45° hardcoded
 	m_matShadowMapProjection = _ortho(-20.0f, 20.0f, -20.0f, 20.0f, -10.0f, 100.0f); // FIXME : use scene AABB and/or camera frustrum to compute this
@@ -510,4 +559,3 @@ void Rendering::renderPickBuffer(void)
 
 	commandBuffer.End();
 }
-
