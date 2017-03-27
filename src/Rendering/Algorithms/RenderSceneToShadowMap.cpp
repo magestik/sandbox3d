@@ -110,12 +110,12 @@ bool RenderSceneToShadowMap::render(RHI::CommandBuffer & commandBuffer)
 	{
 		commandBuffer.Bind(m_pipeline);
 
-		mat4x4 mDepthView = _lookAt(vec3(0,0,0), m_rendering.m_pLight->GetDirection(), vec3(0.0f, -1.0f, 0.0f));
+		mat4x4 mDepthView = _lookAt(vec3(0,0,0), m_rendering.m_scene.m_pLight->GetDirection(), vec3(0.0f, -1.0f, 0.0f));
 		mat4x4 mDepthViewProjection = m_rendering.m_matShadowMapProjection * mDepthView;
 
 		SetUniform(m_pipeline.m_uShaderObject, "LightViewProjection", mDepthViewProjection);
 
-		for (Mesh::Instance & object : m_rendering.m_aObjects)
+		for (const Object & object : m_rendering.m_scene.getObjects())
 		{
 			SetUniform(m_pipeline.m_uShaderObject, "Model", object.transformation);
 

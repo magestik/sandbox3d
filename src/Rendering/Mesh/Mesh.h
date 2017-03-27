@@ -33,14 +33,6 @@ public:
 		vec3 max;
 	};
 
-	struct Instance
-	{
-		Instance(Mesh * m) : transformation(1.0f), mesh(m) { /* ... */ }
-		const std::vector<SubMesh*> & getDrawCommands() const { return(mesh->m_aSubMeshes); }
-		mat4x4 transformation;
-		Mesh * mesh;
-	};
-
 	explicit Mesh(GPU::Buffer<GL_ARRAY_BUFFER> * pVertexBuffer, const std::vector<VertexSpec> & specs);
 	explicit Mesh(GPU::Buffer<GL_ARRAY_BUFFER> * pVertexBuffer, const std::vector<VertexSpec> & specs, GPU::Buffer<GL_ELEMENT_ARRAY_BUFFER> * pIndexBuffer);
 	virtual ~Mesh(void);
@@ -52,8 +44,6 @@ public:
 	void unbind();
 
 	void draw(RHI::CommandBuffer & commandBuffer);
-
-	Instance Instantiate() { return(Instance(this)); }
 
 //private:
 

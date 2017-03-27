@@ -17,8 +17,8 @@
 #include "Light/Light.h"
 #include "Mesh/Mesh.h"
 #include "Mesh/SubMesh.h"
-
-#include "Target/AverageLuminance.h"
+#include "Scene/Scene.h"
+#include "Scene/SceneListener.h"
 
 #include "RenderTexture.h"
 #include "GraphicsAlgorithm.h"
@@ -114,7 +114,7 @@ inline void SetTexture(GLuint uShaderObject, const char * name, int unit, const 
 	glBindSampler(unit, sampler.m_uSamplerObject);
 }
 
-class Rendering
+class Rendering : public SceneListener
 {
 
 	friend class RenderXML;
@@ -129,11 +129,10 @@ public:
 
 	void	onUpdate				(const mat4x4 & mView, const vec4 & clearColor);
 
-	void	onCreate				(const Mesh::Instance & instance);
+	virtual void	onObjectInserted	(const Scene & scene, const Object & object) override;
+	virtual void	onObjectRemoved		(const Scene & scene, const Object & object) override;
 
-	void	onDelete				(const Mesh::Instance & instance);
-
-	Mesh::Instance * getObjectAtPos	(const ivec2 & pos);
+	Object * getObjectAtPos	(const ivec2 & pos);
 
 	void initQueue					(const char * szFilename);
 	void releaseQueue				(void);
@@ -190,16 +189,10 @@ public:
 	unsigned int m_uWidth;
 	unsigned int m_uHeight;
 
-	unsigned int m_uLuminanceSizePOT;
-
 	mat4x4 m_matProjection;
 	mat4x4 m_matShadowMapProjection;
 
-	AverageLuminance * m_AvLum;
-
-	std::vector<Mesh::Instance> m_aObjects;
-
-	Light::Directionnal * m_pLight;
+	Scene m_scene;
 
 	Mesh *	m_pQuadMesh;
 

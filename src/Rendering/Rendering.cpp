@@ -72,6 +72,7 @@ Rendering::Rendering(void)
 , m_bInitialized(false)
 {
 	GraphicsAlgorithm::RegisterEverything();
+	m_scene.registerListener(this);
 }
 
 /**
@@ -83,9 +84,6 @@ void Rendering::onReady(void)
 
 	initShaders();
 
-	//
-	//
-	m_pLight = new Light::Directionnal(vec3(-20.0f, -20.0f, -20.0f));
 
 	//
 	// Generate Meshes
@@ -97,7 +95,7 @@ void Rendering::onReady(void)
 	GPU::realloc(*m_pCameraBuffer, sizeof(CameraBlock), GL_STREAM_DRAW);
 
 	m_pObjectsBuffer = new GPU::Buffer<GL_UNIFORM_BUFFER>();
-	GPU::realloc(*m_pObjectsBuffer, sizeof(ObjectBlock)*m_aObjects.size(), GL_STREAM_DRAW);
+	GPU::realloc(*m_pObjectsBuffer, sizeof(ObjectBlock)*m_scene.getObjectCount(), GL_STREAM_DRAW);
 
 	glBindBufferRange(GL_UNIFORM_BUFFER, BLOCK_BINDING_CAMERA, m_pCameraBuffer->GetObject(), 0, sizeof(CameraBlock));
 
@@ -300,13 +298,13 @@ void Rendering::updateCameraBuffer(const mat4x4 & matView)
  */
 void Rendering::updateObjectsBuffer(void)
 {
-	GPU::realloc(*m_pObjectsBuffer, sizeof(ObjectBlock)*m_aObjects.size(), GL_STREAM_DRAW);
+	GPU::realloc(*m_pObjectsBuffer, sizeof(ObjectBlock)*m_scene.getObjectCount(), GL_STREAM_DRAW);
 
 	ObjectBlock * ptr = (ObjectBlock*)GPU::mmap(*m_pObjectsBuffer, GL_WRITE_ONLY);
 
-	for (const Mesh::Instance & o : m_aObjects)
+	for (const Object & object : m_scene.getObjects())
 	{
-		ptr->Model = o.transformation;
+		ptr->Model = object.transformation;
 		++ptr;
 	}
 
@@ -323,8 +321,6 @@ void Rendering::onResize(int width, int height)
 	m_uWidth        = width;
 	m_uHeight       = height;
 
-	m_uLuminanceSizePOT     = toPOT((width > height) ? width : height);
-
 	float ratio = m_uWidth/(float)m_uHeight;
 	m_matProjection = _perspective(75.0f, ratio, 1.0f, 1000.0f);
 
@@ -333,18 +329,7 @@ void Rendering::onResize(int width, int height)
 
 	for (std::map<std::string, RenderTexture>::iterator it = m_mapTargets.begin(); it != m_mapTargets.end(); ++it)
 	{
-		if (it->first == "luminance1" || it->first == "luminance2")
-		{
-			it->second.resize(m_uLuminanceSizePOT, m_uLuminanceSizePOT);
-		}
-		else if (it->first == "shadow_map")
-		{
-			it->second.resize(SHADOW_MAP_SIZE, SHADOW_MAP_SIZE);
-		}
-		else
-		{
-			it->second.resize(m_uWidth, m_uHeight);
-		}
+		it->second.resize(m_uWidth, m_uHeight);
 	}
 }
 
@@ -389,33 +374,20 @@ void Rendering::onUpdate(const mat4x4 & mView, const vec4 & clearColor)
 }
 
 /**
- * @brief Rendering::onCreate
- * @param m
+ * @brief Rendering::onObjectInserted
+ * @param object
  */
-void Rendering::onCreate(const Mesh::Instance & instance)
+void Rendering::onObjectInserted(const Scene & scene, const Object & object)
 {
-	m_aObjects.push_back(instance);
-
 	updateObjectsBuffer();
 }
 
 /**
- * @brief Rendering::onDelete
- * @param instance
+ * @brief Rendering::onObjectRemoved
+ * @param object
  */
-void Rendering::onDelete(const Mesh::Instance & instance)
+void Rendering::onObjectRemoved(const Scene & scene, const Object & instance)
 {
-	for (std::vector<Mesh::Instance>::iterator it = m_aObjects.begin() ; it != m_aObjects.end(); ++it)
-	{
-		const Mesh::Instance & current = *it;
-
-		if (&current == &instance)
-		{
-			m_aObjects.erase(it);
-			break;
-		}
-	}
-
 	updateObjectsBuffer();
 }
 
@@ -424,9 +396,9 @@ void Rendering::onDelete(const Mesh::Instance & instance)
  * @param pos
  * @return
  */
-Mesh::Instance * Rendering::getObjectAtPos(const ivec2 & pos)
+Object * Rendering::getObjectAtPos(const ivec2 & pos)
 {
-	Mesh::Instance * object = nullptr;
+	Object * object = nullptr;
 
 	glBindFramebuffer(GL_READ_FRAMEBUFFER, m_pickBufferFramebuffer.m_uFramebufferObject);
 	glReadBuffer(GL_COLOR_ATTACHMENT0);
@@ -435,9 +407,9 @@ Mesh::Instance * Rendering::getObjectAtPos(const ivec2 & pos)
 
 	glReadPixels(pos.x, m_uHeight - pos.y, 1, 1, GL_RED_INTEGER, GL_UNSIGNED_INT, &id);
 
-	if (id < m_aObjects.size())
+	if (id < m_scene.getObjectCount())
 	{
-		object = &(m_aObjects[id]);
+		object = (Object*)&(m_scene.getObjects()[id]); // ugly
 	}
 
 	glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
@@ -516,7 +488,7 @@ void Rendering::renderPickBuffer(void)
 
 		unsigned int i = 0;
 
-		for (Mesh::Instance & object : m_aObjects)
+		for (const Object & object : m_scene.getObjects())
 		{
 			object.mesh->bind();
 
