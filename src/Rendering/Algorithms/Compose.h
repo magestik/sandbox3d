@@ -30,6 +30,7 @@ private:
 	RHI::Sampler m_samplerSpecularLightSampler;
 	RHI::Sampler m_samplerShadowMap;
 
+	const GPU::Texture<GL_TEXTURE_2D> * m_pDepthTexture;
 	const GPU::Texture<GL_TEXTURE_2D> * m_pDiffuseLightsTexture;
 	const GPU::Texture<GL_TEXTURE_2D> * m_pSpecularLightsTexture;
 };

@@ -18,7 +18,7 @@ const mat3x3 XYZ_to_RGB(2.0413690, -0.5649464, -0.3446944, -0.9692660, 1.8760108
  * @brief Constructor
  * @param rendering
  */
-Compose::Compose(Rendering & rendering, RHI::Framebuffer & framebuffer) : GraphicsAlgorithm(rendering, framebuffer), m_pDiffuseLightsTexture(nullptr), m_pSpecularLightsTexture(nullptr)
+Compose::Compose(Rendering & rendering, RHI::Framebuffer & framebuffer) : GraphicsAlgorithm(rendering, framebuffer), m_pDepthTexture(nullptr), m_pDiffuseLightsTexture(nullptr), m_pSpecularLightsTexture(nullptr)
 {
 	// ...
 }
@@ -123,6 +123,23 @@ bool Compose::init(void)
 	SetUniformBlockBinding(m_pipeline.m_uShaderObject, "CameraBlock", Rendering::BLOCK_BINDING_CAMERA);
 	SetUniformBlockBinding(m_pipeline.m_uShaderObject, "ObjectBlock", Rendering::BLOCK_BINDING_OBJECT);
 
+	//
+	//
+#if HAVE_OPENGL // ugly but needed for now (quick prototyping)
+	if (nullptr != m_pDepthTexture)
+	{
+		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_framebuffer.m_uFramebufferObject);
+
+		glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, m_pDepthTexture->GetObject(), 0);
+
+		GLenum status = glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER);
+
+		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+
+		assert(GL_FRAMEBUFFER_COMPLETE == status);
+	}
+#endif // HAVE_OPENGL
+
 	return(true);
 }
 
@@ -206,7 +223,11 @@ bool Compose::render(RHI::CommandBuffer & commandBuffer)
  */
 void Compose::setParameter(const char * name, const char * value)
 {
-	if (!strcmp("diffuse_lights", name))
+	if (!strcmp("depth", name))
+	{
+		m_pDepthTexture = m_rendering.m_mapTargets[value].getTexture();
+	}
+	else if (!strcmp("diffuse_lights", name))
 	{
 		m_pDiffuseLightsTexture = m_rendering.m_mapTargets[value].getTexture();
 	}
