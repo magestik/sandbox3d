@@ -137,7 +137,6 @@ void Rendering::initQueue(const char * szFilename)
 	onResize(m_uWidth, m_uHeight);
 
 	initPickBuffer();
-	initBoundingBox();
 
 	renderXML.initializeFramebuffers(*this);
 
@@ -280,33 +279,6 @@ void Rendering::generateMeshes()
 		//SubMesh::Create(vertexBuffer, 4, GL_TRIANGLE_STRIP, specs);
 	}
 
-	{
-		float points [] =
-		{
-			0.0f, 0.0f,
-		};
-
-		GPU::Buffer<GL_ARRAY_BUFFER> * vertexBuffer = new GPU::Buffer<GL_ARRAY_BUFFER>();
-
-		GPU::realloc(*vertexBuffer, sizeof(points), GL_STATIC_DRAW, points);
-
-		std::vector<Mesh::VertexSpec> specs;
-
-		Mesh::VertexSpec SPEC_POS;
-		SPEC_POS.index = 0;
-		SPEC_POS.size = 2;
-		SPEC_POS.type = GL_FLOAT;
-		SPEC_POS.normalized = GL_FALSE;
-		SPEC_POS.stride = 2 * sizeof(float);
-		SPEC_POS.pointer = 0;
-
-		specs.push_back(SPEC_POS);
-
-		m_pPointMesh = new Mesh(vertexBuffer, specs);
-		m_pPointMesh->AddSubMesh(1, GL_POINTS);
-		//SubMesh::Create(vertexBuffer, 4, GL_TRIANGLE_STRIP, specs);
-	}
-
 	// TODO : Sphere / Cone / Cube
 }
 
@@ -381,7 +353,7 @@ void Rendering::onResize(int width, int height)
  * @param mProjection
  * @param mView
  */
-void Rendering::onUpdate(const mat4x4 & mView, const vec4 & clearColor, const Mesh::Instance * pSelectedObject)
+void Rendering::onUpdate(const mat4x4 & mView, const vec4 & clearColor)
 {
 	rmt_ScopedCPUSample(Update, 0);
 	rmt_ScopedOpenGLSample(Update);
@@ -414,11 +386,6 @@ void Rendering::onUpdate(const mat4x4 & mView, const vec4 & clearColor, const Me
 #if ENABLE_PICKBUFFER
 	renderPickBuffer();
 #endif // ENABLE_PICKBUFFER
-
-	if (nullptr != pSelectedObject)
-	{
-		renderBoundingBox(pSelectedObject);
-	}
 }
 
 /**
@@ -572,76 +539,3 @@ void Rendering::renderPickBuffer(void)
 	commandBuffer.End();
 }
 
-/**
- * @brief Rendering::initBoundingBox
- */
-void Rendering::initBoundingBox(void)
-{
-	//
-	// Create Render Pass
-	RHI::RenderPass::SubpassDescription desc;
-	desc.depthAttachment = 0; // disable depth buffer
-	desc.aColorAttachments.push_back(0);
-
-	m_boundingBoxRenderPass = RHI::RenderPass(desc);
-
-	//
-	// Create Pipeline
-	RHI::PipelineInputAssemblyStateCreateInfo input;
-	RHI::PipelineRasterizationStateCreateInfo rasterization;
-	RHI::PipelineDepthStencilStateCreateInfo depthStencil;
-	RHI::PipelineBlendStateCreateInfo blend;
-
-	RHI::PipelineShaderStageCreateInfo vertexShader;
-	vertexShader.stage = RHI::SHADER_STAGE_VERTEX;
-	vertexShader.module = m_mapShaderModules["bbox.vert"];
-
-	RHI::PipelineShaderStageCreateInfo geometryShader;
-	geometryShader.stage = RHI::SHADER_STAGE_GEOMETRY;
-	geometryShader.module = m_mapShaderModules["bbox.geom"];
-
-	RHI::PipelineShaderStageCreateInfo fragmentShader;
-	fragmentShader.stage = RHI::SHADER_STAGE_FRAGMENT;
-	fragmentShader.module = m_mapShaderModules["bbox.frag"];
-
-	std::vector<RHI::PipelineShaderStageCreateInfo> aStages;
-	aStages.push_back(vertexShader);
-	aStages.push_back(geometryShader);
-	aStages.push_back(fragmentShader);
-
-	m_boundingBoxPipeline = RHI::Pipeline(input, rasterization, depthStencil, blend, aStages);
-
-	//
-	// TODO : remove this
-	SetUniformBlockBinding(m_boundingBoxPipeline.m_uShaderObject, "CameraBlock", Rendering::BLOCK_BINDING_CAMERA);
-	SetUniformBlockBinding(m_boundingBoxPipeline.m_uShaderObject, "ObjectBlock", Rendering::BLOCK_BINDING_OBJECT);
-}
-
-/**
- * @brief Rendering::renderBoundingBox
- * @param mView
- */
-void Rendering::renderBoundingBox(const Mesh::Instance * pSelectedObject)
-{
-	RHI::CommandBuffer commandBuffer;
-
-	commandBuffer.Begin();
-
-	RHI::Framebuffer & DefaultFramebuffer = m_defaultFramebuffer;
-
-	commandBuffer.BeginRenderPass(m_boundingBoxRenderPass, DefaultFramebuffer, ivec2(0, 0), ivec2(m_uWidth, m_uHeight));
-	{
-		commandBuffer.Bind(m_boundingBoxPipeline);
-
-		SetUniform(m_boundingBoxPipeline.m_uShaderObject, "Model", pSelectedObject->transformation);
-
-		SetUniform(m_boundingBoxPipeline.m_uShaderObject, "BBoxMin", pSelectedObject->mesh->m_BoundingBox.min);
-		SetUniform(m_boundingBoxPipeline.m_uShaderObject, "BBoxMax", pSelectedObject->mesh->m_BoundingBox.max);
-		SetUniform(m_boundingBoxPipeline.m_uShaderObject, "color", vec3(1.0, 1.0, 1.0));
-
-		m_pPointMesh->draw(commandBuffer);
-	}
-	commandBuffer.EndRenderPass();
-
-	commandBuffer.End();
-}

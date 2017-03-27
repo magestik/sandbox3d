@@ -127,7 +127,7 @@ public:
 
 	void	onResize				(int width, int height);
 
-	void	onUpdate				(const mat4x4 & mView, const vec4 & clearColor, const Mesh::Instance * pSelected = nullptr);
+	void	onUpdate				(const mat4x4 & mView, const vec4 & clearColor);
 
 	void	onCreate				(const Mesh::Instance & instance);
 
@@ -179,9 +179,6 @@ protected:
 	void	initPickBuffer				(void);
 	void	renderPickBuffer			(void);
 
-	void	initBoundingBox				(void);
-	void	renderBoundingBox			(const Mesh::Instance * pSelected);
-
 	void	computeToneMappingParams	(float & avLum, float & white2);
 
 //private:
@@ -205,7 +202,6 @@ public:
 	Light::Directionnal * m_pLight;
 
 	Mesh *	m_pQuadMesh;
-	Mesh *	m_pPointMesh;
 
 	enum EUniformBlockBinding
 	{
@@ -233,9 +229,6 @@ public:
 
 	RHI::Pipeline m_pickBufferPipeline;
 	RHI::RenderPass m_pickBufferRenderPass;
-
-	RHI::Pipeline m_boundingBoxPipeline;
-	RHI::RenderPass m_boundingBoxRenderPass;
 
 	bool m_bReady;
 	bool m_bInitialized;
