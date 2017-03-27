@@ -25,7 +25,7 @@ Compile C++ code, and preprocess shaders :
 $ mkdir build
 $ cd build
 $ cmake ..
-$ make
+$ cmake --build .
 ```
 
 ### Dependencies
@@ -35,7 +35,3 @@ This project is designed to run on GNU/Linux and does not support Windows (maybe
 Libraries needed :
 - OpenGL 3.3 / Vulkan 1.0.4
 - TinyXML2
-
-Other requierements :
-- glslc (to preprocess shaders)
-- xmllint (to check render.xml)
