@@ -28,9 +28,16 @@ public:
 
 	struct BoundingBox
 	{
-		BoundingBox() : min(1e10f, 1e10f, 1e10f), max(-1e10f, -1e10f, -1e10f) { /* ... */ }
+		BoundingBox(void) : min(1e10f, 1e10f, 1e10f), max(-1e10f, -1e10f, -1e10f) { /* ... */ }
 		vec3 min;
 		vec3 max;
+	};
+
+	struct BoundingSphere
+	{
+		BoundingSphere(void) : center(0.0f, 0.0f, 0.0f), radius(0.0f) { /* ... */ }
+		vec3 center;
+		float radius;
 	};
 
 	explicit Mesh(GPU::Buffer<GL_ARRAY_BUFFER> * pVertexBuffer, const std::vector<VertexSpec> & specs);
@@ -58,4 +65,5 @@ private:
 public:
 
 	BoundingBox m_BoundingBox;
+	BoundingSphere m_BoundingSphere;
 };
