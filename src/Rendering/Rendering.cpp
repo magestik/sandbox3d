@@ -26,6 +26,7 @@
 #include "Algorithms/BlurV.h"
 #include "Algorithms/Bloom.h"
 
+#define MAX_Z 1000.0f
 #define MIN_Z 0.0001f
 
 #define ENABLE_PICKBUFFER 1
@@ -311,9 +312,12 @@ void Rendering::updateCameraBuffer(const mat4x4 & matView)
 			{
 				float maxZ = -centerInView.z + fRadiusInView;
 
-				if (maxZ > m_fMaxZ)
+				if (maxZ < MAX_Z)
 				{
-					m_fMaxZ = maxZ;
+					if (maxZ > m_fMaxZ)
+					{
+						m_fMaxZ = maxZ;
+					}
 				}
 
 				float minZ = -centerInView.z - fRadiusInView;
@@ -332,6 +336,11 @@ void Rendering::updateCameraBuffer(const mat4x4 & matView)
 	if (m_fMinZ < MIN_Z)
 	{
 		m_fMinZ = MIN_Z;
+	}
+
+	if (m_fMaxZ > MAX_Z)
+	{
+		m_fMaxZ = MAX_Z;
 	}
 
 	// Compute the new Projection Matrix
