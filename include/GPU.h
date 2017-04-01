@@ -72,6 +72,18 @@ public:
 	}
 
 	template<GLint internalFormat>
+	void init(GLsizei width, GLsizei height, void * buffer, GLenum format, GLenum type)
+	{
+		glBindTexture(T, m_uObject);
+		glTexImage2D(T, 0, internalFormat, width, height, 0, format, type, buffer);
+		glTexParameteri(T, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glTexParameteri(T, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(T, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(T, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		glBindTexture(T, 0);
+	}
+
+	template<GLint internalFormat>
 	void init(GLsizei width, GLsizei height, const Buffer<GL_PIXEL_UNPACK_BUFFER> & buffer, GLenum format, GLenum type)
 	{
 		glBindBuffer(GL_PIXEL_UNPACK_BUFFER, buffer.GetObject());
