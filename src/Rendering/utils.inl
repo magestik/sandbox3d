@@ -23,7 +23,8 @@ inline mat4x4 _lookAt(const vec3 & pos, const vec3 & dir, const vec3 & up)
 
 inline mat4x4 _perspective(float fovy, float aspect, float zNear, float zFar)
 {
-	float f = tanf(M_PI_2 - (fovy / 2.0f)); // cotangent(fovy/2)
+	float fovy_rad = fovy * M_PI / 180.0f;
+	float f = tanf(M_PI_2 - (fovy_rad / 2.0f)); // cotangent(fovy/2)
 
 	mat4x4 mat;
 	mat[0] = vec4(f / aspect, 0.0f, 0.0f, 0.0f);
