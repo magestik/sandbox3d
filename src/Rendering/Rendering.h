@@ -67,6 +67,13 @@ inline void SetUniform(GLuint uShaderObject, const char * name, const vec3 & v)
 	glUniform3fv(location, 1, (float*)&v);
 }
 
+inline void SetUniform(GLuint uShaderObject, const char * name, const vec3 * v, unsigned int count)
+{
+	GLint location = glGetUniformLocation(uShaderObject, name);
+	//assert(-1 != location);
+	glUniform3fv(location, count, (float*)v);
+}
+
 inline void SetUniform(GLuint uShaderObject, const char * name, const vec2 & v)
 {
 	GLint location = glGetUniformLocation(uShaderObject, name);
