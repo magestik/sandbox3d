@@ -2,9 +2,6 @@
 
 #include "Remotery.h"
 
-const float avLum = 0.5f;
-const float white2 = 0.5f;
-
 /**
  * @brief Constructor
  * @param rendering
