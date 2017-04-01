@@ -41,6 +41,18 @@ void RenderTexture::resize(int width, int height)
 		}
 		break;
 
+		case GL_R16F:
+		{
+			m_pTexture->init<GL_R16F>(width, height);
+		}
+		break;
+
+		case GL_RG8:
+		{
+			m_pTexture->init<GL_RG8>(width, height);
+		}
+		break;
+
 		case GL_RG16F:
 		{
 			m_pTexture->init<GL_RGBA16F>(width, height);
