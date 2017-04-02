@@ -343,14 +343,24 @@ void Rendering::updateCameraBuffer(const mat4x4 & matView)
 		m_fMaxZ = MAX_Z;
 	}
 
+	const float fov = 75.0f;
+
 	// Compute the new Projection Matrix
 	float ratio = m_uWidth/(float)m_uHeight;
-	m_matProjection = _perspective(75.0f, ratio, m_fMinZ, m_fMaxZ);
+	m_matProjection = _perspective(fov, ratio, m_fMinZ, m_fMaxZ);
 
 	CameraBlock cam;
-	cam.ViewProjection = m_matProjection * matView;
+	// matrix
 	cam.View = matView;
-
+	cam.Projection = m_matProjection;
+	cam.ViewProjection = m_matProjection * matView;
+	// inverse matrix
+	cam.InverseView = inverse(cam.View);
+	cam.InverseProjection = inverse(cam.Projection);
+	cam.InverseViewProjection = inverse(cam.ViewProjection);
+	// View parameters
+	cam.aspectRatio = ratio;
+	cam.tanHalfFOV = tanf(radians(fov * 0.5f));
 	GPU::memcpy(*m_pCameraBuffer, &cam, sizeof(CameraBlock));
 }
 

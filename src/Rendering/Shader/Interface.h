@@ -13,6 +13,12 @@
 
 #define CAMERA_BLOCK_DEFINITION(name) name \
 { \
-	mat4x4 ViewProjection; \
 	mat4x4 View; \
+	mat4x4 Projection; \
+	mat4x4 ViewProjection; \
+	mat4x4 InverseView; \
+	mat4x4 InverseProjection; \
+	mat4x4 InverseViewProjection; \
+	float aspectRatio; \
+	float tanHalfFOV; \
 }
