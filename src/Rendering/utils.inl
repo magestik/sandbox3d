@@ -28,7 +28,7 @@ inline float cotangent(float angleInRadians)
 
 inline mat4x4 _perspective(float fovy, float aspect, float zNear, float zFar)
 {
-	float f = cotangent((fovy * 0.5f) * M_PI / 180.0f);
+	float f = cotangent(radians(fovy * 0.5f));
 
 	mat4x4 mat;
 	mat[0] = vec4(f / aspect, 0.0f, 0.0f, 0.0f);
