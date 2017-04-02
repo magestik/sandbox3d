@@ -9,6 +9,7 @@
 #include "Algorithms/BrightFilter.h"
 #include "Algorithms/ToneMapping.h"
 #include "Algorithms/FXAA.h"
+#include "Algorithms/SSAO.h"
 #include "Algorithms/BlurH.h"
 #include "Algorithms/BlurV.h"
 #include "Algorithms/Bloom.h"
@@ -65,6 +66,7 @@ void GraphicsAlgorithm::RegisterEverything(void)
 	m_FactoryMap["lighting"]				= Compose::Create;
 	m_FactoryMap["fog"]						= Fog::Create;
 	m_FactoryMap["FXAA"]					= FXAA::Create;
+	m_FactoryMap["SSAO"]					= SSAO::Create;
 	m_FactoryMap["sobel"]					= SobelFilter::Create;
 	m_FactoryMap["tone-mapping"]			= ToneMapping::Create;
 	m_FactoryMap["cel-shading"]				= CelShading::Create;
