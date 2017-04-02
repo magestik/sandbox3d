@@ -14,7 +14,7 @@ const mat3x3 XYZ_to_RGB(2.0413690, -0.5649464, -0.3446944, -0.9692660, 1.8760108
  * @brief Constructor
  * @param rendering
  */
-RenderLightsToAccumBuffer::RenderLightsToAccumBuffer(Rendering & rendering, RHI::Framebuffer & framebuffer) : GraphicsAlgorithm(rendering, framebuffer) , m_pDepthTexture(nullptr), m_pNormalsTexture(nullptr)
+RenderLightsToAccumBuffer::RenderLightsToAccumBuffer(Rendering & rendering, RHI::Framebuffer & framebuffer) : GraphicsAlgorithm(rendering, framebuffer) , m_pDepthTexture(nullptr), m_pNormalsTexture(nullptr), m_pAmbientOcclusionTexture(nullptr)
 {
 	// ...
 }
@@ -68,19 +68,33 @@ bool RenderLightsToAccumBuffer::init(void)
 		blend.srcColorFactor = RHI::BLEND_FACTOR_ONE;
 		blend.dstColorFactor = RHI::BLEND_FACTOR_ONE;
 
-		RHI::PipelineShaderStageCreateInfo vertexShader;
-		vertexShader.stage = RHI::SHADER_STAGE_VERTEX;
-		vertexShader.module = m_rendering.m_mapShaderModules["directionnal_light.vert"];
+		RHI::PipelineShaderStageCreateInfo vertexShaderAmbient;
+		vertexShaderAmbient.stage = RHI::SHADER_STAGE_VERTEX;
+		vertexShaderAmbient.module = m_rendering.m_mapShaderModules["ambient_light.vert"];
 
-		RHI::PipelineShaderStageCreateInfo fragmentShader;
-		fragmentShader.stage = RHI::SHADER_STAGE_FRAGMENT;
-		fragmentShader.module = m_rendering.m_mapShaderModules["directionnal_light.frag"];
+		RHI::PipelineShaderStageCreateInfo fragmentShaderAmbient;
+		fragmentShaderAmbient.stage = RHI::SHADER_STAGE_FRAGMENT;
+		fragmentShaderAmbient.module = m_rendering.m_mapShaderModules["ambient_light.frag"];
 
-		std::vector<RHI::PipelineShaderStageCreateInfo> aStages;
-		aStages.push_back(vertexShader);
-		aStages.push_back(fragmentShader);
+		std::vector<RHI::PipelineShaderStageCreateInfo> aStagesAmbient;
+		aStagesAmbient.push_back(vertexShaderAmbient);
+		aStagesAmbient.push_back(fragmentShaderAmbient);
 
-		m_pipelineDirectionalLight = RHI::Pipeline(input, rasterization, depthStencil, blend, aStages);
+		m_pipelineAmbientLight = RHI::Pipeline(input, rasterization, depthStencil, blend, aStagesAmbient);
+
+		RHI::PipelineShaderStageCreateInfo vertexShaderDirectional;
+		vertexShaderDirectional.stage = RHI::SHADER_STAGE_VERTEX;
+		vertexShaderDirectional.module = m_rendering.m_mapShaderModules["directionnal_light.vert"];
+
+		RHI::PipelineShaderStageCreateInfo fragmentShaderDirectional;
+		fragmentShaderDirectional.stage = RHI::SHADER_STAGE_FRAGMENT;
+		fragmentShaderDirectional.module = m_rendering.m_mapShaderModules["directionnal_light.frag"];
+
+		std::vector<RHI::PipelineShaderStageCreateInfo> aStagesDirectional;
+		aStagesDirectional.push_back(vertexShaderDirectional);
+		aStagesDirectional.push_back(fragmentShaderDirectional);
+
+		m_pipelineDirectionalLight = RHI::Pipeline(input, rasterization, depthStencil, blend, aStagesDirectional);
 	}
 
 	//
@@ -132,6 +146,19 @@ bool RenderLightsToAccumBuffer::render(RHI::CommandBuffer & commandBuffer)
 	commandBuffer.BeginRenderPass(m_renderPass, m_framebuffer, ivec2(0, 0), ivec2(m_rendering.GetWidth(), m_rendering.GetHeight()), vec4(0.0f, 0.0f, 0.0f, 0.0f));
 
 	{
+		commandBuffer.Bind(m_pipelineAmbientLight);
+
+		SetUniform(m_pipelineAmbientLight.m_uShaderObject, "ambientColor", vec3(0.5f, 0.5f, 0.5f));
+
+		if (m_pAmbientOcclusionTexture)
+		{
+			SetTexture(m_pipelineAmbientLight.m_uShaderObject, "aoSampler", 2, *m_pAmbientOcclusionTexture, m_samplerNormal);
+		}
+
+		m_rendering.m_pQuadMesh->draw(commandBuffer);
+	}
+
+	{
 		commandBuffer.Bind(m_pipelineDirectionalLight);
 
 		mat4x4 mCameraViewProjection = m_rendering.m_matProjection * m_rendering.m_matCurrentView;
@@ -152,9 +179,9 @@ bool RenderLightsToAccumBuffer::render(RHI::CommandBuffer & commandBuffer)
 		}
 
 		m_rendering.m_pQuadMesh->draw(commandBuffer);
-
-		// TODO : render all lights
 	}
+
+	// TODO : render all lights
 
 	commandBuffer.EndRenderPass();
 
@@ -175,6 +202,10 @@ void RenderLightsToAccumBuffer::setParameter(const char * name, const char * val
 	else if (!strcmp("geometry_normals", name))
 	{
 		m_pNormalsTexture = m_rendering.m_mapTargets[value].getTexture();
+	}
+	else if (!strcmp("geometry_ao", name))
+	{
+		m_pAmbientOcclusionTexture = m_rendering.m_mapTargets[value].getTexture();
 	}
 	else
 	{

@@ -25,10 +25,14 @@ public:
 
 private:
 
+	RHI::Pipeline m_pipelineAmbientLight;
 	RHI::Pipeline m_pipelineDirectionalLight;
 	RHI::Sampler m_samplerDepth;
 	RHI::Sampler m_samplerNormal;
 
 	const GPU::Texture<GL_TEXTURE_2D> * m_pDepthTexture;
 	const GPU::Texture<GL_TEXTURE_2D> * m_pNormalsTexture;
+
+	const GPU::Texture<GL_TEXTURE_2D> * m_pAmbientOcclusionTexture;
+
 };
