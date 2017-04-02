@@ -16,7 +16,7 @@ Implemented :
 - Bloom,
 - FXAA (just plugged Timothy Lottes implementation),
 - Cel Shading,
-- Pick Buffer.
+- SSAO.
 
 ### Build
 
