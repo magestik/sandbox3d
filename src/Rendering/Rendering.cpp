@@ -128,15 +128,6 @@ void Rendering::initQueue(const char * szFilename)
 
 	renderXML.initializeTargets(*this);
 
-	//
-	// Create Pick Buffer Texture
-	{
-		RenderTexture RTc(GL_R32UI, 1);
-		m_mapTargets.insert(std::pair<std::string, RenderTexture>("pickbuffer-color", RTc));
-		RenderTexture RTd(GL_DEPTH_COMPONENT32F, 1);
-		m_mapTargets.insert(std::pair<std::string, RenderTexture>("pickbuffer-depth", RTd));
-	}
-
 	onResize(m_uWidth, m_uHeight);
 
 	initPickBuffer();
@@ -491,16 +482,6 @@ Object * Rendering::getObjectAtPos(const ivec2 & pos)
  */
 void Rendering::initPickBuffer(void)
 {
-	//
-	// Create Framebuffer
-	std::vector<const GPU::Texture<GL_TEXTURE_2D> *> aTextures;
-	const GPU::Texture<GL_TEXTURE_2D> * pDepthTexture = GetRenderTexture("pickbuffer-depth");
-	const GPU::Texture<GL_TEXTURE_2D> * pRenderTexture = GetRenderTexture("pickbuffer-color");
-	aTextures.push_back(pDepthTexture);
-	aTextures.push_back(pRenderTexture);
-
-	m_pickBufferFramebuffer = RHI::Framebuffer(aTextures);
-
 	//
 	// Create Render Pass
 	RHI::RenderPass::SubpassDescription desc;

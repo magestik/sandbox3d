@@ -171,6 +171,11 @@ public:
 		m_defaultFramebuffer = RHI::Framebuffer(framebuffer);
 	}
 
+	void SetPickBufferFramebuffer(GLuint framebuffer)
+	{
+		m_pickBufferFramebuffer = RHI::Framebuffer(framebuffer);
+	}
+
 protected:
 
 	void	initShaders					(void);
