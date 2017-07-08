@@ -451,33 +451,6 @@ void Rendering::onObjectRemoved(const Scene & scene, const Object & instance)
 }
 
 /**
- * @brief Rendering::getObjectAtPos
- * @param pos
- * @return
- */
-Object * Rendering::getObjectAtPos(const ivec2 & pos)
-{
-	Object * object = nullptr;
-
-	glBindFramebuffer(GL_READ_FRAMEBUFFER, m_pickBufferFramebuffer.m_uFramebufferObject);
-	glReadBuffer(GL_COLOR_ATTACHMENT0);
-
-	unsigned int id = UINT32_MAX;
-
-	glReadPixels(pos.x, m_uHeight - pos.y, 1, 1, GL_RED_INTEGER, GL_UNSIGNED_INT, &id);
-
-	if (id < m_scene.getObjectCount())
-	{
-		object = (Object*)&(m_scene.getObjects()[id]); // ugly
-	}
-
-	glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
-	glReadBuffer(GL_BACK);
-
-	return(object);
-}
-
-/**
  * @brief Rendering::initPickBuffer
  */
 void Rendering::initPickBuffer(void)

@@ -139,8 +139,6 @@ public:
 	virtual void	onObjectInserted	(const Scene & scene, const Object & object) override;
 	virtual void	onObjectRemoved		(const Scene & scene, const Object & object) override;
 
-	Object * getObjectAtPos	(const ivec2 & pos);
-
 	void initQueue					(const char * szFilename);
 	void releaseQueue				(void);
 
