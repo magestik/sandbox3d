@@ -28,7 +28,7 @@
 #include "Shader/Interface.h"
 
 // theses maps contains all shaders, compiled at launch time
-extern std::map<std::string, GPU::Texture<GL_TEXTURE_2D> *> g_Textures;
+extern std::map<std::string, GLuint> g_Textures;
 
 extern std::map<std::string, Mesh>			g_Meshes;
 
@@ -118,6 +118,15 @@ inline void SetTexture(GLuint uShaderObject, const char * name, int unit, const 
 	SetUniform(uShaderObject, name, unit);
 	glActiveTexture(GL_TEXTURE0 + unit);
 	glBindTexture(D, texture.GetObject());
+	glBindSampler(unit, sampler.m_uSamplerObject);
+}
+
+template<GLenum D>
+inline void SetTexture(GLuint uShaderObject, const char * name, int unit, GLuint textureId, RHI::Sampler & sampler)
+{
+	SetUniform(uShaderObject, name, unit);
+	glActiveTexture(GL_TEXTURE0 + unit);
+	glBindTexture(D, textureId);
 	glBindSampler(unit, sampler.m_uSamplerObject);
 }
 

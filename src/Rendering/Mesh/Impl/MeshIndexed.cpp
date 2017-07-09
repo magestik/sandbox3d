@@ -34,3 +34,11 @@ void MeshIndexed::draw(RHI::CommandBuffer & commandBuffer) const
 	commandBuffer.m_pCurrentPipeline->m_inputAssemblyState.topology = RHI::PrimitiveType(m_eMode); // TODO : remove this (ugly !!!)
 	commandBuffer.DrawIndexed(m_iCount, m_iBaseVertex, m_iOffset);
 }
+
+/**
+ * @brief Mesh::drawGL
+ */
+void MeshIndexed::drawGL(void) const
+{
+	// TODO
+}

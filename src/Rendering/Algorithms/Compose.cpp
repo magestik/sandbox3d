@@ -199,8 +199,8 @@ bool Compose::render(RHI::CommandBuffer & commandBuffer)
 
 			for (SubMesh * m : object.getDrawCommands())
 			{
-				SetTexture(m_pipeline.m_uShaderObject, "diffuseSampler", 3, *(m->m_material.m_diffuse), m_samplerDiffuseSampler);
-				SetTexture(m_pipeline.m_uShaderObject, "specularSampler", 4, *(m->m_material.m_specular), m_samplerSpecularSampler);
+				SetTexture<GL_TEXTURE_2D>(m_pipeline.m_uShaderObject, "diffuseSampler", 3, m->m_material.m_diffuse, m_samplerDiffuseSampler);
+				SetTexture<GL_TEXTURE_2D>(m_pipeline.m_uShaderObject, "specularSampler", 4, m->m_material.m_specular, m_samplerSpecularSampler);
 
 				m->draw(commandBuffer);
 			}

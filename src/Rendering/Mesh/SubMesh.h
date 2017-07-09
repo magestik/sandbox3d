@@ -24,8 +24,8 @@ public:
 
 	struct Material
 	{
-		GPU::Texture<GL_TEXTURE_2D> * m_diffuse;
-		GPU::Texture<GL_TEXTURE_2D> * m_specular;
+		GLuint m_diffuse;
+		GLuint m_specular;
 		float shininess;
 	};
 
@@ -33,8 +33,9 @@ public:
 	virtual ~SubMesh(void);
 
 	virtual void draw(RHI::CommandBuffer & commandBuffer) const = 0;
+	virtual void drawGL(void) const = 0;
 
-	const GPU::Texture<GL_TEXTURE_2D> * getNormalMap(void) { return(m_pNormalMap); }
+	const GLuint getNormalMap(void) const { return(m_NormalMapId); }
 
 protected:
 
@@ -45,5 +46,5 @@ public:
 
 	Material m_material;
 
-	const GPU::Texture<GL_TEXTURE_2D> * m_pNormalMap;
+	GLuint m_NormalMapId;
 };

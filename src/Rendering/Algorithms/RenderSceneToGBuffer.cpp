@@ -147,9 +147,9 @@ bool RenderSceneToGBuffer::render(RHI::CommandBuffer & commandBuffer)
 
 				for (SubMesh * m : object.getDrawCommands())
 				{
-					const GPU::Texture<GL_TEXTURE_2D> * pNormalMap = m->getNormalMap();
+					const GLuint NormalMapId = m->getNormalMap();
 
-					if (nullptr == pNormalMap)
+					if (0 == NormalMapId)
 					{
 						SetUniform(m_pipelineSimple.m_uShaderObject, "shininess", m->m_material.shininess);
 
@@ -178,11 +178,11 @@ bool RenderSceneToGBuffer::render(RHI::CommandBuffer & commandBuffer)
 
 				for (SubMesh * m : object.getDrawCommands())
 				{
-					const GPU::Texture<GL_TEXTURE_2D> * pNormalMap = m->getNormalMap();
+					const GLuint NormalMapId = m->getNormalMap();
 
-					if (nullptr != pNormalMap)
+					if (0 != NormalMapId)
 					{
-						SetTexture(m_pipelineNormalMap.m_uShaderObject, "normalMap", 0, *pNormalMap, m_sampler);
+						SetTexture<GL_TEXTURE_2D>(m_pipelineNormalMap.m_uShaderObject, "normalMap", 0, NormalMapId, m_sampler);
 
 						SetUniform(m_pipelineNormalMap.m_uShaderObject, "shininess", m->m_material.shininess);
 

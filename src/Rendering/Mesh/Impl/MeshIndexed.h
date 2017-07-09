@@ -10,6 +10,7 @@ public:
 	virtual ~MeshIndexed(void);
 
 	virtual void draw(RHI::CommandBuffer & commandBuffer) const;
+	virtual void drawGL(void) const;
 
 private:
 

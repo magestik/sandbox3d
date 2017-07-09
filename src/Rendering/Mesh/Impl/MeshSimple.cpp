@@ -27,3 +27,11 @@ void MeshSimple::draw(RHI::CommandBuffer & commandBuffer) const
 	commandBuffer.m_pCurrentPipeline->m_inputAssemblyState.topology = RHI::PrimitiveType(m_eMode); // TODO : remove this (ugly !!!)
 	commandBuffer.Draw(m_iCount, 0);
 }
+
+/**
+ * @brief MeshSimple::drawGL
+ */
+void MeshSimple::drawGL(void) const
+{
+	// TODO
+}

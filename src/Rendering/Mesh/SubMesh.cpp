@@ -11,10 +11,10 @@
 SubMesh::SubMesh(GLsizei iCount, GLenum eMode)
 : m_iCount(iCount)
 , m_eMode(eMode)
-, m_pNormalMap(nullptr)
+, m_NormalMapId(0)
 {
-	m_material.m_diffuse = nullptr;
-	m_material.m_specular = nullptr;
+	m_material.m_diffuse = 0;
+	m_material.m_specular = 0;
 	m_material.shininess = 0.0f;
 }
 
