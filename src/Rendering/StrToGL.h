@@ -1,22 +1,20 @@
 #pragma once
 
-#include <GPU.h>
+unsigned int /*GLenum*/ strToShaderType		(const char * strShaderType);
+unsigned int /*GLenum*/ strToCapability		(const char * strCapability);
+unsigned int /*GLenum*/ strToFormat			(const char * strFormat);
 
-GLenum strToShaderType		(const char * strShaderType);
-GLenum strToCapability		(const char * strCapability);
-GLenum strToFormat			(const char * strFormat);
+unsigned int /*GLenum*/ strToDepthFunc		(const char * strDepthFunc);
+unsigned int /*GLenum*/ strToDepthMask		(const char * strDepthMask);
 
-GLenum strToDepthFunc		(const char * strDepthFunc);
-GLenum strToDepthMask		(const char * strDepthMask);
+unsigned int /*GLenum*/ strToStencilFunc	(const char * strStencilFunc);
+unsigned int /*GLuint*/ strToStencilMask	(const char * strStencilMask);
 
-GLenum strToStencilFunc		(const char * strStencilFunc);
-GLuint strToStencilMask		(const char * strStencilMask);
+unsigned int /*GLenum*/ strToBlendEquation	(const char * strBlendEquation);
+unsigned int /*GLenum*/ strToBlendFunc		(const char * strBlendFunc);
 
-GLenum strToBlendEquation	(const char * strBlendEquation);
-GLenum strToBlendFunc		(const char * strBlendFunc);
-
-GLenum strToMinFilter		(const char * strFilter);
-GLenum strToMagFilter		(const char * strFilter);
-GLenum strToWrapMode		(const char * strWrapMode);
-GLenum strToCompareMode     (const char * strCompareMode);
-GLenum strToCompareFunc     (const char * strCompareFunc);
+unsigned int /*GLenum*/ strToMinFilter		(const char * strFilter);
+unsigned int /*GLenum*/ strToMagFilter		(const char * strFilter);
+unsigned int /*GLenum*/ strToWrapMode		(const char * strWrapMode);
+unsigned int /*GLenum*/ strToCompareMode	(const char * strCompareMode);
+unsigned int /*GLenum*/ strToCompareFunc	(const char * strCompareFunc);

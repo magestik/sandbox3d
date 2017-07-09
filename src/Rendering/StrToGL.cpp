@@ -1,5 +1,7 @@
 #include "StrToGL.h"
 
+#include <GPU.h>
+
 #include <assert.h>
 
 #include <stdlib.h>
