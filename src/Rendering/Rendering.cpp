@@ -130,8 +130,6 @@ void Rendering::initQueue(const char * szFilename)
 
 	onResize(m_uWidth, m_uHeight);
 
-	initPickBuffer();
-
 	renderXML.initializeFramebuffers(*this);
 
 	renderXML.initializeQueue(*this);
@@ -426,10 +424,6 @@ void Rendering::onUpdate(const mat4x4 & mView, const vec4 & clearColor)
 	}
 
 	rmt_EndCPUSample();
-
-#if ENABLE_PICKBUFFER
-	renderPickBuffer();
-#endif // ENABLE_PICKBUFFER
 }
 
 /**
@@ -448,87 +442,4 @@ void Rendering::onObjectInserted(const Scene & scene, const Object & object)
 void Rendering::onObjectRemoved(const Scene & scene, const Object & instance)
 {
 	updateObjectsBuffer();
-}
-
-/**
- * @brief Rendering::initPickBuffer
- */
-void Rendering::initPickBuffer(void)
-{
-	//
-	// Create Render Pass
-	RHI::RenderPass::SubpassDescription desc;
-	desc.depthAttachment = 0; // disable depth buffer
-	desc.aColorAttachments.push_back(0);
-
-	m_pickBufferRenderPass = RHI::RenderPass(desc);
-
-	//
-	// Create Pipeline
-	RHI::PipelineInputAssemblyStateCreateInfo input;
-	RHI::PipelineRasterizationStateCreateInfo rasterization;
-
-	RHI::PipelineDepthStencilStateCreateInfo depthStencil;
-	depthStencil.enableDepth = true;
-	depthStencil.depthState.enableWrite = true;
-	depthStencil.depthState.compareOp = RHI::COMPARE_OP_LESS;
-
-	RHI::PipelineBlendStateCreateInfo blend;
-
-	RHI::PipelineShaderStageCreateInfo vertexShader;
-	vertexShader.stage = RHI::SHADER_STAGE_VERTEX;
-	vertexShader.module = m_mapShaderModules["pickbuffer.vert"];
-
-	RHI::PipelineShaderStageCreateInfo fragmentShader;
-	fragmentShader.stage = RHI::SHADER_STAGE_FRAGMENT;
-	fragmentShader.module = m_mapShaderModules["pickbuffer.frag"];
-
-	std::vector<RHI::PipelineShaderStageCreateInfo> aStages;
-	aStages.push_back(vertexShader);
-	aStages.push_back(fragmentShader);
-
-	m_pickBufferPipeline = RHI::Pipeline(input, rasterization, depthStencil, blend, aStages);
-
-	//
-	// TODO : remove this
-	SetUniformBlockBinding(m_pickBufferPipeline.m_uShaderObject, "CameraBlock", Rendering::BLOCK_BINDING_CAMERA);
-	SetUniformBlockBinding(m_pickBufferPipeline.m_uShaderObject, "ObjectBlock", Rendering::BLOCK_BINDING_OBJECT);
-}
-
-/**
- * @brief Rendering::renderPickBuffer
- */
-void Rendering::renderPickBuffer(void)
-{
-	RHI::CommandBuffer commandBuffer;
-
-	commandBuffer.Begin();
-
-	commandBuffer.BeginRenderPass(m_pickBufferRenderPass, m_pickBufferFramebuffer, ivec2(0, 0), ivec2(m_uWidth, m_uHeight), vec4(1.0f, 1.0f, 1.0f, 1.0f), 1.0f, 0);
-	{
-		commandBuffer.Bind(m_pickBufferPipeline);
-
-		unsigned int i = 0;
-
-		for (const Object & object : m_scene.getObjects())
-		{
-			object.mesh->bind();
-
-			SetUniform(m_pickBufferPipeline.m_uShaderObject, "Model", object.transformation);
-
-			glVertexAttribI1ui(5, i);
-
-			for (SubMesh * m : object.getDrawCommands())
-			{
-				m->draw(commandBuffer);
-			}
-
-			object.mesh->unbind();
-
-			++i;
-		}
-	}
-	commandBuffer.EndRenderPass();
-
-	commandBuffer.End();
 }

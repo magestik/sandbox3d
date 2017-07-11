@@ -171,16 +171,7 @@ void RenderXML::initializeQueue(Rendering & rendering)
 
 		const char * fb = elmt->Attribute("framebuffer");
 
-		GraphicsAlgorithm * a = nullptr;
-
-		if (!strcmp(fb, "default"))
-		{
-			a = GraphicsAlgorithm::Create(type, rendering, rendering.m_defaultFramebuffer);
-		}
-		else
-		{
-			a = GraphicsAlgorithm::Create(type, rendering, rendering.m_mapFramebuffer[fb]);
-		}
+		GraphicsAlgorithm * a = GraphicsAlgorithm::Create(type, rendering, rendering.m_mapFramebuffer[fb]);
 
 		rendering.m_renderQueue.push_back(a);
 

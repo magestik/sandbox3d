@@ -173,16 +173,6 @@ public:
 		return(nullptr);
 	}
 
-	void SetDefaultFramebuffer(GLuint framebuffer)
-	{
-		m_defaultFramebuffer = RHI::Framebuffer(framebuffer);
-	}
-
-	void SetPickBufferFramebuffer(GLuint framebuffer)
-	{
-		m_pickBufferFramebuffer = RHI::Framebuffer(framebuffer);
-	}
-
 protected:
 
 	void	initShaders					(void);
@@ -191,9 +181,6 @@ protected:
 
 	void    updateCameraBuffer          (const mat4x4 & matView);
 	void    updateObjectsBuffer         (void);
-
-	void	initPickBuffer				(void);
-	void	renderPickBuffer			(void);
 
 	void	computeToneMappingParams	(float & avLum, float & white2);
 
@@ -229,7 +216,6 @@ public:
 
 	std::map<std::string, RHI::ShaderModule> m_mapShaderModules;
 	std::map<std::string, RHI::Framebuffer>	m_mapFramebuffer;
-	RHI::Framebuffer m_defaultFramebuffer;
 
 	std::vector<GraphicsAlgorithm*> m_renderQueue;
 
@@ -238,8 +224,6 @@ public:
 
 	//
 	// Pick-Buffer
-	RHI::Framebuffer m_pickBufferFramebuffer;
-
 	RHI::Pipeline m_pickBufferPipeline;
 	RHI::RenderPass m_pickBufferRenderPass;
 
