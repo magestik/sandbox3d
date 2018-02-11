@@ -3,7 +3,8 @@ cmake_minimum_required(VERSION 2.8.12)
 INCLUDE(CheckIncludeFiles)
 
 file(GLOB_RECURSE SHADERS_FILES *.frag *.vert *.geom)
-file(GLOB_RECURSE SRC_FILES *.cpp *.h *.inl ../include/*.h ../include/*.inl)
+file(GLOB_RECURSE RENDERING_SOURCE_FILES Rendering/*.cpp Rendering/*.h Rendering/*.inl)
+file(GLOB_RECURSE RHI_SOURCE_FILES RHI/*.cpp RHI/*.h RHI/*.inl)
 
 if (USE_VULKAN)
 
@@ -30,17 +31,21 @@ endif (USE_VULKAN)
 find_package(TinyXML2 REQUIRED)
 
 # Compile application
-add_library(${PROJECT_NAME} ${SRC_FILES} ${UI_FILES} ${SHADERS_FILES})
+add_library(Sandbox3D STATIC ${RENDERING_SOURCE_FILES} ${RHI_SOURCE_FILES} ${UI_FILES} ${SHADERS_FILES})
+target_include_directories(Sandbox3D PUBLIC . ../include/)
 
-target_include_directories(${PROJECT_NAME} PUBLIC . ../include/)
+add_library(Sandbox3D_EditorInterface SHARED EditorInterface.cpp)
+target_link_libraries(Sandbox3D_EditorInterface PRIVATE Sandbox3D)
+set_target_properties(Sandbox3D_EditorInterface PROPERTIES C_VISIBILITY_PRESET hidden)
+set_target_properties(Sandbox3D_EditorInterface PROPERTIES CXX_VISIBILITY_PRESET hidden)
 
 IF(CMAKE_BUILD_TYPE MATCHES Debug)
-	target_link_libraries(${PROJECT_NAME} PUBLIC glBreak)
+        target_link_libraries(Sandbox3D PUBLIC glBreak)
 ENDIF()
 
-target_link_libraries(${PROJECT_NAME} PUBLIC "rt" "dl")
+target_link_libraries(Sandbox3D PUBLIC "rt" "dl")
 
-target_link_libraries(${PROJECT_NAME} PUBLIC scene linear-algebra ${OPENGL_LIBRARIES} ${TINYXML2_LIBRARY} Remotery)
+target_link_libraries(Sandbox3D PUBLIC scene linear-algebra ${OPENGL_LIBRARIES} ${TINYXML2_LIBRARY} Remotery)
 
 add_custom_target(deploy_shaders ALL COMMAND "${PROJECT_SOURCE_DIR}/scripts/deploy_shaders.sh" WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
 
