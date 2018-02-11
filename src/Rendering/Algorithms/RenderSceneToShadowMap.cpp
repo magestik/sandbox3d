@@ -122,7 +122,7 @@ bool RenderSceneToShadowMap::render(RHI::CommandBuffer & commandBuffer)
 			object.mesh->bind();
 
 			// TODO : remove loop and directly use glDrawElements on the full buffer
-			for (SubMesh * m : object.getDrawCommands())
+			for (SubMesh * m : object.mesh->m_aSubMeshes)
 			{
 				m->draw(commandBuffer);
 			}

@@ -145,7 +145,7 @@ bool RenderSceneToGBuffer::render(RHI::CommandBuffer & commandBuffer)
 
 				object.mesh->bind();
 
-				for (SubMesh * m : object.getDrawCommands())
+				for (SubMesh * m : object.mesh->m_aSubMeshes)
 				{
 					const GLuint NormalMapId = m->getNormalMap();
 
@@ -176,7 +176,7 @@ bool RenderSceneToGBuffer::render(RHI::CommandBuffer & commandBuffer)
 
 				object.mesh->bind();
 
-				for (SubMesh * m : object.getDrawCommands())
+				for (SubMesh * m : object.mesh->m_aSubMeshes)
 				{
 					const GLuint NormalMapId = m->getNormalMap();
 
