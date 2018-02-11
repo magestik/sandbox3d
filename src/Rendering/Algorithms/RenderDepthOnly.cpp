@@ -113,7 +113,7 @@ bool RenderDepthOnly::render(RHI::CommandBuffer & commandBuffer)
 
 		unsigned int offset = 0;
 
-		for (const Object & object : m_rendering.m_scene.getObjects())
+		for (const Object & object : m_rendering.GetScene().getObjects())
 		{
 			glBindBufferRange(GL_UNIFORM_BUFFER, Rendering::BLOCK_BINDING_OBJECT, m_rendering.m_pObjectsBuffer->GetObject(), sizeof(Rendering::ObjectBlock)*offset, sizeof(Rendering::ObjectBlock));
 

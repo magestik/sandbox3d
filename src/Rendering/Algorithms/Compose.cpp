@@ -166,7 +166,7 @@ bool Compose::render(RHI::CommandBuffer & commandBuffer)
 	{
 		commandBuffer.Bind(m_pipeline);
 
-		mat4x4 mDepthView = _lookAt(vec3(0,0,0), m_rendering.m_scene.m_pLight->GetDirection(), vec3(0.0f, -1.0f, 0.0f));
+		mat4x4 mDepthView = _lookAt(vec3(0,0,0), m_rendering.GetScene().m_pLight->GetDirection(), vec3(0.0f, -1.0f, 0.0f));
 		mat4x4 mDepthViewProjection = m_rendering.m_matShadowMapProjection * mDepthView;
 
 		if (m_pDiffuseLightsTexture)
@@ -191,7 +191,7 @@ bool Compose::render(RHI::CommandBuffer & commandBuffer)
 
 		unsigned int offset = 0;
 
-		for (const Object & object : m_rendering.m_scene.getObjects())
+		for (const Object & object : m_rendering.GetScene().getObjects())
 		{
 			glBindBufferRange(GL_UNIFORM_BUFFER, Rendering::BLOCK_BINDING_OBJECT, m_rendering.m_pObjectsBuffer->GetObject(), sizeof(Rendering::ObjectBlock)*offset, sizeof(Rendering::ObjectBlock));
 

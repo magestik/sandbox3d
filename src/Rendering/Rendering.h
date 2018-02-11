@@ -174,6 +174,16 @@ public:
 		return(nullptr);
 	}
 
+	const Scene & GetScene(void) const
+	{
+		return(m_scene);
+	}
+
+	Scene & GetScene(void)
+	{
+		return(m_scene);
+	}
+
 protected:
 
 	void	initShaders					(void);
@@ -200,7 +210,11 @@ public:
 	mat4x4 m_matProjection;
 	mat4x4 m_matShadowMapProjection;
 
+private:
+
 	Scene & m_scene;
+
+public:
 
 	Mesh *	m_pQuadMesh;
 
