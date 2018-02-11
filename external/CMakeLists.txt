@@ -1,5 +1,8 @@
 add_subdirectory(glBreak)
-add_subdirectory(linear-algebra)
+
+if (NOT TARGET linear-algebra)
+    add_subdirectory(linear-algebra)
+endif ()
 
 find_package(Threads)
 add_library(Remotery STATIC Remotery/lib/Remotery.c)

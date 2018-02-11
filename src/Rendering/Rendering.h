@@ -17,8 +17,9 @@
 #include "Light/Light.h"
 #include "Mesh/Mesh.h"
 #include "Mesh/SubMesh.h"
-#include "Scene/Scene.h"
-#include "Scene/SceneListener.h"
+
+#include "Scene.h"
+#include "SceneListener.h"
 
 #include "RenderTexture.h"
 #include "GraphicsAlgorithm.h"

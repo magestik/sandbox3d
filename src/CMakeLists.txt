@@ -40,7 +40,7 @@ ENDIF()
 
 target_link_libraries(${PROJECT_NAME} PUBLIC "rt" "dl")
 
-target_link_libraries(${PROJECT_NAME} PUBLIC linear-algebra ${OPENGL_LIBRARIES} ${TINYXML2_LIBRARY} Remotery)
+target_link_libraries(${PROJECT_NAME} PUBLIC scene linear-algebra ${OPENGL_LIBRARIES} ${TINYXML2_LIBRARY} Remotery)
 
 add_custom_target(deploy_shaders ALL COMMAND "${PROJECT_SOURCE_DIR}/scripts/deploy_shaders.sh" WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
 
