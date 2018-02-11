@@ -64,7 +64,7 @@ static inline unsigned int toPOT(unsigned int v)
 /**
  * @brief Rendering::onInitialize
  */
-Rendering::Rendering(void)
+Rendering::Rendering(Scene & scene)
 : m_uWidth(1280)
 , m_uHeight(720)
 , m_fMinZ(1.0f)
@@ -75,6 +75,7 @@ Rendering::Rendering(void)
 , m_mapTargets()
 , m_bReady(false)
 , m_bInitialized(false)
+, m_scene(scene)
 {
 	GraphicsAlgorithm::RegisterEverything();
 	m_scene.registerListener(this);

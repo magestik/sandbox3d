@@ -138,7 +138,7 @@ class Rendering : public SceneListener
 
 public:
 
-	explicit Rendering		(void);
+	explicit Rendering				(Scene & scene);
 
 	void	onReady					(void);
 
@@ -200,7 +200,7 @@ public:
 	mat4x4 m_matProjection;
 	mat4x4 m_matShadowMapProjection;
 
-	Scene m_scene;
+	Scene & m_scene;
 
 	Mesh *	m_pQuadMesh;
 
