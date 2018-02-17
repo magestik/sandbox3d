@@ -39,10 +39,6 @@ target_link_libraries(Sandbox3D_EditorInterface PRIVATE Sandbox3D)
 set_target_properties(Sandbox3D_EditorInterface PROPERTIES C_VISIBILITY_PRESET hidden)
 set_target_properties(Sandbox3D_EditorInterface PROPERTIES CXX_VISIBILITY_PRESET hidden)
 
-IF(CMAKE_BUILD_TYPE MATCHES Debug)
-        target_link_libraries(Sandbox3D PUBLIC glBreak)
-ENDIF()
-
 target_link_libraries(Sandbox3D PUBLIC "rt" "dl")
 
 target_link_libraries(Sandbox3D PUBLIC scene linear-algebra ${OPENGL_LIBRARIES} ${TINYXML2_LIBRARY} Remotery)

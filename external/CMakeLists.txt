@@ -1,5 +1,3 @@
-add_subdirectory(glBreak)
-
 if (NOT TARGET linear-algebra)
     add_subdirectory(linear-algebra)
 endif ()
