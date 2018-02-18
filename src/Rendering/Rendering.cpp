@@ -511,9 +511,28 @@ void Rendering::onMeshImported(const ResourceManager & scene, unsigned int MeshI
 	unsigned int base_vertex = 0;
 
 	vec3 * Vertices = (vec3*)vertexData.vertices[VertexData::VERTEX_TYPE_POSITION];
+	if (Vertices)
+	{
+		assert(vertexData.vertexFormat[VertexData::VERTEX_TYPE_POSITION] == VERTEX_FORMAT_FLOAT3);
+	}
+
 	vec3 * Normals = (vec3*)vertexData.vertices[VertexData::VERTEX_TYPE_NORMAL];
+	if (Normals)
+	{
+		assert(vertexData.vertexFormat[VertexData::VERTEX_TYPE_NORMAL] == VERTEX_FORMAT_FLOAT3);
+	}
+
 	vec3 * Tangents = (vec3*)vertexData.vertices[VertexData::VERTEX_TYPE_TANGENT];
-	vec2 * TextureCoords = (vec2*)vertexData.vertices[VertexData::VERTEX_TYPE_TEX_COORD0];
+	if (Tangents)
+	{
+		assert(vertexData.vertexFormat[VertexData::VERTEX_TYPE_TANGENT] == VERTEX_FORMAT_FLOAT3);
+	}
+
+	vec3 * TextureCoords = (vec3*)vertexData.vertices[VertexData::VERTEX_TYPE_TEX_COORD0];
+	if (TextureCoords)
+	{
+		assert(vertexData.vertexFormat[VertexData::VERTEX_TYPE_TEX_COORD0] == VERTEX_FORMAT_FLOAT3);
+	}
 
 	//for (int i = 0; i < scene->mNumMeshes; ++i)
 	{
