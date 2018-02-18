@@ -135,7 +135,7 @@ public:
 
 	explicit Rendering				(Scene & scene);
 
-	void	onReady					(void);
+	void	onReady					(const char * szBaseDir);
 
 	void	onResize				(int width, int height);
 
@@ -188,7 +188,7 @@ public:
 
 protected:
 
-	void	initShaders					(void);
+	void	initShaders					(const char * szShadersDir);
 
 	void	generateMeshes				(void);
 

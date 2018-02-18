@@ -84,12 +84,11 @@ Rendering::Rendering(Scene & scene)
 /**
  * @brief Rendering::onReady
  */
-void Rendering::onReady(void)
+void Rendering::onReady(const char * szBaseDir)
 {
 	assert(!m_bReady);
 
-	initShaders();
-
+	initShaders(szBaseDir);
 
 	//
 	// Generate Meshes
@@ -168,9 +167,9 @@ void Rendering::releaseQueue(void)
 /**
  * @brief Rendering::initShaders
  */
-void Rendering::initShaders(void)
+void Rendering::initShaders(const char * szShadersDir)
 {
-	DIR * dir = opendir("data/shaders");
+	DIR * dir = opendir(szShadersDir);
 
 	if (dir != nullptr)
 	{
@@ -196,7 +195,7 @@ void Rendering::initShaders(void)
 
 			if (0 != stage)
 			{
-				std::string strFilePath = std::string("data/shaders/") + ep->d_name;
+			        std::string strFilePath = std::string(szShadersDir) + "/" + ep->d_name;
 				int fd = open(strFilePath.c_str(), O_RDONLY);
 
 				struct stat buf;

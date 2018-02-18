@@ -33,12 +33,14 @@ namespace RenderGraph
 }
 
 static Rendering  * g_pRendering = nullptr;
+static std::string g_strBaseDir;
 
 extern "C"
 {
 
-DLL_PUBLIC bool renderer_onLoad(void)
+DLL_PUBLIC bool renderer_onLoad(const char * baseDirectory)
 {
+	g_strBaseDir = baseDirectory;
 	return(true);
 }
 
@@ -57,7 +59,7 @@ DLL_PUBLIC bool renderer_onRelease(void)
 
 DLL_PUBLIC void renderer_onReady(void)
 {
-	g_pRendering->onReady();
+	g_pRendering->onReady(g_strBaseDir.data());
 }
 
 DLL_PUBLIC void renderer_onResize(unsigned int width, unsigned int height)
