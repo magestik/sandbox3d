@@ -117,14 +117,19 @@ bool RenderDepthOnly::render(RHI::CommandBuffer & commandBuffer)
 		{
 			glBindBufferRange(GL_UNIFORM_BUFFER, Rendering::BLOCK_BINDING_OBJECT, m_rendering.m_pObjectsBuffer->GetObject(), sizeof(Rendering::ObjectBlock)*offset, sizeof(Rendering::ObjectBlock));
 
-			object.mesh->bind();
-
-			for (SubMesh * m : object.mesh->m_aSubMeshes)
+			for (const Object::Mesh & mesh : object.Meshes)
 			{
-				m->draw(commandBuffer);
-			}
+				Mesh * pRenderingMesh = m_rendering.GetMesh(mesh.MeshID);
 
-			object.mesh->unbind();
+				pRenderingMesh->bind();
+
+				for (SubMesh * m : pRenderingMesh->m_aSubMeshes)
+				{
+					m->draw(commandBuffer);
+				}
+
+				pRenderingMesh->unbind();
+			}
 
 			++offset;
 		}

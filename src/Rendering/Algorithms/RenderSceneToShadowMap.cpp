@@ -119,15 +119,20 @@ bool RenderSceneToShadowMap::render(RHI::CommandBuffer & commandBuffer)
 		{
 			SetUniform(m_pipeline.m_uShaderObject, "Model", object.transformation);
 
-			object.mesh->bind();
-
-			// TODO : remove loop and directly use glDrawElements on the full buffer
-			for (SubMesh * m : object.mesh->m_aSubMeshes)
+			for (const Object::Mesh & mesh : object.Meshes)
 			{
-				m->draw(commandBuffer);
-			}
+				Mesh * pRenderingMesh = m_rendering.GetMesh(mesh.MeshID);
 
-			object.mesh->unbind();
+				pRenderingMesh->bind();
+
+				// TODO : remove loop and directly use glDrawElements on the full buffer
+				for (SubMesh * m : pRenderingMesh->m_aSubMeshes)
+				{
+					m->draw(commandBuffer);
+				}
+
+				pRenderingMesh->unbind();
+			}
 		}
 	}
 	commandBuffer.EndRenderPass();

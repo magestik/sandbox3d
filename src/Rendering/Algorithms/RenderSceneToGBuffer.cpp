@@ -143,21 +143,24 @@ bool RenderSceneToGBuffer::render(RHI::CommandBuffer & commandBuffer)
 			{
 				glBindBufferRange(GL_UNIFORM_BUFFER, Rendering::BLOCK_BINDING_OBJECT, m_rendering.m_pObjectsBuffer->GetObject(), sizeof(Rendering::ObjectBlock)*offset, sizeof(Rendering::ObjectBlock));
 
-				object.mesh->bind();
-
-				for (SubMesh * m : object.mesh->m_aSubMeshes)
+				for (const Object::Mesh & mesh : object.Meshes)
 				{
-					const GLuint NormalMapId = m->getNormalMap();
-
-					if (0 == NormalMapId)
+					if (0 == mesh.NormalMapID)
 					{
-						SetUniform(m_pipelineSimple.m_uShaderObject, "shininess", m->m_material.shininess);
+						SetUniform(m_pipelineSimple.m_uShaderObject, "shininess", mesh.shininess);
 
-						m->draw(commandBuffer);
+						Mesh * pRenderingMesh = m_rendering.GetMesh(mesh.MeshID);
+
+						pRenderingMesh->bind();
+
+						for (SubMesh * m : pRenderingMesh->m_aSubMeshes)
+						{
+							m->draw(commandBuffer);
+						}
+
+						pRenderingMesh->unbind();
 					}
 				}
-
-				object.mesh->unbind();
 
 				++offset;
 			}
@@ -174,23 +177,27 @@ bool RenderSceneToGBuffer::render(RHI::CommandBuffer & commandBuffer)
 			{
 				glBindBufferRange(GL_UNIFORM_BUFFER, Rendering::BLOCK_BINDING_OBJECT, m_rendering.m_pObjectsBuffer->GetObject(), sizeof(Rendering::ObjectBlock)*offset, sizeof(Rendering::ObjectBlock));
 
-				object.mesh->bind();
-
-				for (SubMesh * m : object.mesh->m_aSubMeshes)
+				for (const Object::Mesh & mesh : object.Meshes)
 				{
-					const GLuint NormalMapId = m->getNormalMap();
-
-					if (0 != NormalMapId)
+					if (0 != mesh.NormalMapID)
 					{
+						SetUniform(m_pipelineNormalMap.m_uShaderObject, "shininess", mesh.shininess);
+
+						GLuint NormalMapId = m_rendering.GetTexture(mesh.NormalMapID);
 						SetTexture<GL_TEXTURE_2D>(m_pipelineNormalMap.m_uShaderObject, "normalMap", 0, NormalMapId, m_sampler);
 
-						SetUniform(m_pipelineNormalMap.m_uShaderObject, "shininess", m->m_material.shininess);
+						Mesh * pRenderingMesh = m_rendering.GetMesh(mesh.MeshID);
 
-						m->draw(commandBuffer);
+						pRenderingMesh->bind();
+
+						for (SubMesh * m : pRenderingMesh->m_aSubMeshes)
+						{
+							m->draw(commandBuffer);
+						}
+
+						pRenderingMesh->unbind();
 					}
 				}
-
-				object.mesh->unbind();
 
 				++offset;
 			}

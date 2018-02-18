@@ -75,15 +75,42 @@ bool Compose::init(void)
 		vertexShader.stage = RHI::SHADER_STAGE_VERTEX;
 		vertexShader.module = m_rendering.m_mapShaderModules["full.vert"];
 
-		RHI::PipelineShaderStageCreateInfo fragmentShader;
-		fragmentShader.stage = RHI::SHADER_STAGE_FRAGMENT;
-		fragmentShader.module = m_rendering.m_mapShaderModules["full.frag"];
+		RHI::PipelineShaderStageCreateInfo fragmentShader_variant_diffuse_specular;
+		fragmentShader_variant_diffuse_specular.stage = RHI::SHADER_STAGE_FRAGMENT;
+		fragmentShader_variant_diffuse_specular.module = m_rendering.m_mapShaderModules["full_variant_diffuse_specular.frag"];
 
-		std::vector<RHI::PipelineShaderStageCreateInfo> aStages;
-		aStages.push_back(vertexShader);
-		aStages.push_back(fragmentShader);
+		RHI::PipelineShaderStageCreateInfo fragmentShader_variant_diffuse_only;
+		fragmentShader_variant_diffuse_only.stage = RHI::SHADER_STAGE_FRAGMENT;
+		fragmentShader_variant_diffuse_only.module = m_rendering.m_mapShaderModules["full_variant_diffuse_only.frag"];
 
-		m_pipeline = RHI::Pipeline(input, rasterization, depthStencil, blend, aStages);
+		RHI::PipelineShaderStageCreateInfo fragmentShader_variant_specular_only;
+		fragmentShader_variant_specular_only.stage = RHI::SHADER_STAGE_FRAGMENT;
+		fragmentShader_variant_specular_only.module = m_rendering.m_mapShaderModules["full_variant_specular_only.frag"];
+
+		RHI::PipelineShaderStageCreateInfo fragmentShader_variant_none;
+		fragmentShader_variant_none.stage = RHI::SHADER_STAGE_FRAGMENT;
+		fragmentShader_variant_none.module = m_rendering.m_mapShaderModules["full_variant_none.frag"];
+
+		std::vector<RHI::PipelineShaderStageCreateInfo> aStages_variant_diffuse_specular;
+		aStages_variant_diffuse_specular.push_back(vertexShader);
+		aStages_variant_diffuse_specular.push_back(fragmentShader_variant_diffuse_specular);
+
+		std::vector<RHI::PipelineShaderStageCreateInfo> aStages_variant_diffuse_only;
+		aStages_variant_diffuse_only.push_back(vertexShader);
+		aStages_variant_diffuse_only.push_back(fragmentShader_variant_diffuse_only);
+
+		std::vector<RHI::PipelineShaderStageCreateInfo> aStages_variant_specular_only;
+		aStages_variant_specular_only.push_back(vertexShader);
+		aStages_variant_specular_only.push_back(fragmentShader_variant_specular_only);
+
+		std::vector<RHI::PipelineShaderStageCreateInfo> aStages_variant_none;
+		aStages_variant_none.push_back(vertexShader);
+		aStages_variant_none.push_back(fragmentShader_variant_none);
+
+		m_pipeline_diffuse_specular = RHI::Pipeline(input, rasterization, depthStencil, blend, aStages_variant_diffuse_specular);
+		m_pipeline_diffuse_only = RHI::Pipeline(input, rasterization, depthStencil, blend, aStages_variant_diffuse_only);
+		m_pipeline_specular_only = RHI::Pipeline(input, rasterization, depthStencil, blend, aStages_variant_specular_only);
+		m_pipeline_none = RHI::Pipeline(input, rasterization, depthStencil, blend, aStages_variant_none);
 	}
 
 	//
@@ -120,8 +147,14 @@ bool Compose::init(void)
 
 	//
 	// TODO : remove this
-	SetUniformBlockBinding(m_pipeline.m_uShaderObject, "CameraBlock", Rendering::BLOCK_BINDING_CAMERA);
-	SetUniformBlockBinding(m_pipeline.m_uShaderObject, "ObjectBlock", Rendering::BLOCK_BINDING_OBJECT);
+	SetUniformBlockBinding(m_pipeline_diffuse_specular.m_uShaderObject, "CameraBlock", Rendering::BLOCK_BINDING_CAMERA);
+	SetUniformBlockBinding(m_pipeline_diffuse_specular.m_uShaderObject, "ObjectBlock", Rendering::BLOCK_BINDING_OBJECT);
+	SetUniformBlockBinding(m_pipeline_diffuse_only.m_uShaderObject, "CameraBlock", Rendering::BLOCK_BINDING_CAMERA);
+	SetUniformBlockBinding(m_pipeline_diffuse_only.m_uShaderObject, "ObjectBlock", Rendering::BLOCK_BINDING_OBJECT);
+	SetUniformBlockBinding(m_pipeline_specular_only.m_uShaderObject, "CameraBlock", Rendering::BLOCK_BINDING_CAMERA);
+	SetUniformBlockBinding(m_pipeline_specular_only.m_uShaderObject, "ObjectBlock", Rendering::BLOCK_BINDING_OBJECT);
+	SetUniformBlockBinding(m_pipeline_none.m_uShaderObject, "CameraBlock", Rendering::BLOCK_BINDING_CAMERA);
+	SetUniformBlockBinding(m_pipeline_none.m_uShaderObject, "ObjectBlock", Rendering::BLOCK_BINDING_OBJECT);
 
 	//
 	//
@@ -164,30 +197,30 @@ bool Compose::render(RHI::CommandBuffer & commandBuffer)
 	commandBuffer.BeginRenderPass(m_renderPass, m_framebuffer, ivec2(0, 0), ivec2(m_rendering.GetWidth(), m_rendering.GetHeight()), m_rendering.m_vCurrentClearColor);
 
 	{
-		commandBuffer.Bind(m_pipeline);
+		commandBuffer.Bind(m_pipeline_diffuse_specular);
 
 		mat4x4 mDepthView = _lookAt(vec3(0,0,0), m_rendering.GetScene().m_pLight->GetDirection(), vec3(0.0f, -1.0f, 0.0f));
 		mat4x4 mDepthViewProjection = m_rendering.m_matShadowMapProjection * mDepthView;
 
 		if (m_pDiffuseLightsTexture)
 		{
-			SetTexture(m_pipeline.m_uShaderObject, "diffuseLightSampler", 0, *m_pDiffuseLightsTexture, m_samplerDiffuseLightSampler);
+			SetTexture(m_pipeline_diffuse_specular.m_uShaderObject, "diffuseLightSampler", 0, *m_pDiffuseLightsTexture, m_samplerDiffuseLightSampler);
 		}
 
 		if (m_pSpecularLightsTexture)
 		{
-			SetTexture(m_pipeline.m_uShaderObject, "specularLightSampler", 1, *m_pSpecularLightsTexture, m_samplerSpecularLightSampler);
+			SetTexture(m_pipeline_diffuse_specular.m_uShaderObject, "specularLightSampler", 1, *m_pSpecularLightsTexture, m_samplerSpecularLightSampler);
 		}
 
 		const GPU::Texture<GL_TEXTURE_2D> * pShadowMap = m_rendering.GetRenderTexture("shadow_map");
 		if (pShadowMap)
 		{
-			SetTexture(m_pipeline.m_uShaderObject, "shadowMap", 2, *pShadowMap, m_samplerShadowMap);
+			SetTexture(m_pipeline_diffuse_specular.m_uShaderObject, "shadowMap", 2, *pShadowMap, m_samplerShadowMap);
 		}
 
-		SetUniform(m_pipeline.m_uShaderObject, "ambientColor", RGB_to_XYZ * m_rendering.environment.ambient.Color);
-		SetUniform(m_pipeline.m_uShaderObject, "DepthTransformation", mDepthViewProjection);
-		SetUniform(m_pipeline.m_uShaderObject, "View", m_rendering.m_matCurrentView);
+		SetUniform(m_pipeline_diffuse_specular.m_uShaderObject, "ambientColor", RGB_to_XYZ * m_rendering.environment.ambient.Color);
+		SetUniform(m_pipeline_diffuse_specular.m_uShaderObject, "DepthTransformation", mDepthViewProjection);
+		SetUniform(m_pipeline_diffuse_specular.m_uShaderObject, "View", m_rendering.m_matCurrentView);
 
 		unsigned int offset = 0;
 
@@ -195,17 +228,84 @@ bool Compose::render(RHI::CommandBuffer & commandBuffer)
 		{
 			glBindBufferRange(GL_UNIFORM_BUFFER, Rendering::BLOCK_BINDING_OBJECT, m_rendering.m_pObjectsBuffer->GetObject(), sizeof(Rendering::ObjectBlock)*offset, sizeof(Rendering::ObjectBlock));
 
-			object.mesh->bind();
-
-			for (SubMesh * m : object.mesh->m_aSubMeshes)
+			for (const Object::Mesh & mesh : object.Meshes)
 			{
-				SetTexture<GL_TEXTURE_2D>(m_pipeline.m_uShaderObject, "diffuseSampler", 3, m->m_material.m_diffuse, m_samplerDiffuseSampler);
-				SetTexture<GL_TEXTURE_2D>(m_pipeline.m_uShaderObject, "specularSampler", 4, m->m_material.m_specular, m_samplerSpecularSampler);
+				if (mesh.DiffuseMapID != 0 && mesh.SpecularMapID != 0)
+			    {
+					GLuint DiffuseMapId = m_rendering.GetTexture(mesh.DiffuseMapID);
+					SetTexture<GL_TEXTURE_2D>(m_pipeline_diffuse_specular.m_uShaderObject, "diffuseSampler", 3, DiffuseMapId, m_samplerDiffuseSampler);
 
-				m->draw(commandBuffer);
+					GLuint SpecualMapId = m_rendering.GetTexture(mesh.SpecularMapID);
+					SetTexture<GL_TEXTURE_2D>(m_pipeline_diffuse_specular.m_uShaderObject, "specularSampler", 4, SpecualMapId, m_samplerSpecularSampler);
+
+					Mesh * pRenderingMesh = m_rendering.GetMesh(mesh.MeshID);
+
+					pRenderingMesh->bind();
+
+					for (SubMesh * m : pRenderingMesh->m_aSubMeshes)
+					{
+						m->draw(commandBuffer);
+					}
+
+					pRenderingMesh->unbind();
+				}
 			}
 
-			object.mesh->unbind();
+			++offset;
+		}
+	}
+
+	{
+		commandBuffer.Bind(m_pipeline_none);
+
+		mat4x4 mDepthView = _lookAt(vec3(0,0,0), m_rendering.GetScene().m_pLight->GetDirection(), vec3(0.0f, -1.0f, 0.0f));
+		mat4x4 mDepthViewProjection = m_rendering.m_matShadowMapProjection * mDepthView;
+
+		if (m_pDiffuseLightsTexture)
+		{
+			SetTexture(m_pipeline_none.m_uShaderObject, "diffuseLightSampler", 0, *m_pDiffuseLightsTexture, m_samplerDiffuseLightSampler);
+		}
+
+		if (m_pSpecularLightsTexture)
+		{
+			SetTexture(m_pipeline_none.m_uShaderObject, "specularLightSampler", 1, *m_pSpecularLightsTexture, m_samplerSpecularLightSampler);
+		}
+
+		const GPU::Texture<GL_TEXTURE_2D> * pShadowMap = m_rendering.GetRenderTexture("shadow_map");
+		if (pShadowMap)
+		{
+			SetTexture(m_pipeline_none.m_uShaderObject, "shadowMap", 2, *pShadowMap, m_samplerShadowMap);
+		}
+
+		SetUniform(m_pipeline_none.m_uShaderObject, "ambientColor", RGB_to_XYZ * m_rendering.environment.ambient.Color);
+		SetUniform(m_pipeline_none.m_uShaderObject, "DepthTransformation", mDepthViewProjection);
+		SetUniform(m_pipeline_none.m_uShaderObject, "View", m_rendering.m_matCurrentView);
+
+		unsigned int offset = 0;
+
+		for (const Object & object : m_rendering.GetScene().getObjects())
+		{
+			glBindBufferRange(GL_UNIFORM_BUFFER, Rendering::BLOCK_BINDING_OBJECT, m_rendering.m_pObjectsBuffer->GetObject(), sizeof(Rendering::ObjectBlock)*offset, sizeof(Rendering::ObjectBlock));
+
+			for (const Object::Mesh & mesh : object.Meshes)
+			{
+				if (mesh.DiffuseMapID == 0 && mesh.SpecularMapID == 0)
+				{
+					Mesh * pRenderingMesh = m_rendering.GetMesh(mesh.MeshID);
+
+					SetUniform(m_pipeline_none.m_uShaderObject, "diffuseColor", mesh.Kd);
+					SetUniform(m_pipeline_none.m_uShaderObject, "specularColor", mesh.Ks);
+
+					pRenderingMesh->bind();
+
+					for (SubMesh * m : pRenderingMesh->m_aSubMeshes)
+					{
+						m->draw(commandBuffer);
+					}
+
+					pRenderingMesh->unbind();
+				}
+			}
 
 			++offset;
 		}

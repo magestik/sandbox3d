@@ -23,7 +23,11 @@ public:
 
 private:
 
-	RHI::Pipeline m_pipeline;
+	RHI::Pipeline m_pipeline_diffuse_specular;
+	RHI::Pipeline m_pipeline_diffuse_only;
+	RHI::Pipeline m_pipeline_specular_only;
+	RHI::Pipeline m_pipeline_none;
+
 	RHI::Sampler m_samplerDiffuseSampler;
 	RHI::Sampler m_samplerSpecularSampler;
 	RHI::Sampler m_samplerDiffuseLightSampler;

@@ -26,6 +26,9 @@
 #include "Algorithms/BlurV.h"
 #include "Algorithms/Bloom.h"
 
+#define _min(x, y) ((x < y) ? x : y)
+#define _max(x, y) ((x > y) ? x : y)
+
 #define MAX_Z 1000.0f
 #define MIN_Z 0.0001f
 
@@ -33,13 +36,9 @@
 
 inline bool ends_with(std::string const & value, std::string const & ending)
 {
-    if (ending.size() > value.size()) return false;
-    return std::equal(ending.rbegin(), ending.rend(), value.rbegin());
+	if (ending.size() > value.size()) return false;
+	return std::equal(ending.rbegin(), ending.rend(), value.rbegin());
 }
-
-std::map<std::string, GLuint> g_Textures;
-
-std::map<std::string, Mesh> g_Meshes;
 
 // sRGB
 const mat3x3 sRGB_to_XYZ(0.4124564, 0.3575761, 0.1804375, 0.2126729, 0.7151522, 0.0721750, 0.0193339, 0.1191920, 0.9503041);
@@ -79,6 +78,7 @@ Rendering::Rendering(Scene & scene)
 {
 	GraphicsAlgorithm::RegisterEverything();
 	m_scene.registerListener(this);
+	m_scene.getResourceManager().registerListener(this);
 }
 
 /**
@@ -281,6 +281,7 @@ void Rendering::generateMeshes()
  */
 void Rendering::updateCameraBuffer(const mat4x4 & matView)
 {
+#if 0
 	//
 	// compute minZ / maxZ
 	{
@@ -332,6 +333,10 @@ void Rendering::updateCameraBuffer(const mat4x4 & matView)
 	{
 		m_fMaxZ = MAX_Z;
 	}
+#endif // 0
+
+	m_fMinZ = MIN_Z;
+	m_fMaxZ = 100.0f; // MAX_Z;
 
 	const float fov = 75.0f;
 
@@ -428,6 +433,206 @@ void Rendering::onUpdate(const mat4x4 & mView, const vec4 & clearColor)
 }
 
 /**
+ * @brief Rendering::onMeshImported
+ * @param scene
+ * @param MeshID
+ * @param vertexData
+ */
+void Rendering::onMeshImported(const ResourceManager & scene, unsigned int MeshID, const VertexData & vertexData)
+{
+	// TODO
+}
+
+/**
+ * @brief Rendering::onMeshImported
+ * @param scene
+ * @param MeshID
+ * @param vertexData
+ * @param indexData
+ */
+void Rendering::onMeshImported(const ResourceManager & scene, unsigned int MeshID, const VertexData & vertexData, const IndexData & indexData)
+{
+	const uint NumVertices = vertexData.vertexCount;
+	const uint NumIndices = indexData.indexCount;
+
+	// Reserve GPU memory for the vertex attributes and indices
+	GPU::Buffer<GL_ARRAY_BUFFER> * vertexBuffer = new GPU::Buffer<GL_ARRAY_BUFFER>();
+	GPU::Buffer<GL_ELEMENT_ARRAY_BUFFER> * indexBuffer = new GPU::Buffer<GL_ELEMENT_ARRAY_BUFFER>();
+
+	GPU::realloc(*vertexBuffer, NumVertices * sizeof(SubMesh::VertexSimple));
+	GPU::realloc(*indexBuffer, NumIndices * 3 * sizeof(unsigned int));
+
+	void * pVertexGPU = GPU::mmap(*vertexBuffer, GL_WRITE_ONLY);
+	void * pIndexGPU = GPU::mmap(*indexBuffer, GL_WRITE_ONLY);
+
+	std::vector<Mesh::VertexSpec> specs;
+
+	Mesh::VertexSpec SPEC_POS;
+	SPEC_POS.index			= 0;
+	SPEC_POS.size			= 3;
+	SPEC_POS.type			= GL_FLOAT;
+	SPEC_POS.normalized		= GL_FALSE;
+	SPEC_POS.stride			= sizeof(SubMesh::VertexSimple);
+	SPEC_POS.pointer		= BUFFER_OFFSET(0);
+
+	Mesh::VertexSpec SPEC_UV;
+	SPEC_UV.index			= 2;
+	SPEC_UV.size			= 2;
+	SPEC_UV.type			= GL_FLOAT;
+	SPEC_UV.normalized		= GL_FALSE;
+	SPEC_UV.stride			= sizeof(SubMesh::VertexSimple);
+	SPEC_UV.pointer			= BUFFER_OFFSET(sizeof(float)*3);
+
+	Mesh::VertexSpec SPEC_NORMAL;
+	SPEC_NORMAL.index		= 1;
+	SPEC_NORMAL.size		= 3;
+	SPEC_NORMAL.type		= GL_FLOAT;
+	SPEC_NORMAL.normalized	= GL_FALSE;
+	SPEC_NORMAL.stride		= sizeof(SubMesh::VertexSimple);
+	SPEC_NORMAL.pointer		= BUFFER_OFFSET(sizeof(float)*5);
+
+	Mesh::VertexSpec SPEC_TANGENT;
+	SPEC_TANGENT.index		= 3;
+	SPEC_TANGENT.size		= 3;
+	SPEC_TANGENT.type		= GL_FLOAT;
+	SPEC_TANGENT.normalized	= GL_FALSE;
+	SPEC_TANGENT.stride		= sizeof(SubMesh::VertexSimple);
+	SPEC_TANGENT.pointer	= BUFFER_OFFSET(sizeof(float)*8);
+
+	specs.push_back(SPEC_POS);
+	specs.push_back(SPEC_UV);
+	specs.push_back(SPEC_NORMAL);
+	specs.push_back(SPEC_TANGENT);
+
+	Mesh * m = new Mesh(vertexBuffer, specs, indexBuffer);
+
+	//unsigned int vertex_offset = 0;
+	unsigned int index_offset = 0;
+	unsigned int base_vertex = 0;
+
+	vec3 * Vertices = (vec3*)vertexData.vertices[VertexData::VERTEX_TYPE_POSITION];
+	vec3 * Normals = (vec3*)vertexData.vertices[VertexData::VERTEX_TYPE_NORMAL];
+	vec3 * Tangents = (vec3*)vertexData.vertices[VertexData::VERTEX_TYPE_TANGENT];
+	vec2 * TextureCoords = (vec2*)vertexData.vertices[VertexData::VERTEX_TYPE_TEX_COORD0];
+
+	//for (int i = 0; i < scene->mNumMeshes; ++i)
+	{
+		//aiMesh * mesh = scene->mMeshes[i];
+
+		std::vector<SubMesh::VertexSimple> vertices;
+		vertices.reserve(NumVertices);
+
+		// Populate the vertex attribute vectors
+		for (int j = 0 ; j < NumVertices ; ++j)
+		{
+			SubMesh::VertexSimple vertex;
+
+			vertex.position.x = Vertices[j].x;
+			vertex.position.y = Vertices[j].y;
+			vertex.position.z = Vertices[j].z;
+
+			vertex.normal.x = Normals[j].x;
+			vertex.normal.y = Normals[j].y;
+			vertex.normal.z = Normals[j].z;
+
+			if (Tangents)
+			{
+				vertex.tangent.x = Tangents[j].x;
+				vertex.tangent.y = Tangents[j].y;
+				vertex.tangent.z = Tangents[j].z;
+			}
+
+			if (TextureCoords)
+			{
+				vertex.uv.x = TextureCoords[j].x;
+				vertex.uv.y = TextureCoords[j].y;
+			}
+			else
+			{
+				vertex.uv.x = 0.5f;
+				vertex.uv.y = 0.5f;
+			}
+
+			vertices.push_back(vertex);
+		}
+
+		memcpy(pVertexGPU, (void *)vertices.data(), vertices.size() * sizeof(SubMesh::VertexSimple));
+		memcpy(pIndexGPU, (void *)indexData.indices, indexData.indexCount * sizeof(unsigned int));
+
+		SubMesh * subMesh = m->AddSubMesh(indexData.indexCount, GL_TRIANGLES, index_offset, GL_UNSIGNED_INT, base_vertex);
+	}
+
+	GPU::munmap(*vertexBuffer);
+	GPU::munmap(*indexBuffer);
+
+	assert(m_aLoadedMeshes.size() == (MeshID-1)); // otherwise we will need a map instead of a simple vector
+	m_aLoadedMeshes.push_back(m);
+}
+
+/**
+ * @brief Rendering::onTextureImported
+ * @param scene
+ * @param TextureID
+ * @param textureData
+ */
+void Rendering::onTextureImported(const ResourceManager & scene, unsigned int TextureID, const TextureData1D & textureData)
+{
+	// TODO
+}
+
+/**
+ * @brief Rendering::onTextureImported
+ * @param scene
+ * @param TextureID
+ * @param textureData
+ */
+void Rendering::onTextureImported(const ResourceManager & scene, unsigned int TextureID, const TextureData2D & textureData)
+{
+	GLuint textureId = 0;
+
+	glGenTextures(1, &textureId);
+
+	glBindTexture(GL_TEXTURE_2D, textureId);
+
+	if (textureData.texelFormat == TEXEL_FORMAT_RGBA8)
+	{
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, textureData.width, textureData.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, textureData.data);
+	}
+	else if (textureData.texelFormat == TEXEL_FORMAT_RGB8)
+	{
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, textureData.width, textureData.height, 0, GL_RGB, GL_UNSIGNED_BYTE, textureData.data);
+	}
+	else if (textureData.texelFormat == TEXEL_FORMAT_BGRA8)
+	{
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, textureData.width, textureData.height, 0, GL_BGRA, GL_UNSIGNED_BYTE, textureData.data);
+	}
+	else if (textureData.texelFormat == TEXEL_FORMAT_BGR8)
+	{
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, textureData.width, textureData.height, 0, GL_BGR, GL_UNSIGNED_BYTE, textureData.data);
+	}
+
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+	assert(m_aLoadedTextures.size() == (TextureID-1)); // otherwise we will need a map instead of a simple vector
+	m_aLoadedTextures.push_back(textureId);
+}
+
+/**
+ * @brief Rendering::onTextureImported
+ * @param scene
+ * @param TextureID
+ * @param textureData
+ */
+void Rendering::onTextureImported(const ResourceManager & scene, unsigned int TextureID, const TextureData3D & textureData)
+{
+	// TODO
+}
+
+/**
  * @brief Rendering::onObjectInserted
  * @param object
  */
@@ -443,4 +648,24 @@ void Rendering::onObjectInserted(const Scene & scene, const Object & object)
 void Rendering::onObjectRemoved(const Scene & scene, const Object & instance)
 {
 	updateObjectsBuffer();
+}
+
+/**
+ * @brief Rendering::onCameraInserted
+ * @param scene
+ * @param camera
+ */
+void Rendering::onCameraInserted(const Scene & scene, const Camera & camera)
+{
+	// nothing
+}
+
+/**
+ * @brief Rendering::onCameraRemoved
+ * @param scene
+ * @param camera
+ */
+void Rendering::onCameraRemoved(const Scene & scene, const Camera & camera)
+{
+	// nothing
 }

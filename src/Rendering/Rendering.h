@@ -14,12 +14,12 @@
 #include "RHI/RHI.h"
 
 // class definitions
-#include "Light/Light.h"
 #include "Mesh/Mesh.h"
 #include "Mesh/SubMesh.h"
 
 #include "Scene.h"
 #include "SceneListener.h"
+#include "Resources/ResourceManagerListener.h"
 
 #include "RenderTexture.h"
 #include "GraphicsAlgorithm.h"
@@ -27,11 +27,6 @@
 #include "Environment.h"
 
 #include "Shader/Interface.h"
-
-// theses maps contains all shaders, compiled at launch time
-extern std::map<std::string, GLuint> g_Textures;
-
-extern std::map<std::string, Mesh>			g_Meshes;
 
 inline void SetUniform(GLuint uShaderObject, const char * name, const mat2x2 & m)
 {
@@ -131,7 +126,7 @@ inline void SetTexture(GLuint uShaderObject, const char * name, int unit, GLuint
 	glBindSampler(unit, sampler.m_uSamplerObject);
 }
 
-class Rendering : public SceneListener
+class Rendering : public SceneListener, public ResourceManagerListener
 {
 
 	friend class RenderXML;
@@ -145,9 +140,6 @@ public:
 	void	onResize				(int width, int height);
 
 	void	onUpdate				(const mat4x4 & mView, const vec4 & clearColor);
-
-	virtual void	onObjectInserted	(const Scene & scene, const Object & object) override;
-	virtual void	onObjectRemoved		(const Scene & scene, const Object & object) override;
 
 	void initQueue					(const char * szFilename);
 	void releaseQueue				(void);
@@ -174,6 +166,16 @@ public:
 		return(nullptr);
 	}
 
+	GLuint GetTexture(unsigned int TextureID) const
+	{
+		return(m_aLoadedTextures[TextureID-1]);
+	}
+
+	Mesh * GetMesh(unsigned int MeshID) const
+	{
+		return(m_aLoadedMeshes[MeshID-1]);
+	}
+
 	const Scene & GetScene(void) const
 	{
 		return(m_scene);
@@ -195,6 +197,21 @@ protected:
 
 	void	computeToneMappingParams	(float & avLum, float & white2);
 
+private: // implements SceneListener / ResourceManagerListener
+
+	virtual void	onMeshImported		(const ResourceManager & scene, unsigned int MeshID, const VertexData & vertexData) override;
+	virtual void	onMeshImported		(const ResourceManager & scene, unsigned int MeshID, const VertexData & vertexData, const IndexData & indexData) override;
+
+	virtual void	onTextureImported	(const ResourceManager & scene, unsigned int TextureID, const TextureData1D & textureData) override;
+	virtual void	onTextureImported	(const ResourceManager & scene, unsigned int TextureID, const TextureData2D & textureData) override;
+	virtual void	onTextureImported	(const ResourceManager & scene, unsigned int TextureID, const TextureData3D & textureData) override;
+
+	virtual void	onObjectInserted	(const Scene & scene, const Object & object) override;
+	virtual void	onObjectRemoved		(const Scene & scene, const Object & object) override;
+
+	virtual void	onCameraInserted	(const Scene & scene, const Camera & camera) override;
+	virtual void	onCameraRemoved		(const Scene & scene, const Camera & camera) override;
+
 //private:
 public:
 
@@ -213,6 +230,9 @@ public:
 private:
 
 	Scene & m_scene;
+
+	std::vector<Mesh*> m_aLoadedMeshes; // onMeshImported
+	std::vector<GLuint> m_aLoadedTextures; // onTextureImported
 
 public:
 
