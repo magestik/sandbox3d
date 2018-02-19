@@ -280,48 +280,47 @@ void Rendering::generateMeshes()
  */
 void Rendering::updateCameraBuffer(const mat4x4 & matView)
 {
-#if 0
-	//
-	// compute minZ / maxZ
+	const BoundingBox & box = m_scene.getBoundingBox();
+	const BoundingSphere & sphere = m_scene.getBoundingSphere();
+
+	vec3 points [8] =
 	{
-		m_fMinZ = INFINITY;
-		m_fMaxZ = 0.0f;
+		vec3(box.min.x, box.min.y, box.min.z),
+		vec3(box.max.x, box.min.y, box.min.z),
+		vec3(box.min.x, box.max.y, box.min.z),
+		vec3(box.max.x, box.max.y, box.min.z),
+		vec3(box.min.x, box.min.y, box.max.z),
+		vec3(box.max.x, box.min.y, box.max.z),
+		vec3(box.min.x, box.max.y, box.max.z),
+		vec3(box.max.x, box.max.y, box.max.z),
+	};
 
-		for (const Object & object : m_scene.getObjects())
+	float viewMin = INFINITY;
+	float viewMax = -INFINITY;
+
+	const vec3 cameraDir(matView[0][2], matView[1][2], matView[2][2]); // view dir
+	//const vec3 cameraPos(matView[0][3], matView[1][3], matView[2][3]); // view position
+
+	for (const vec3 & point : points)
+	{
+		vec3 ViewPoint = _transform(point, matView);
+
+		//float len = length(ViewPoint);
+		float len = dot(-cameraDir, ViewPoint); // distance along the camera dir
+
+		if (len < viewMin)
 		{
-			const mat4x4 mMVP = matView * object.transformation;
+			viewMin = len;
+		}
 
-			vec4 centerInViewProjected = vec4(object.mesh->m_BoundingSphere.center, 1.0f) * mMVP;
-			vec3 centerInView = centerInViewProjected.xyz / centerInViewProjected.w;
-
-			vec4 radiusPointViewProjected = vec4(object.mesh->m_BoundingSphere.center.xy, object.mesh->m_BoundingSphere.center.z + object.mesh->m_BoundingSphere.radius, 1.0f) * mMVP;
-			vec3 radiusPointView = radiusPointViewProjected.xyz / radiusPointViewProjected.w;
-
-			float fRadiusInView = distance(centerInView, radiusPointView);
-
-			{
-				float maxZ = -centerInView.z + fRadiusInView;
-
-				if (maxZ < MAX_Z)
-				{
-					if (maxZ > m_fMaxZ)
-					{
-						m_fMaxZ = maxZ;
-					}
-				}
-
-				float minZ = -centerInView.z - fRadiusInView;
-
-				if (minZ > MIN_Z)
-				{
-					if (minZ < m_fMinZ)
-					{
-						m_fMinZ = minZ;
-					}
-				}
-			}
+		if (len > viewMax)
+		{
+			viewMax = len;
 		}
 	}
+
+	m_fMinZ = (viewMin) * 0.99f;
+	m_fMaxZ = (viewMin + (sphere.radius * 2.0f)) * 1.01f; // sphere radius * 2 = sphere diameter = distance between extreme points of the box
 
 	if (m_fMinZ < MIN_Z)
 	{
@@ -332,10 +331,6 @@ void Rendering::updateCameraBuffer(const mat4x4 & matView)
 	{
 		m_fMaxZ = MAX_Z;
 	}
-#endif // 0
-
-	m_fMinZ = MIN_Z;
-	m_fMaxZ = 100.0f; // MAX_Z;
 
 	const float fov = 75.0f;
 
