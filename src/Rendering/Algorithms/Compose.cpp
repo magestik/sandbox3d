@@ -117,10 +117,10 @@ bool Compose::init(void)
 	// Initialize Samplers
 	{
 		RHI::SamplerCreateInfo samplerLinear;
-		samplerLinear.minFilter = RHI::FILTER_LINEAR;
+		samplerLinear.minFilter = (RHI::Filter)GL_LINEAR_MIPMAP_LINEAR;
 		samplerLinear.magFilter = RHI::FILTER_LINEAR;
-		samplerLinear.addressModeU = RHI::SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
-		samplerLinear.addressModeV = RHI::SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+		samplerLinear.addressModeU = RHI::SAMPLER_ADDRESS_MODE_REPEAT;
+		samplerLinear.addressModeV = RHI::SAMPLER_ADDRESS_MODE_REPEAT;
 
 		RHI::SamplerCreateInfo samplerNearest;
 		samplerNearest.minFilter = RHI::FILTER_NEAREST;
