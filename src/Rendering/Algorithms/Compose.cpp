@@ -196,6 +196,8 @@ bool Compose::render(RHI::CommandBuffer & commandBuffer)
 
 	commandBuffer.BeginRenderPass(m_renderPass, m_framebuffer, ivec2(0, 0), ivec2(m_rendering.GetWidth(), m_rendering.GetHeight()), m_rendering.m_vCurrentClearColor);
 
+	//
+	// Diffuse + Specular textures
 	{
 		commandBuffer.Bind(m_pipeline_diffuse_specular);
 
@@ -255,6 +257,118 @@ bool Compose::render(RHI::CommandBuffer & commandBuffer)
 		}
 	}
 
+	//
+	// Diffuse texture only
+	{
+		commandBuffer.Bind(m_pipeline_diffuse_only);
+
+		mat4x4 mDepthView = _lookAt(vec3(0,0,0), m_rendering.GetScene().m_pLight->GetDirection(), vec3(0.0f, -1.0f, 0.0f));
+		mat4x4 mDepthViewProjection = m_rendering.m_matShadowMapProjection * mDepthView;
+
+		if (m_pDiffuseLightsTexture)
+		{
+			SetTexture(m_pipeline_diffuse_only.m_uShaderObject, "diffuseLightSampler", 0, *m_pDiffuseLightsTexture, m_samplerDiffuseLightSampler);
+		}
+
+		const GPU::Texture<GL_TEXTURE_2D> * pShadowMap = m_rendering.GetRenderTexture("shadow_map");
+		if (pShadowMap)
+		{
+			SetTexture(m_pipeline_diffuse_only.m_uShaderObject, "shadowMap", 2, *pShadowMap, m_samplerShadowMap);
+		}
+
+		SetUniform(m_pipeline_diffuse_only.m_uShaderObject, "ambientColor", RGB_to_XYZ * m_rendering.environment.ambient.Color);
+		SetUniform(m_pipeline_diffuse_only.m_uShaderObject, "DepthTransformation", mDepthViewProjection);
+		SetUniform(m_pipeline_diffuse_only.m_uShaderObject, "View", m_rendering.m_matCurrentView);
+
+		unsigned int offset = 0;
+
+		for (const Object & object : m_rendering.GetScene().getObjects())
+		{
+			glBindBufferRange(GL_UNIFORM_BUFFER, Rendering::BLOCK_BINDING_OBJECT, m_rendering.m_pObjectsBuffer->GetObject(), sizeof(Rendering::ObjectBlock)*offset, sizeof(Rendering::ObjectBlock));
+
+			for (const Object::Mesh & mesh : object.Meshes)
+			{
+				if (mesh.DiffuseMapID != 0 && mesh.SpecularMapID == 0)
+				{
+					GLuint DiffuseMapId = m_rendering.GetTexture(mesh.DiffuseMapID);
+					SetTexture<GL_TEXTURE_2D>(m_pipeline_diffuse_only.m_uShaderObject, "diffuseSampler", 3, DiffuseMapId, m_samplerDiffuseSampler);
+
+					SetUniform(m_pipeline_none.m_uShaderObject, "specularColor", mesh.Ks);
+
+					Mesh * pRenderingMesh = m_rendering.GetMesh(mesh.MeshID);
+
+					pRenderingMesh->bind();
+
+					for (SubMesh * m : pRenderingMesh->m_aSubMeshes)
+					{
+						m->draw(commandBuffer);
+					}
+
+					pRenderingMesh->unbind();
+				}
+			}
+
+			++offset;
+		}
+	}
+
+	//
+	// Specular texture only
+	{
+		commandBuffer.Bind(m_pipeline_specular_only);
+
+		mat4x4 mDepthView = _lookAt(vec3(0,0,0), m_rendering.GetScene().m_pLight->GetDirection(), vec3(0.0f, -1.0f, 0.0f));
+		mat4x4 mDepthViewProjection = m_rendering.m_matShadowMapProjection * mDepthView;
+
+		if (m_pDiffuseLightsTexture)
+		{
+			SetTexture(m_pipeline_specular_only.m_uShaderObject, "diffuseLightSampler", 0, *m_pDiffuseLightsTexture, m_samplerDiffuseLightSampler);
+		}
+
+		const GPU::Texture<GL_TEXTURE_2D> * pShadowMap = m_rendering.GetRenderTexture("shadow_map");
+		if (pShadowMap)
+		{
+			SetTexture(m_pipeline_specular_only.m_uShaderObject, "shadowMap", 2, *pShadowMap, m_samplerShadowMap);
+		}
+
+		SetUniform(m_pipeline_specular_only.m_uShaderObject, "ambientColor", RGB_to_XYZ * m_rendering.environment.ambient.Color);
+		SetUniform(m_pipeline_specular_only.m_uShaderObject, "DepthTransformation", mDepthViewProjection);
+		SetUniform(m_pipeline_specular_only.m_uShaderObject, "View", m_rendering.m_matCurrentView);
+
+		unsigned int offset = 0;
+
+		for (const Object & object : m_rendering.GetScene().getObjects())
+		{
+			glBindBufferRange(GL_UNIFORM_BUFFER, Rendering::BLOCK_BINDING_OBJECT, m_rendering.m_pObjectsBuffer->GetObject(), sizeof(Rendering::ObjectBlock)*offset, sizeof(Rendering::ObjectBlock));
+
+			for (const Object::Mesh & mesh : object.Meshes)
+			{
+				if (mesh.DiffuseMapID == 0 && mesh.SpecularMapID != 0)
+				{
+					SetUniform(m_pipeline_none.m_uShaderObject, "diffuseColor", mesh.Kd);
+
+					GLuint SpecualMapId = m_rendering.GetTexture(mesh.SpecularMapID);
+					SetTexture<GL_TEXTURE_2D>(m_pipeline_diffuse_specular.m_uShaderObject, "specularSampler", 4, SpecualMapId, m_samplerSpecularSampler);
+
+					Mesh * pRenderingMesh = m_rendering.GetMesh(mesh.MeshID);
+
+					pRenderingMesh->bind();
+
+					for (SubMesh * m : pRenderingMesh->m_aSubMeshes)
+					{
+						m->draw(commandBuffer);
+					}
+
+					pRenderingMesh->unbind();
+				}
+			}
+
+			++offset;
+		}
+	}
+
+	//
+	// No texture
 	{
 		commandBuffer.Bind(m_pipeline_none);
 
