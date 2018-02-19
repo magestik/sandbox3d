@@ -76,4 +76,10 @@ inline mat4x4 _ortho(float left, float right, float bottom, float top, float nea
 	return(mat);
 }
 
+inline vec3 _transform(const vec3 & point, const mat4x4 & matTransform)
+{
+	vec4 transformed = matTransform * vec4(point, 1.0f);
+	return(transformed.xyz / transformed.w);
+}
+
 #endif // UTILS_INL
