@@ -319,8 +319,8 @@ void Rendering::updateCameraBuffer(const mat4x4 & matView)
 		}
 	}
 
-	m_fMinZ = (viewMin) * 0.99f;
-	m_fMaxZ = (viewMin + (sphere.radius * 2.0f)) * 1.01f; // sphere radius * 2 = sphere diameter = distance between extreme points of the box
+	m_fMinZ = (viewMin);
+	m_fMaxZ = (viewMax);
 
 	if (m_fMinZ < MIN_Z)
 	{
