@@ -298,15 +298,11 @@ void Rendering::updateCameraBuffer(const mat4x4 & matView)
 	float viewMin = INFINITY;
 	float viewMax = -INFINITY;
 
-	const vec3 cameraDir(matView[0][2], matView[1][2], matView[2][2]); // view dir
-	//const vec3 cameraPos(matView[0][3], matView[1][3], matView[2][3]); // view position
-
 	for (const vec3 & point : points)
 	{
 		vec3 ViewPoint = _transform(point, matView);
 
-		//float len = length(ViewPoint);
-		float len = dot(-cameraDir, ViewPoint); // distance along the camera dir
+		float len = dot(vec3(0.0f, 0.0f, -1.0f), ViewPoint); // distance along the camera dir
 
 		if (len < viewMin)
 		{
