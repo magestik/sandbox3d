@@ -30,7 +30,7 @@
 #define _max(x, y) ((x > y) ? x : y)
 
 #define MAX_Z 1000.0f
-#define MIN_Z 0.0001f
+#define MIN_Z 0.01f
 
 #define ENABLE_PICKBUFFER 1
 
