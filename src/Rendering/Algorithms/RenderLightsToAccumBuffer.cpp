@@ -82,6 +82,20 @@ bool RenderLightsToAccumBuffer::init(void)
 
 		m_pipelineAmbientLight = RHI::Pipeline(input, rasterization, depthStencil, blend, aStagesAmbient);
 
+		RHI::PipelineShaderStageCreateInfo vertexShaderAmbientNoAO;
+		vertexShaderAmbientNoAO.stage = RHI::SHADER_STAGE_VERTEX;
+		vertexShaderAmbientNoAO.module = m_rendering.m_mapShaderModules["ambient_light_no_ao.vert"];
+
+		RHI::PipelineShaderStageCreateInfo fragmentShaderAmbientNoAO;
+		fragmentShaderAmbientNoAO.stage = RHI::SHADER_STAGE_FRAGMENT;
+		fragmentShaderAmbientNoAO.module = m_rendering.m_mapShaderModules["ambient_light_no_ao.frag"];
+
+		std::vector<RHI::PipelineShaderStageCreateInfo> aStagesAmbientNoAO;
+		aStagesAmbientNoAO.push_back(vertexShaderAmbientNoAO);
+		aStagesAmbientNoAO.push_back(fragmentShaderAmbientNoAO);
+
+		m_pipelineAmbientLightNoAO = RHI::Pipeline(input, rasterization, depthStencil, blend, aStagesAmbientNoAO);
+
 		RHI::PipelineShaderStageCreateInfo vertexShaderDirectional;
 		vertexShaderDirectional.stage = RHI::SHADER_STAGE_VERTEX;
 		vertexShaderDirectional.module = m_rendering.m_mapShaderModules["directionnal_light.vert"];
@@ -145,15 +159,20 @@ bool RenderLightsToAccumBuffer::render(RHI::CommandBuffer & commandBuffer)
 
 	commandBuffer.BeginRenderPass(m_renderPass, m_framebuffer, ivec2(0, 0), ivec2(m_rendering.GetWidth(), m_rendering.GetHeight()), vec4(0.0f, 0.0f, 0.0f, 0.0f));
 
+	if (m_pAmbientOcclusionTexture)
 	{
 		commandBuffer.Bind(m_pipelineAmbientLight);
 
 		SetUniform(m_pipelineAmbientLight.m_uShaderObject, "ambientColor", vec3(0.5f, 0.5f, 0.5f));
+		SetTexture(m_pipelineAmbientLight.m_uShaderObject, "aoSampler", 2, *m_pAmbientOcclusionTexture, m_samplerNormal);
 
-		if (m_pAmbientOcclusionTexture)
-		{
-			SetTexture(m_pipelineAmbientLight.m_uShaderObject, "aoSampler", 2, *m_pAmbientOcclusionTexture, m_samplerNormal);
-		}
+		m_rendering.m_pQuadMesh->draw(commandBuffer);
+	}
+	else
+	{
+		commandBuffer.Bind(m_pipelineAmbientLightNoAO);
+
+		SetUniform(m_pipelineAmbientLightNoAO.m_uShaderObject, "ambientColor", vec3(0.5f, 0.5f, 0.5f));
 
 		m_rendering.m_pQuadMesh->draw(commandBuffer);
 	}

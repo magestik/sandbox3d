@@ -26,6 +26,7 @@ public:
 private:
 
 	RHI::Pipeline m_pipelineAmbientLight;
+	RHI::Pipeline m_pipelineAmbientLightNoAO;
 	RHI::Pipeline m_pipelineDirectionalLight;
 	RHI::Sampler m_samplerDepth;
 	RHI::Sampler m_samplerNormal;
