@@ -1,8 +1,6 @@
 sandbox3d
 =========
 
-[![Build Status](https://travis-ci.org/magestik/sandbox3d.svg?branch=master)](https://travis-ci.org/magestik/sandbox3d)
-
 ### Introduction
 
 A sandbox that I use to test some graphic techniques.
