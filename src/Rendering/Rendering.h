@@ -265,6 +265,14 @@ public:
 	bool m_bReady;
 	bool m_bInitialized;
 
+	enum DEPTH_CLIP_SPACE
+	{
+		ZERO_TO_ONE,
+		NEGATIVE_ONE_TO_ONE
+	};
+
+	DEPTH_CLIP_SPACE m_depthClipSpace;
+
 public:
 
 	EnvironmentSettings environment;

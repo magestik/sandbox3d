@@ -74,6 +74,7 @@ Rendering::Rendering(Scene & scene)
 , m_mapTargets()
 , m_bReady(false)
 , m_bInitialized(false)
+, m_depthClipSpace(NEGATIVE_ONE_TO_ONE)
 , m_scene(scene)
 {
 	GraphicsAlgorithm::RegisterEverything();
@@ -103,6 +104,13 @@ void Rendering::onReady(const char * szBaseDir)
 	GPU::realloc(*m_pObjectsBuffer, sizeof(ObjectBlock)*m_scene.getObjectCount(), GL_STREAM_DRAW);
 
 	glBindBufferRange(GL_UNIFORM_BUFFER, BLOCK_BINDING_CAMERA, m_pCameraBuffer->GetObject(), 0, sizeof(CameraBlock));
+
+#if 1 // FIXME : detect glClipControl
+	{
+		glClipControl(GL_LOWER_LEFT, GL_ZERO_TO_ONE);
+		m_depthClipSpace = ZERO_TO_ONE;
+	}
+#endif
 
 	rmt_BindOpenGL();
 
@@ -332,7 +340,15 @@ void Rendering::updateCameraBuffer(const mat4x4 & matView)
 
 	// Compute the new Projection Matrix
 	float ratio = m_uWidth/(float)m_uHeight;
-	m_matProjection = _perspective(fov, ratio, m_fMinZ, m_fMaxZ);
+
+	if (m_depthClipSpace == ZERO_TO_ONE)
+	{
+		m_matProjection = _perspective_zo(fov, ratio, m_fMinZ, m_fMaxZ);
+	}
+	else
+	{
+		m_matProjection = _perspective_no(fov, ratio, m_fMinZ, m_fMaxZ);
+	}
 
 	CameraBlock cam;
 	// matrix
