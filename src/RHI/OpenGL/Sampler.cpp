@@ -2,6 +2,8 @@
 
 #if HAVE_OPENGL
 
+#include <GL/glext.h>
+
 /**
  * @brief Default constructor
  */
@@ -29,8 +31,13 @@ RHI::Sampler::Sampler(const SamplerCreateInfo & createInfo)
 	glSamplerParameteri(m_uSamplerObject, GL_TEXTURE_WRAP_R, createInfo.addressModeW);
 
 	// TODO : mipLodBias
-	// TODO : anisotropyEnable
-	// TODO : maxAnisotropy
+
+	if (createInfo.anisotropyEnable) // FIXME : detect extension first !
+	{
+		float maxAnisotropy = 0.0f;
+		glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &maxAnisotropy);
+		glSamplerParameterf(m_uSamplerObject, GL_TEXTURE_MAX_ANISOTROPY_EXT, (createInfo.maxAnisotropy > maxAnisotropy) ? maxAnisotropy : createInfo.maxAnisotropy);
+	}
 
 	if (createInfo.compareEnable)
 	{
