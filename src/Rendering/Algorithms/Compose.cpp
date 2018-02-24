@@ -121,6 +121,8 @@ bool Compose::init(void)
 		samplerLinear.magFilter = RHI::FILTER_LINEAR;
 		samplerLinear.addressModeU = RHI::SAMPLER_ADDRESS_MODE_REPEAT;
 		samplerLinear.addressModeV = RHI::SAMPLER_ADDRESS_MODE_REPEAT;
+		samplerLinear.anisotropyEnable = true;
+		samplerLinear.maxAnisotropy = 16.0f;
 
 		RHI::SamplerCreateInfo samplerNearest;
 		samplerNearest.minFilter = RHI::FILTER_NEAREST;
