@@ -105,15 +105,23 @@ void BrightFilter::release(void)
  */
 bool BrightFilter::render(const RenderGraph::Parameters & parameters, RHI::CommandBuffer & commandBuffer)
 {
-	assert(parameters.size() == 1);
-
 	rmt_ScopedOpenGLSample(BrightFilter);
+
+	if (parameters.size() != 1)
+	{
+		glClearColor(0.0f, 1.0f, 0.0f, 0.0f);
+		glClear(GL_COLOR_BUFFER_BIT);
+		return false;
+	}
+
+	assert(parameters[0].first == 0);
+	const GLuint inputTexture = parameters[0].second.asUInt;
 
 	commandBuffer.BeginRenderPass(m_renderPass, m_framebuffer, ivec2(0, 0), ivec2(m_rendering.GetWidth()/4, m_rendering.GetHeight()/4));
 	{
 		commandBuffer.Bind(m_pipeline);
 
-		SetTexture<GL_TEXTURE_2D>(m_pipeline.m_uShaderObject, "texSampler", 0, parameters[0], m_sampler);
+		SetTexture<GL_TEXTURE_2D>(m_pipeline.m_uShaderObject, "texSampler", 0, inputTexture, m_sampler);
 
 		m_rendering.m_pQuadMesh->draw(commandBuffer);
 	}

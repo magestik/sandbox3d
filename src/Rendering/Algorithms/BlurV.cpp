@@ -105,9 +105,17 @@ void BlurV::release(void)
  */
 bool BlurV::render(const RenderGraph::Parameters & parameters, RHI::CommandBuffer & commandBuffer)
 {
-	assert(parameters.size() == 1);
-
 	rmt_ScopedOpenGLSample(BlurV);
+
+	if (parameters.size() != 1)
+	{
+		glClearColor(0.0f, 1.0f, 0.0f, 0.0f);
+		glClear(GL_COLOR_BUFFER_BIT);
+		return false;
+	}
+
+	assert(parameters[0].first == 0);
+	const GLuint inputTexture = parameters[0].second.asUInt;
 
 	ivec2 viewport(m_rendering.GetWidth(), m_rendering.GetHeight()); // FIXME : m_pTexture H/W
 
@@ -115,7 +123,7 @@ bool BlurV::render(const RenderGraph::Parameters & parameters, RHI::CommandBuffe
 	{
 		commandBuffer.Bind(m_pipeline);
 
-		SetTexture<GL_TEXTURE_2D>(m_pipeline.m_uShaderObject, "texSampler", 0, parameters[0], m_sampler);
+		SetTexture<GL_TEXTURE_2D>(m_pipeline.m_uShaderObject, "texSampler", 0, inputTexture, m_sampler);
 
 		m_rendering.m_pQuadMesh->draw(commandBuffer);
 	}

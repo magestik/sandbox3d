@@ -198,17 +198,50 @@ void Compose::release(void)
  */
 bool Compose::render(const RenderGraph::Parameters & parameters, RHI::CommandBuffer & commandBuffer)
 {
-	assert(parameters.size() == 3);
+	rmt_ScopedOpenGLSample(Compose);
 
+	if (parameters.size() != 3)
 	{
-		glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, parameters[2], 0);
+		glClearColor(0.0f, 1.0f, 0.0f, 0.0f);
+		glClear(GL_COLOR_BUFFER_BIT);
+		return false;
+	}
+
+	GLuint inputTextureDepth = 0;
+	GLuint inputTextureDiffuse = 0;
+	GLuint inputTextureSpecular = 0;
+
+	for (auto & parameter : parameters)
+	{
+		if (parameter.first == 0)
+		{
+			inputTextureDepth = parameter.second.asUInt;
+		}
+		else if (parameter.first == 1)
+		{
+			inputTextureDiffuse = parameter.second.asUInt;
+		}
+		else if (parameter.first == 2)
+		{
+			inputTextureSpecular = parameter.second.asUInt;
+		}
+	}
+
+	GLint drawFboId = 0;
+	glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &drawFboId);
+
+	if (drawFboId != 0)
+	{
+		glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, inputTextureDepth, 0);
 
 		GLenum status = glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER);
 
-		assert(GL_FRAMEBUFFER_COMPLETE == status);
+		if (GL_FRAMEBUFFER_COMPLETE != status)
+		{
+			glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, 0, 0);
+			return false;
+		}
 	}
-
-	rmt_ScopedOpenGLSample(Compose);
 
 	commandBuffer.BeginRenderPass(m_renderPass, m_framebuffer, ivec2(0, 0), ivec2(m_rendering.GetWidth(), m_rendering.GetHeight()), m_rendering.m_vCurrentClearColor);
 
@@ -220,8 +253,8 @@ bool Compose::render(const RenderGraph::Parameters & parameters, RHI::CommandBuf
 		mat4x4 mDepthView = _lookAt(vec3(0,0,0), m_rendering.GetScene().m_pLight->GetDirection(), vec3(0.0f, -1.0f, 0.0f));
 		mat4x4 mDepthViewProjection = m_rendering.m_matShadowMapProjection * mDepthView;
 
-		SetTexture<GL_TEXTURE_2D>(m_pipeline_diffuse_specular.m_uShaderObject, "diffuseLightSampler", 0, parameters[0], m_samplerDiffuseLightSampler);
-		SetTexture<GL_TEXTURE_2D>(m_pipeline_diffuse_specular.m_uShaderObject, "specularLightSampler", 1, parameters[1], m_samplerSpecularLightSampler);
+		SetTexture<GL_TEXTURE_2D>(m_pipeline_diffuse_specular.m_uShaderObject, "diffuseLightSampler", 0, inputTextureDiffuse, m_samplerDiffuseLightSampler);
+		SetTexture<GL_TEXTURE_2D>(m_pipeline_diffuse_specular.m_uShaderObject, "specularLightSampler", 1, inputTextureSpecular, m_samplerSpecularLightSampler);
 
 #if 0
 		const GPU::Texture<GL_TEXTURE_2D> * pShadowMap = m_rendering.GetRenderTexture("shadow_map");
@@ -280,8 +313,8 @@ bool Compose::render(const RenderGraph::Parameters & parameters, RHI::CommandBuf
 		mat4x4 mDepthView = _lookAt(vec3(0,0,0), m_rendering.GetScene().m_pLight->GetDirection(), vec3(0.0f, -1.0f, 0.0f));
 		mat4x4 mDepthViewProjection = m_rendering.m_matShadowMapProjection * mDepthView;
 
-		SetTexture<GL_TEXTURE_2D>(m_pipeline_diffuse_only.m_uShaderObject, "diffuseLightSampler", 0, parameters[0], m_samplerDiffuseLightSampler);
-		SetTexture<GL_TEXTURE_2D>(m_pipeline_diffuse_only.m_uShaderObject, "specularLightSampler", 1, parameters[1], m_samplerSpecularLightSampler);
+		SetTexture<GL_TEXTURE_2D>(m_pipeline_diffuse_only.m_uShaderObject, "diffuseLightSampler", 0, inputTextureDiffuse, m_samplerDiffuseLightSampler);
+		SetTexture<GL_TEXTURE_2D>(m_pipeline_diffuse_only.m_uShaderObject, "specularLightSampler", 1, inputTextureSpecular, m_samplerSpecularLightSampler);
 
 #if 0
 		const GPU::Texture<GL_TEXTURE_2D> * pShadowMap = m_rendering.GetRenderTexture("shadow_map");
@@ -339,8 +372,8 @@ bool Compose::render(const RenderGraph::Parameters & parameters, RHI::CommandBuf
 		mat4x4 mDepthView = _lookAt(vec3(0,0,0), m_rendering.GetScene().m_pLight->GetDirection(), vec3(0.0f, -1.0f, 0.0f));
 		mat4x4 mDepthViewProjection = m_rendering.m_matShadowMapProjection * mDepthView;
 
-		SetTexture<GL_TEXTURE_2D>(m_pipeline_specular_only.m_uShaderObject, "diffuseLightSampler", 0, parameters[0], m_samplerDiffuseLightSampler);
-		SetTexture<GL_TEXTURE_2D>(m_pipeline_specular_only.m_uShaderObject, "specularLightSampler", 1, parameters[1], m_samplerSpecularLightSampler);
+		SetTexture<GL_TEXTURE_2D>(m_pipeline_specular_only.m_uShaderObject, "diffuseLightSampler", 0, inputTextureDiffuse, m_samplerDiffuseLightSampler);
+		SetTexture<GL_TEXTURE_2D>(m_pipeline_specular_only.m_uShaderObject, "specularLightSampler", 1, inputTextureSpecular, m_samplerSpecularLightSampler);
 
 #if 0
 		const GPU::Texture<GL_TEXTURE_2D> * pShadowMap = m_rendering.GetRenderTexture("shadow_map");
@@ -398,8 +431,8 @@ bool Compose::render(const RenderGraph::Parameters & parameters, RHI::CommandBuf
 		mat4x4 mDepthView = _lookAt(vec3(0,0,0), m_rendering.GetScene().m_pLight->GetDirection(), vec3(0.0f, -1.0f, 0.0f));
 		mat4x4 mDepthViewProjection = m_rendering.m_matShadowMapProjection * mDepthView;
 
-		SetTexture<GL_TEXTURE_2D>(m_pipeline_none.m_uShaderObject, "diffuseLightSampler", 0, parameters[0], m_samplerDiffuseLightSampler);
-		SetTexture<GL_TEXTURE_2D>(m_pipeline_none.m_uShaderObject, "specularLightSampler", 1, parameters[1], m_samplerSpecularLightSampler);
+		SetTexture<GL_TEXTURE_2D>(m_pipeline_none.m_uShaderObject, "diffuseLightSampler", 0, inputTextureDiffuse, m_samplerDiffuseLightSampler);
+		SetTexture<GL_TEXTURE_2D>(m_pipeline_none.m_uShaderObject, "specularLightSampler", 1, inputTextureSpecular, m_samplerSpecularLightSampler);
 
 #if 0
 		const GPU::Texture<GL_TEXTURE_2D> * pShadowMap = m_rendering.GetRenderTexture("shadow_map");
@@ -449,6 +482,7 @@ bool Compose::render(const RenderGraph::Parameters & parameters, RHI::CommandBuf
 
 	commandBuffer.EndRenderPass();
 
+	if (drawFboId != 0)
 	{
 		glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, 0, 0);
 

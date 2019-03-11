@@ -159,9 +159,34 @@ void RenderLightsToAccumBuffer::release(void)
  */
 bool RenderLightsToAccumBuffer::render(const RenderGraph::Parameters & parameters, RHI::CommandBuffer & commandBuffer)
 {
-	assert(parameters.size() == 2 || parameters.size() == 3);
-
 	rmt_ScopedOpenGLSample(RenderLightsToAccumBuffer);
+
+	if (parameters.size() != 3)
+	{
+		glClearColor(0.0f, 1.0f, 0.0f, 0.0f);
+		glClear(GL_COLOR_BUFFER_BIT);
+		return false;
+	}
+
+	GLuint inputTextureAO = 0;
+	GLuint inputTextureDepth = 0;
+	GLuint inputTextureNormal = 0;
+
+	for (auto & parameter : parameters)
+	{
+		if (parameter.first == 0)
+		{
+			inputTextureDepth = parameter.second.asUInt;
+		}
+		else if (parameter.first == 1)
+		{
+			inputTextureNormal = parameter.second.asUInt;
+		}
+		else if (parameter.first == 2)
+		{
+			inputTextureAO = parameter.second.asUInt;
+		}
+	}
 
 	commandBuffer.BeginRenderPass(m_renderPass, m_framebuffer, ivec2(0, 0), ivec2(m_rendering.GetWidth(), m_rendering.GetHeight()), vec4(0.0f, 0.0f, 0.0f, 0.0f));
 
@@ -170,7 +195,7 @@ bool RenderLightsToAccumBuffer::render(const RenderGraph::Parameters & parameter
 		commandBuffer.Bind(m_pipelineAmbientLight);
 
 		SetUniform(m_pipelineAmbientLight.m_uShaderObject, "ambientColor", vec3(0.5f, 0.5f, 0.5f));
-		SetTexture<GL_TEXTURE_2D>(m_pipelineAmbientLight.m_uShaderObject, "aoSampler", 2, parameters[2], m_samplerNormal);
+		SetTexture<GL_TEXTURE_2D>(m_pipelineAmbientLight.m_uShaderObject, "aoSampler", 2, inputTextureAO, m_samplerNormal);
 
 		m_rendering.m_pQuadMesh->draw(commandBuffer);
 	}
@@ -193,8 +218,8 @@ bool RenderLightsToAccumBuffer::render(const RenderGraph::Parameters & parameter
 		SetUniform(m_pipelineDirectionalLight.m_uShaderObject, "lightDir", - normalize(m_rendering.GetScene().m_pLight->GetDirection()));
 		SetUniform(m_pipelineDirectionalLight.m_uShaderObject, "lightColor", RGB_to_XYZ * m_rendering.GetScene().m_pLight->GetColor());
 
-		SetTexture<GL_TEXTURE_2D>(m_pipelineDirectionalLight.m_uShaderObject, "depthSampler", 0, parameters[1], m_samplerDepth);
-		SetTexture<GL_TEXTURE_2D>(m_pipelineDirectionalLight.m_uShaderObject, "normalSampler", 1, parameters[0], m_samplerNormal);
+		SetTexture<GL_TEXTURE_2D>(m_pipelineDirectionalLight.m_uShaderObject, "depthSampler", 0, inputTextureDepth, m_samplerDepth);
+		SetTexture<GL_TEXTURE_2D>(m_pipelineDirectionalLight.m_uShaderObject, "normalSampler", 1, inputTextureNormal, m_samplerNormal);
 
 		m_rendering.m_pQuadMesh->draw(commandBuffer);
 	}

@@ -115,16 +115,24 @@ void Fog::release(void)
  */
 bool Fog::render(const RenderGraph::Parameters & parameters, RHI::CommandBuffer & commandBuffer)
 {
-	assert(parameters.size() == 1);
-
 	rmt_ScopedOpenGLSample(Fog);
+
+	if (parameters.size() != 1)
+	{
+		glClearColor(0.0f, 1.0f, 0.0f, 0.0f);
+		glClear(GL_COLOR_BUFFER_BIT);
+		return false;
+	}
+
+	assert(parameters[0].first == 0);
+	const GLuint inputTexture = parameters[0].second.asUInt;
 
 	commandBuffer.BeginRenderPass(m_renderPass, m_framebuffer, ivec2(0, 0), ivec2(m_rendering.GetWidth(), m_rendering.GetHeight()));
 
 	{
 		commandBuffer.Bind(m_pipeline);
 
-		SetTexture<GL_TEXTURE_2D>(m_pipeline.m_uShaderObject, "depthMapSampler", 0, parameters[0], m_samplerDepthMap);
+		SetTexture<GL_TEXTURE_2D>(m_pipeline.m_uShaderObject, "depthMapSampler", 0, inputTexture, m_samplerDepthMap);
 
 		SetUniform(m_pipeline.m_uShaderObject, "FogScattering", m_rendering.environment.fog.Scattering);
 		SetUniform(m_pipeline.m_uShaderObject, "FogExtinction", m_rendering.environment.fog.Extinction);

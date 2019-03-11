@@ -105,16 +105,36 @@ void CelShading::release(void)
  */
 bool CelShading::render(const RenderGraph::Parameters & parameters, RHI::CommandBuffer & commandBuffer)
 {
-	assert(parameters.size() == 2);
-
 	rmt_ScopedOpenGLSample(CelShading);
+
+	if (parameters.size() != 2)
+	{
+		glClearColor(0.0f, 1.0f, 0.0f, 0.0f);
+		glClear(GL_COLOR_BUFFER_BIT);
+		return false;
+	}
+
+	GLuint inputTextureEdge = 0;
+	GLuint inputTextureColor = 0;
+
+	for (auto & parameter : parameters)
+	{
+		if (parameter.first == 0)
+		{
+			inputTextureEdge = parameter.second.asUInt;
+		}
+		else if (parameter.first == 1)
+		{
+			inputTextureColor = parameter.second.asUInt;
+		}
+	}
 
 	commandBuffer.BeginRenderPass(m_renderPass, m_framebuffer, ivec2(0, 0), ivec2(m_rendering.GetWidth(), m_rendering.GetHeight()));
 	{
 		commandBuffer.Bind(m_pipeline);
 
-		SetTexture<GL_TEXTURE_2D>(m_pipeline.m_uShaderObject, "edgeSampler", 0, parameters[0], m_sampler);
-		SetTexture<GL_TEXTURE_2D>(m_pipeline.m_uShaderObject, "colorSampler", 1, parameters[1], m_sampler);
+		SetTexture<GL_TEXTURE_2D>(m_pipeline.m_uShaderObject, "edgeSampler", 0, inputTextureEdge, m_sampler);
+		SetTexture<GL_TEXTURE_2D>(m_pipeline.m_uShaderObject, "colorSampler", 1, inputTextureColor, m_sampler);
 		SetUniform(m_pipeline.m_uShaderObject, "threshold", m_fThreshold);
 
 		m_rendering.m_pQuadMesh->draw(commandBuffer);

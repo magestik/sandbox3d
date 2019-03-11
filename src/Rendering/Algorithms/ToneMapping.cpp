@@ -6,7 +6,7 @@
  * @brief Constructor
  * @param rendering
  */
-ToneMapping::ToneMapping() : GraphicsAlgorithm(), m_fAverageLuminance(0.5f), m_fWhite2(0.5f)
+ToneMapping::ToneMapping() : GraphicsAlgorithm()
 {
 	// ...
 }
@@ -105,22 +105,47 @@ void ToneMapping::release(void)
  */
 bool ToneMapping::render(const RenderGraph::Parameters & parameters, RHI::CommandBuffer & commandBuffer)
 {
-	assert(parameters.size() == 1);
-
 	rmt_ScopedOpenGLSample(ToneMapping);
+
+	GLuint inputTexture = 0;
+	float avLum = 0.5f;
+	float white2 = 0.5f;
+
+	for (auto & parameter : parameters)
+	{
+		if (parameter.first == 0)
+		{
+			inputTexture = parameter.second.asUInt;
+		}
+		else if (parameter.first == 1)
+		{
+			avLum = parameter.second.asFloat;
+		}
+		else if (parameter.first == 2)
+		{
+			white2 = parameter.second.asFloat;
+		}
+	}
+
+	if (inputTexture == 0)
+	{
+		glClearColor(0.0f, 1.0f, 0.0f, 0.0f);
+		glClear(GL_COLOR_BUFFER_BIT);
+		return false;
+	}
 
 	commandBuffer.BeginRenderPass(m_renderPass, m_framebuffer, ivec2(0, 0), ivec2(m_rendering.GetWidth(), m_rendering.GetHeight()));
 	{
 		commandBuffer.Bind(m_pipeline);
 
-		SetTexture<GL_TEXTURE_2D>(m_pipeline.m_uShaderObject, "texSampler", 0, parameters[0], m_sampler);
+		SetTexture<GL_TEXTURE_2D>(m_pipeline.m_uShaderObject, "texSampler", 0, inputTexture, m_sampler);
 
-		SetUniform(m_pipeline.m_uShaderObject, "avLum", m_fAverageLuminance);
-		SetUniform(m_pipeline.m_uShaderObject, "white2", m_fWhite2);
+		SetUniform(m_pipeline.m_uShaderObject, "avLum", avLum);
+		SetUniform(m_pipeline.m_uShaderObject, "white2", white2);
 
 		m_rendering.m_pQuadMesh->draw(commandBuffer);
 	}
 	commandBuffer.EndRenderPass();
 
-	return(true);
+	return true;
 }

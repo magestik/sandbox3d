@@ -24,7 +24,4 @@ private:
 
 	RHI::Pipeline m_pipeline;
 	RHI::Sampler m_sampler;
-
-	float m_fAverageLuminance;
-	float m_fWhite2;
 };

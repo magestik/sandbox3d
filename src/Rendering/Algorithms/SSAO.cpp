@@ -154,16 +154,36 @@ void SSAO::release(void)
  */
 bool SSAO::render(const RenderGraph::Parameters & parameters, RHI::CommandBuffer & commandBuffer)
 {
-	assert(parameters.size() == 2);
-
 	rmt_ScopedOpenGLSample(SSAO);
+
+	if (parameters.size() != 2)
+	{
+		glClearColor(0.0f, 1.0f, 0.0f, 0.0f);
+		glClear(GL_COLOR_BUFFER_BIT);
+		return false;
+	}
+
+	GLuint inputTextureDepth = 0;
+	GLuint inputTextureNormal = 0;
+
+	for (auto & parameter : parameters)
+	{
+		if (parameter.first == 0)
+		{
+			inputTextureDepth = parameter.second.asUInt;
+		}
+		else if (parameter.first == 1)
+		{
+			inputTextureNormal = parameter.second.asUInt;
+		}
+	}
 
 	commandBuffer.BeginRenderPass(m_renderPass, m_framebuffer, ivec2(0, 0), ivec2(m_rendering.GetWidth(), m_rendering.GetHeight()));
 	{
 		commandBuffer.Bind(m_pipeline);
 
-		SetTexture<GL_TEXTURE_2D>(m_pipeline.m_uShaderObject, "depthSampler", 0, parameters[1], m_sampler);
-		SetTexture<GL_TEXTURE_2D>(m_pipeline.m_uShaderObject, "normalSampler", 1, parameters[0], m_sampler);
+		SetTexture<GL_TEXTURE_2D>(m_pipeline.m_uShaderObject, "depthSampler", 0, inputTextureDepth, m_sampler);
+		SetTexture<GL_TEXTURE_2D>(m_pipeline.m_uShaderObject, "normalSampler", 1, inputTextureNormal, m_sampler);
 
 		SetTexture(m_pipeline.m_uShaderObject, "noiseSampler", 2, *m_pNoiseTexture, m_samplerNoise);
 
