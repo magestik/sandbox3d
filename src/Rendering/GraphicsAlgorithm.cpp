@@ -16,12 +16,14 @@
 #include "Algorithms/SobelFilter.h"
 #include "Algorithms/CelShading.h"
 
+extern Rendering  * g_pRendering; // TODO : remove this
+
 std::map<std::string, GraphicsAlgorithmFactory> GraphicsAlgorithm::m_FactoryMap;
 
 /**
  * @brief Constructor
  */
-GraphicsAlgorithm::GraphicsAlgorithm(Rendering & rendering, RHI::Framebuffer & framebuffer) :  m_rendering(rendering), m_framebuffer(framebuffer)
+GraphicsAlgorithm::GraphicsAlgorithm() :  m_rendering(*g_pRendering)
 {
 	// ...
 }
@@ -35,39 +37,19 @@ GraphicsAlgorithm::~GraphicsAlgorithm()
 }
 
 /**
- * @brief GraphicsAlgorithm::Create
- * @param szName
- * @param rendering
- * @param framebuffer
+ * @brief GraphicsAlgorithm::render
+ * @param parameters
  * @return
  */
-GraphicsAlgorithm * GraphicsAlgorithm::Create(const char * szType, Rendering & rendering, RHI::Framebuffer & framebuffer)
+bool GraphicsAlgorithm::render(const RenderGraph::Parameters & parameters)
 {
-	GraphicsAlgorithmFactory factory = m_FactoryMap[szType];
-	return(factory(rendering, framebuffer));
-}
+	RHI::CommandBuffer commandBuffer;
 
-/**
- * @brief GraphicsAlgorithm::Register
- * @param szName
- * @param factory
- */
-void GraphicsAlgorithm::RegisterEverything(void)
-{
-	m_FactoryMap["depth-only"]				= RenderDepthOnly::Create;
-	m_FactoryMap["geometry"]				= RenderSceneToGBuffer::Create;
-	m_FactoryMap["lights"]					= RenderLightsToAccumBuffer::Create;
-	m_FactoryMap["shadowmap-directional"]	= RenderSceneToShadowMap::Create;
+	commandBuffer.Begin();
 
-	m_FactoryMap["compose"]					= Bloom::Create;
-	m_FactoryMap["BlurH"]					= BlurH::Create;
-	m_FactoryMap["BlurV"]					= BlurV::Create;
-	m_FactoryMap["bright"]					= BrightFilter::Create;
-	m_FactoryMap["lighting"]				= Compose::Create;
-	m_FactoryMap["fog"]						= Fog::Create;
-	m_FactoryMap["FXAA"]					= FXAA::Create;
-	m_FactoryMap["SSAO"]					= SSAO::Create;
-	m_FactoryMap["sobel"]					= SobelFilter::Create;
-	m_FactoryMap["tone-mapping"]			= ToneMapping::Create;
-	m_FactoryMap["cel-shading"]				= CelShading::Create;
+	render(parameters, commandBuffer);
+
+	commandBuffer.End();
+
+	return true;
 }

@@ -21,12 +21,13 @@
 #include "SceneListener.h"
 #include "Resources/ResourceManagerListener.h"
 
-#include "RenderTexture.h"
 #include "GraphicsAlgorithm.h"
 
 #include "Environment.h"
 
 #include "Shader/Interface.h"
+
+#include "RenderGraph.h"
 
 inline void SetUniform(GLuint uShaderObject, const char * name, const mat2x2 & m)
 {
@@ -133,16 +134,13 @@ class Rendering : public SceneListener, public ResourceManagerListener
 
 public:
 
-	explicit Rendering				(Scene & scene);
+	explicit Rendering				(Scene & scene, RenderGraph::Factory & factory);
 
 	void	onReady					(const char * szBaseDir);
 
 	void	onResize				(int width, int height);
 
 	void	onUpdate				(const mat4x4 & mView, const vec4 & clearColor);
-
-	void initQueue					(const char * szFilename);
-	void releaseQueue				(void);
 
 	unsigned int GetWidth(void) const
 	{
@@ -152,18 +150,6 @@ public:
 	unsigned int GetHeight(void) const
 	{
 		return(m_uHeight);
-	}
-
-	const GPU::Texture<GL_TEXTURE_2D> * GetRenderTexture(const char * name) const
-	{
-		std::map<std::string, RenderTexture>::const_iterator it = m_mapTargets.find(name);
-
-		if (it != m_mapTargets.end())
-		{
-			return((*it).second.getTexture());
-		}
-
-		return(nullptr);
 	}
 
 	GLuint GetTexture(unsigned int TextureID) const
@@ -247,12 +233,7 @@ public:
 	GPU::Buffer<GL_UNIFORM_BUFFER> * m_pCameraBuffer;
 	GPU::Buffer<GL_UNIFORM_BUFFER> * m_pObjectsBuffer;
 
-	std::map<std::string, RenderTexture>	m_mapTargets;
-
 	std::map<std::string, RHI::ShaderModule> m_mapShaderModules;
-	std::map<std::string, RHI::Framebuffer>	m_mapFramebuffer;
-
-	std::vector<GraphicsAlgorithm*> m_renderQueue;
 
 	mat4x4	m_matCurrentView;
 	vec4	m_vCurrentClearColor;

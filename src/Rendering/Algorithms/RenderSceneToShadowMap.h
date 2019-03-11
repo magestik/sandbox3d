@@ -11,17 +11,16 @@ public:
 
 	//
 	// Constructor / Destructor
-	explicit		RenderSceneToShadowMap	(Rendering & rendering, RHI::Framebuffer & framebuffer);
-	virtual			~RenderSceneToShadowMap	(void);
+	explicit		RenderSceneToShadowMap	(void);
+	virtual			~RenderSceneToShadowMap	(void) override;
 
-	static GraphicsAlgorithm * Create(Rendering & rendering, RHI::Framebuffer & framebuffer);
+	static RenderGraph::Pass * Create();
 
 	//
 	// override GraphicsAlgorithm
 	virtual bool	init			(void) override;
-	virtual bool	release			(void) override;
-	virtual bool	render			(RHI::CommandBuffer & commandBuffer) override;
-	virtual void	setParameter	(const char * name, const char * value) override;
+	virtual void	release			(void) override;
+	virtual bool	render			(const RenderGraph::Parameters & parameters, RHI::CommandBuffer & commandBuffer) override;
 
 private:
 

@@ -53,10 +53,13 @@ bool RHI::CommandBuffer::BeginRenderPass(RenderPass & pass, Framebuffer & fb, co
 {
 	assert(m_bActive);
 
-	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fb.m_uFramebufferObject);
 
 	m_pCurrentPass = &pass;
 	m_pCurrentPass->Begin(0 == fb.m_uFramebufferObject);
+
+	return true;
+
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fb.m_uFramebufferObject);
 
 	glViewport(offset.x, offset.y, extent.x, extent.y);
 
@@ -76,10 +79,12 @@ bool RHI::CommandBuffer::BeginRenderPass(RenderPass & pass, Framebuffer & fb, co
 {
 	assert(m_bActive);
 
-	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fb.m_uFramebufferObject);
-
 	m_pCurrentPass = &pass;
 	m_pCurrentPass->Begin(0 == fb.m_uFramebufferObject);
+
+	return true;
+
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fb.m_uFramebufferObject);
 
 	glViewport(offset.x, offset.y, extent.x, extent.y);
 
@@ -105,10 +110,12 @@ bool RHI::CommandBuffer::BeginRenderPass(RenderPass & pass, Framebuffer & fb, co
 {
 	assert(m_bActive);
 
-	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fb.m_uFramebufferObject);
-
 	m_pCurrentPass = &pass;
 	m_pCurrentPass->Begin(0 == fb.m_uFramebufferObject);
+
+	return true;
+
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fb.m_uFramebufferObject);
 
 	glViewport(offset.x, offset.y, extent.x, extent.y);
 
@@ -137,10 +144,12 @@ bool RHI::CommandBuffer::BeginRenderPass(RenderPass & pass, Framebuffer & fb, co
 	assert(m_bActive);
 	assert(nullptr == m_pCurrentPass);
 
-	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fb.m_uFramebufferObject);
-
 	m_pCurrentPass = &pass;
 	m_pCurrentPass->Begin(0 == fb.m_uFramebufferObject);
+
+	return true;
+
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fb.m_uFramebufferObject);
 
 	glViewport(offset.x, offset.y, extent.x, extent.y);
 
@@ -174,10 +183,12 @@ void RHI::CommandBuffer::EndRenderPass(void)
 	assert(m_bActive);
 	assert(nullptr != m_pCurrentPass);
 
-	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-
 	m_pCurrentPass->End();
 	m_pCurrentPass = nullptr;
+
+	return;
+
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 }
 
 /**

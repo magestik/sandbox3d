@@ -6,7 +6,7 @@
  * @brief Constructor
  * @param rendering
  */
-CelShading::CelShading(Rendering & rendering, RHI::Framebuffer & framebuffer) : GraphicsAlgorithm(rendering, framebuffer), m_pEdgesTexture(nullptr), m_pColorTexture(nullptr), m_fThreshold(0.5f)
+CelShading::CelShading() : GraphicsAlgorithm(), m_fThreshold(0.5f)
 {
 	// ...
 }
@@ -25,9 +25,9 @@ CelShading::~CelShading(void)
  * @param framebuffer
  * @return
  */
-GraphicsAlgorithm * CelShading::Create(Rendering & rendering, RHI::Framebuffer & framebuffer)
+RenderGraph::Pass * CelShading::Create()
 {
-	return(new CelShading(rendering, framebuffer));
+	return(new CelShading());
 }
 
 /**
@@ -93,9 +93,9 @@ bool CelShading::init(void)
  * @brief CelShading::release
  * @return
  */
-bool CelShading::release(void)
+void CelShading::release(void)
 {
-	return(false); // TODO
+	// TODO
 }
 
 /**
@@ -103,16 +103,18 @@ bool CelShading::release(void)
  * @param commandBuffer
  * @return
  */
-bool CelShading::render(RHI::CommandBuffer & commandBuffer)
+bool CelShading::render(const RenderGraph::Parameters & parameters, RHI::CommandBuffer & commandBuffer)
 {
+	assert(parameters.size() == 2);
+
 	rmt_ScopedOpenGLSample(CelShading);
 
 	commandBuffer.BeginRenderPass(m_renderPass, m_framebuffer, ivec2(0, 0), ivec2(m_rendering.GetWidth(), m_rendering.GetHeight()));
 	{
 		commandBuffer.Bind(m_pipeline);
 
-		SetTexture(m_pipeline.m_uShaderObject, "edgeSampler", 0, *m_pEdgesTexture, m_sampler);
-		SetTexture(m_pipeline.m_uShaderObject, "colorSampler", 1, *m_pColorTexture, m_sampler);
+		SetTexture<GL_TEXTURE_2D>(m_pipeline.m_uShaderObject, "edgeSampler", 0, parameters[0], m_sampler);
+		SetTexture<GL_TEXTURE_2D>(m_pipeline.m_uShaderObject, "colorSampler", 1, parameters[1], m_sampler);
 		SetUniform(m_pipeline.m_uShaderObject, "threshold", m_fThreshold);
 
 		m_rendering.m_pQuadMesh->draw(commandBuffer);
@@ -120,29 +122,4 @@ bool CelShading::render(RHI::CommandBuffer & commandBuffer)
 	commandBuffer.EndRenderPass();
 
 	return(true);
-}
-
-/**
- * @brief CelShading::setParameter
- * @param name
- * @param value
- */
-void CelShading::setParameter(const char * name, const char * value)
-{
-	if (!strcmp("edges", name))
-	{
-		m_pEdgesTexture = m_rendering.m_mapTargets[value].getTexture();
-	}
-	else if (!strcmp("color", name))
-	{
-		m_pColorTexture = m_rendering.m_mapTargets[value].getTexture();
-	}
-	else if (!strcmp("threshold", name))
-	{
-		m_fThreshold = atof(value);
-	}
-	else
-	{
-		assert(false);
-	}
 }

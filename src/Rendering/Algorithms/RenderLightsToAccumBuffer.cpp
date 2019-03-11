@@ -14,9 +14,13 @@ const mat3x3 XYZ_to_RGB(2.0413690, -0.5649464, -0.3446944, -0.9692660, 1.8760108
  * @brief Constructor
  * @param rendering
  */
-RenderLightsToAccumBuffer::RenderLightsToAccumBuffer(Rendering & rendering, RHI::Framebuffer & framebuffer) : GraphicsAlgorithm(rendering, framebuffer) , m_pDepthTexture(nullptr), m_pNormalsTexture(nullptr), m_pAmbientOcclusionTexture(nullptr)
+RenderLightsToAccumBuffer::RenderLightsToAccumBuffer() : GraphicsAlgorithm()
 {
-	// ...
+	m_loadOp = ATTACHMENT_LOAD_OP_CLEAR;
+	m_fClearColorR = 0.0f;
+	m_fClearColorG = 0.0f;
+	m_fClearColorB = 0.0f;
+	m_fClearColorA = 0.0f;
 }
 
 /**
@@ -33,9 +37,9 @@ RenderLightsToAccumBuffer::~RenderLightsToAccumBuffer(void)
  * @param framebuffer
  * @return
  */
-GraphicsAlgorithm * RenderLightsToAccumBuffer::Create(Rendering & rendering, RHI::Framebuffer & framebuffer)
+RenderGraph::Pass * RenderLightsToAccumBuffer::Create()
 {
-	return(new RenderLightsToAccumBuffer(rendering, framebuffer));
+	return(new RenderLightsToAccumBuffer());
 }
 
 /**
@@ -143,9 +147,9 @@ bool RenderLightsToAccumBuffer::init(void)
  * @brief RenderLightsToAccumBuffer::release
  * @return
  */
-bool RenderLightsToAccumBuffer::release(void)
+void RenderLightsToAccumBuffer::release(void)
 {
-	return(false); // TODO
+	// TODO
 }
 
 /**
@@ -153,18 +157,20 @@ bool RenderLightsToAccumBuffer::release(void)
  * @param commandBuffer
  * @return
  */
-bool RenderLightsToAccumBuffer::render(RHI::CommandBuffer & commandBuffer)
+bool RenderLightsToAccumBuffer::render(const RenderGraph::Parameters & parameters, RHI::CommandBuffer & commandBuffer)
 {
+	assert(parameters.size() == 2 || parameters.size() == 3);
+
 	rmt_ScopedOpenGLSample(RenderLightsToAccumBuffer);
 
 	commandBuffer.BeginRenderPass(m_renderPass, m_framebuffer, ivec2(0, 0), ivec2(m_rendering.GetWidth(), m_rendering.GetHeight()), vec4(0.0f, 0.0f, 0.0f, 0.0f));
 
-	if (m_pAmbientOcclusionTexture)
+	if (parameters.size() == 3)
 	{
 		commandBuffer.Bind(m_pipelineAmbientLight);
 
 		SetUniform(m_pipelineAmbientLight.m_uShaderObject, "ambientColor", vec3(0.5f, 0.5f, 0.5f));
-		SetTexture(m_pipelineAmbientLight.m_uShaderObject, "aoSampler", 2, *m_pAmbientOcclusionTexture, m_samplerNormal);
+		SetTexture<GL_TEXTURE_2D>(m_pipelineAmbientLight.m_uShaderObject, "aoSampler", 2, parameters[2], m_samplerNormal);
 
 		m_rendering.m_pQuadMesh->draw(commandBuffer);
 	}
@@ -187,15 +193,8 @@ bool RenderLightsToAccumBuffer::render(RHI::CommandBuffer & commandBuffer)
 		SetUniform(m_pipelineDirectionalLight.m_uShaderObject, "lightDir", - normalize(m_rendering.GetScene().m_pLight->GetDirection()));
 		SetUniform(m_pipelineDirectionalLight.m_uShaderObject, "lightColor", RGB_to_XYZ * m_rendering.GetScene().m_pLight->GetColor());
 
-		if (m_pDepthTexture)
-		{
-			SetTexture(m_pipelineDirectionalLight.m_uShaderObject, "depthSampler", 0, *m_pDepthTexture, m_samplerDepth);
-		}
-
-		if (m_pNormalsTexture)
-		{
-			SetTexture(m_pipelineDirectionalLight.m_uShaderObject, "normalSampler", 1, *m_pNormalsTexture, m_samplerNormal);
-		}
+		SetTexture<GL_TEXTURE_2D>(m_pipelineDirectionalLight.m_uShaderObject, "depthSampler", 0, parameters[1], m_samplerDepth);
+		SetTexture<GL_TEXTURE_2D>(m_pipelineDirectionalLight.m_uShaderObject, "normalSampler", 1, parameters[0], m_samplerNormal);
 
 		m_rendering.m_pQuadMesh->draw(commandBuffer);
 	}
@@ -205,29 +204,4 @@ bool RenderLightsToAccumBuffer::render(RHI::CommandBuffer & commandBuffer)
 	commandBuffer.EndRenderPass();
 
 	return(true);
-}
-
-/**
- * @brief RenderLightsToAccumBuffer::setParameter
- * @param name
- * @param value
- */
-void RenderLightsToAccumBuffer::setParameter(const char * name, const char * value)
-{
-	if (!strcmp("geometry_depth", name))
-	{
-		m_pDepthTexture = m_rendering.m_mapTargets[value].getTexture();
-	}
-	else if (!strcmp("geometry_normals", name))
-	{
-		m_pNormalsTexture = m_rendering.m_mapTargets[value].getTexture();
-	}
-	else if (!strcmp("geometry_ao", name))
-	{
-		m_pAmbientOcclusionTexture = m_rendering.m_mapTargets[value].getTexture();
-	}
-	else
-	{
-		assert(false);
-	}
 }

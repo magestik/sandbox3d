@@ -7,34 +7,35 @@
 
 #include <map>
 
+#include "RenderGraph.h"
+
 class Rendering;
 class GraphicsAlgorithm;
 
-typedef GraphicsAlgorithm * (*GraphicsAlgorithmFactory)(Rendering & rendering, RHI::Framebuffer & framebuffer);
+typedef GraphicsAlgorithm * (*GraphicsAlgorithmFactory)(void);
 
-class GraphicsAlgorithm
+class GraphicsAlgorithm : public RenderGraph::Pass
 {
 
 public:
 
-	GraphicsAlgorithm(Rendering & rendering, RHI::Framebuffer & framebuffer);
-	~GraphicsAlgorithm();
+	GraphicsAlgorithm();
+	~GraphicsAlgorithm() override;
 
-	virtual bool init(void) = 0;
-	virtual bool release(void) = 0;
+	virtual bool init(void) override = 0;
+	virtual void release(void) override = 0;
 
-	virtual bool render(RHI::CommandBuffer & commandBuffer) = 0;
+	virtual bool render(const RenderGraph::Parameters & parameters) override;
 
-	virtual void setParameter(const char * name, const char * value) = 0;
+protected:
 
-	static GraphicsAlgorithm * Create(const char * szType, Rendering & rendering, RHI::Framebuffer & framebuffer);
-	static void RegisterEverything(void);
+	virtual bool render(const RenderGraph::Parameters & parameters, RHI::CommandBuffer & commandBuffer) = 0;
 
 protected:
 
 	Rendering & m_rendering;
 
-	RHI::Framebuffer & m_framebuffer;
+	RHI::Framebuffer m_framebuffer;
 
 	RHI::RenderPass m_renderPass;
 
@@ -42,4 +43,3 @@ private:
 
 	static std::map<std::string, GraphicsAlgorithmFactory> m_FactoryMap;
 };
-

@@ -6,9 +6,14 @@
  * @brief Constructor
  * @param rendering
  */
-RenderDepthOnly::RenderDepthOnly(Rendering & rendering, RHI::Framebuffer & framebuffer) : GraphicsAlgorithm(rendering, framebuffer)
+RenderDepthOnly::RenderDepthOnly() : GraphicsAlgorithm()
 {
-	// ...
+	m_loadOp = ATTACHMENT_LOAD_OP_CLEAR;
+	m_fClearColorR = 0.0f;
+	m_fClearColorG = 0.0f;
+	m_fClearColorB = 0.0f;
+	m_fClearColorA = 0.0f;
+	m_fClearDepthValue = 1.0f;
 }
 
 /**
@@ -25,9 +30,9 @@ RenderDepthOnly::~RenderDepthOnly(void)
  * @param framebuffer
  * @return
  */
-GraphicsAlgorithm * RenderDepthOnly::Create(Rendering & rendering, RHI::Framebuffer & framebuffer)
+RenderGraph::Pass * RenderDepthOnly::Create()
 {
-	return(new RenderDepthOnly(rendering, framebuffer));
+	return(new RenderDepthOnly());
 }
 
 /**
@@ -92,9 +97,9 @@ bool RenderDepthOnly::init(void)
  * @brief RenderDepthOnly::release
  * @return
  */
-bool RenderDepthOnly::release(void)
+void RenderDepthOnly::release(void)
 {
-	return(false); // TODO
+	// TODO
 }
 
 /**
@@ -102,7 +107,7 @@ bool RenderDepthOnly::release(void)
  * @param commandBuffer
  * @return
  */
-bool RenderDepthOnly::render(RHI::CommandBuffer & commandBuffer)
+bool RenderDepthOnly::render(const RenderGraph::Parameters & parameters, RHI::CommandBuffer & commandBuffer)
 {
 	rmt_ScopedOpenGLSample(RenderDepthOnly);
 
@@ -138,14 +143,4 @@ bool RenderDepthOnly::render(RHI::CommandBuffer & commandBuffer)
 	commandBuffer.EndRenderPass();
 
 	return(true);
-}
-
-/**
- * @brief RenderDepthOnly::setParameter
- * @param name
- * @param value
- */
-void RenderDepthOnly::setParameter(const char * name, const char * value)
-{
-	assert(false);
 }

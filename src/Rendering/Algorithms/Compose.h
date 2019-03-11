@@ -9,17 +9,16 @@ public:
 
 	//
 	// Constructor / Destructor
-	Compose(Rendering & rendering, RHI::Framebuffer & framebuffer);
-	virtual ~Compose(void);
+	Compose();
+	virtual ~Compose(void) override;
 
-	static GraphicsAlgorithm * Create(Rendering & rendering, RHI::Framebuffer & framebuffer);
+	static RenderGraph::Pass * Create();
 
 	//
 	// override GraphicsAlgorithm
 	virtual bool	init			(void) override;
-	virtual bool	release			(void) override;
-	virtual bool	render			(RHI::CommandBuffer & commandBuffer) override;
-	virtual void	setParameter	(const char * name, const char * value) override;
+	virtual void	release			(void) override;
+	virtual bool	render			(const RenderGraph::Parameters & parameters, RHI::CommandBuffer & commandBuffer) override;
 
 private:
 
@@ -33,8 +32,4 @@ private:
 	RHI::Sampler m_samplerDiffuseLightSampler;
 	RHI::Sampler m_samplerSpecularLightSampler;
 	RHI::Sampler m_samplerShadowMap;
-
-	const GPU::Texture<GL_TEXTURE_2D> * m_pDepthTexture;
-	const GPU::Texture<GL_TEXTURE_2D> * m_pDiffuseLightsTexture;
-	const GPU::Texture<GL_TEXTURE_2D> * m_pSpecularLightsTexture;
 };

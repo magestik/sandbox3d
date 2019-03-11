@@ -6,7 +6,7 @@
  * @brief Constructor
  * @param rendering
  */
-BrightFilter::BrightFilter(Rendering & rendering, RHI::Framebuffer & framebuffer) : GraphicsAlgorithm(rendering, framebuffer), m_pTexture(nullptr)
+BrightFilter::BrightFilter() : GraphicsAlgorithm()
 {
 	// ...
 }
@@ -25,9 +25,9 @@ BrightFilter::~BrightFilter(void)
  * @param framebuffer
  * @return
  */
-GraphicsAlgorithm * BrightFilter::Create(Rendering & rendering, RHI::Framebuffer & framebuffer)
+RenderGraph::Pass * BrightFilter::Create()
 {
-	return(new BrightFilter(rendering, framebuffer));
+	return(new BrightFilter());
 }
 
 /**
@@ -93,9 +93,9 @@ bool BrightFilter::init(void)
  * @brief BrightFilter::release
  * @return
  */
-bool BrightFilter::release(void)
+void BrightFilter::release(void)
 {
-	return(false); // TODO
+	// TODO
 }
 
 /**
@@ -103,36 +103,21 @@ bool BrightFilter::release(void)
  * @param commandBuffer
  * @return
  */
-bool BrightFilter::render(RHI::CommandBuffer & commandBuffer)
+bool BrightFilter::render(const RenderGraph::Parameters & parameters, RHI::CommandBuffer & commandBuffer)
 {
+	assert(parameters.size() == 1);
+
 	rmt_ScopedOpenGLSample(BrightFilter);
 
 	commandBuffer.BeginRenderPass(m_renderPass, m_framebuffer, ivec2(0, 0), ivec2(m_rendering.GetWidth()/4, m_rendering.GetHeight()/4));
 	{
 		commandBuffer.Bind(m_pipeline);
 
-		SetTexture(m_pipeline.m_uShaderObject, "texSampler", 0, *m_pTexture, m_sampler);
+		SetTexture<GL_TEXTURE_2D>(m_pipeline.m_uShaderObject, "texSampler", 0, parameters[0], m_sampler);
 
 		m_rendering.m_pQuadMesh->draw(commandBuffer);
 	}
 	commandBuffer.EndRenderPass();
 
 	return(true);
-}
-
-/**
- * @brief BrightFilter::setParameter
- * @param name
- * @param value
- */
-void BrightFilter::setParameter(const char * name, const char * value)
-{
-	if (!strcmp("texture", name))
-	{
-		m_pTexture = m_rendering.m_mapTargets[value].getTexture();
-	}
-	else
-	{
-		assert(false);
-	}
 }

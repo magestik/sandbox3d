@@ -6,9 +6,17 @@
  * @brief Constructor
  * @param rendering
  */
-RenderSceneToGBuffer::RenderSceneToGBuffer(Rendering & rendering, RHI::Framebuffer & framebuffer) : GraphicsAlgorithm(rendering, framebuffer)
+RenderSceneToGBuffer::RenderSceneToGBuffer() : GraphicsAlgorithm()
 {
-	// ...
+	m_loadOp = ATTACHMENT_LOAD_OP_CLEAR;
+	m_fClearColorR = 0.0f;
+	m_fClearColorG = 0.0f;
+	m_fClearColorB = 0.0f;
+	m_fClearColorA = 0.0f;
+
+	m_depthLoadOp = ATTACHMENT_LOAD_OP_CLEAR;
+	m_fClearDepthValue = 1.0f;
+	m_iClearStencilValue = 0;
 }
 
 /**
@@ -25,9 +33,9 @@ RenderSceneToGBuffer::~RenderSceneToGBuffer(void)
  * @param framebuffer
  * @return
  */
-GraphicsAlgorithm * RenderSceneToGBuffer::Create(Rendering & rendering, RHI::Framebuffer & framebuffer)
+RenderGraph::Pass * RenderSceneToGBuffer::Create()
 {
-	return(new RenderSceneToGBuffer(rendering, framebuffer));
+	return(new RenderSceneToGBuffer());
 }
 
 /**
@@ -113,9 +121,9 @@ bool RenderSceneToGBuffer::init(void)
  * @brief RenderSceneToGBuffer::release
  * @return
  */
-bool RenderSceneToGBuffer::release(void)
+void RenderSceneToGBuffer::release(void)
 {
-	return(false); // TODO
+	// TODO
 }
 
 /**
@@ -123,7 +131,7 @@ bool RenderSceneToGBuffer::release(void)
  * @param commandBuffer
  * @return
  */
-bool RenderSceneToGBuffer::render(RHI::CommandBuffer & commandBuffer)
+bool RenderSceneToGBuffer::render(const RenderGraph::Parameters & parameters, RHI::CommandBuffer & commandBuffer)
 {
 	rmt_ScopedOpenGLSample(RenderSceneToGBuffer);
 
@@ -207,14 +215,4 @@ bool RenderSceneToGBuffer::render(RHI::CommandBuffer & commandBuffer)
 	commandBuffer.EndRenderPass();
 
 	return(true);
-}
-
-/**
- * @brief RenderSceneToGBuffer::setParameter
- * @param name
- * @param value
- */
-void RenderSceneToGBuffer::setParameter(const char * name, const char * value)
-{
-	assert(false);
 }

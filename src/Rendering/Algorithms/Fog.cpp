@@ -11,7 +11,7 @@
  * @brief Constructor
  * @param rendering
  */
-Fog::Fog(Rendering & rendering, RHI::Framebuffer & framebuffer) : GraphicsAlgorithm(rendering, framebuffer), m_pDepthTexture(nullptr)
+Fog::Fog() : GraphicsAlgorithm()
 {
 	// ...
 }
@@ -30,9 +30,9 @@ Fog::~Fog(void)
  * @param framebuffer
  * @return
  */
-GraphicsAlgorithm * Fog::Create(Rendering & rendering, RHI::Framebuffer & framebuffer)
+RenderGraph::Pass * Fog::Create()
 {
-	return(new Fog(rendering, framebuffer));
+	return(new Fog());
 }
 
 /**
@@ -103,9 +103,9 @@ bool Fog::init(void)
  * @brief Fog::release
  * @return
  */
-bool Fog::release(void)
+void Fog::release(void)
 {
-	return(false); // TODO
+	// TODO
 }
 
 /**
@@ -113,8 +113,10 @@ bool Fog::release(void)
  * @param commandBuffer
  * @return
  */
-bool Fog::render(RHI::CommandBuffer & commandBuffer)
+bool Fog::render(const RenderGraph::Parameters & parameters, RHI::CommandBuffer & commandBuffer)
 {
+	assert(parameters.size() == 1);
+
 	rmt_ScopedOpenGLSample(Fog);
 
 	commandBuffer.BeginRenderPass(m_renderPass, m_framebuffer, ivec2(0, 0), ivec2(m_rendering.GetWidth(), m_rendering.GetHeight()));
@@ -122,7 +124,7 @@ bool Fog::render(RHI::CommandBuffer & commandBuffer)
 	{
 		commandBuffer.Bind(m_pipeline);
 
-		SetTexture(m_pipeline.m_uShaderObject, "depthMapSampler", 0, *m_pDepthTexture, m_samplerDepthMap);
+		SetTexture<GL_TEXTURE_2D>(m_pipeline.m_uShaderObject, "depthMapSampler", 0, parameters[0], m_samplerDepthMap);
 
 		SetUniform(m_pipeline.m_uShaderObject, "FogScattering", m_rendering.environment.fog.Scattering);
 		SetUniform(m_pipeline.m_uShaderObject, "FogExtinction", m_rendering.environment.fog.Extinction);
@@ -137,21 +139,4 @@ bool Fog::render(RHI::CommandBuffer & commandBuffer)
 	commandBuffer.EndRenderPass();
 
 	return(true);
-}
-
-/**
- * @brief Fog::setParameter
- * @param name
- * @param value
- */
-void Fog::setParameter(const char * name, const char * value)
-{
-	if (!strcmp("geometry_depth", name))
-	{
-		m_pDepthTexture = m_rendering.m_mapTargets[value].getTexture();
-	}
-	else
-	{
-		assert(false);
-	}
 }

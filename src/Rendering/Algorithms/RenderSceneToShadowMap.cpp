@@ -8,9 +8,10 @@
  * @brief Constructor
  * @param rendering
  */
-RenderSceneToShadowMap::RenderSceneToShadowMap(Rendering & rendering, RHI::Framebuffer & framebuffer) : GraphicsAlgorithm(rendering, framebuffer)
+RenderSceneToShadowMap::RenderSceneToShadowMap() : GraphicsAlgorithm()
 {
-	// ...
+	m_loadOp = ATTACHMENT_LOAD_OP_CLEAR;
+	m_fClearDepthValue = 1.0f;
 }
 
 /**
@@ -27,9 +28,9 @@ RenderSceneToShadowMap::~RenderSceneToShadowMap(void)
  * @param framebuffer
  * @return
  */
-GraphicsAlgorithm * RenderSceneToShadowMap::Create(Rendering & rendering, RHI::Framebuffer & framebuffer)
+RenderGraph::Pass * RenderSceneToShadowMap::Create()
 {
-	return(new RenderSceneToShadowMap(rendering, framebuffer));
+	return(new RenderSceneToShadowMap());
 }
 
 /**
@@ -92,9 +93,9 @@ bool RenderSceneToShadowMap::init(void)
  * @brief RenderSceneToShadowMap::release
  * @return
  */
-bool RenderSceneToShadowMap::release(void)
+void RenderSceneToShadowMap::release(void)
 {
-	return(false); // TODO
+	// TODO
 }
 
 /**
@@ -102,7 +103,7 @@ bool RenderSceneToShadowMap::release(void)
  * @param commandBuffer
  * @return
  */
-bool RenderSceneToShadowMap::render(RHI::CommandBuffer & commandBuffer)
+bool RenderSceneToShadowMap::render(const RenderGraph::Parameters & parameters, RHI::CommandBuffer & commandBuffer)
 {
 	rmt_ScopedOpenGLSample(RenderSceneToShadowMap);
 
@@ -138,14 +139,4 @@ bool RenderSceneToShadowMap::render(RHI::CommandBuffer & commandBuffer)
 	commandBuffer.EndRenderPass();
 
 	return(true);
-}
-
-/**
- * @brief RenderSceneToShadowMap::setParameter
- * @param name
- * @param value
- */
-void RenderSceneToShadowMap::setParameter(const char * name, const char * value)
-{
-	assert(false);
 }

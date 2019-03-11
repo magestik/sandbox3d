@@ -1,6 +1,6 @@
 #include "Rendering/Rendering.h"
 
-//#include <RenderGraph.h>
+#include "RenderGraph.h"
 
 #if defined _WIN32 || defined __CYGWIN__
 #	ifdef Sandbox3D_EditorInterface_EXPORTS
@@ -32,7 +32,7 @@ namespace RenderGraph
 	class Factory;
 }
 
-static Rendering  * g_pRendering = nullptr;
+Rendering  * g_pRendering = nullptr;
 static std::string g_strBaseDir;
 
 extern "C"
@@ -44,9 +44,9 @@ DLL_PUBLIC bool renderer_onLoad(const char * baseDirectory)
 	return(true);
 }
 
-DLL_PUBLIC bool renderer_onInit(Scene & scene)
+DLL_PUBLIC bool renderer_onInit(Scene & scene, RenderGraph::Factory & factory)
 {
-	g_pRendering = new Rendering(scene);
+	g_pRendering = new Rendering(scene, factory);
 	return(g_pRendering != nullptr);
 }
 
@@ -70,28 +70,6 @@ DLL_PUBLIC void renderer_onResize(unsigned int width, unsigned int height)
 DLL_PUBLIC void renderer_onUpdate(const mat4x4 & matView)
 {
 	g_pRendering->onUpdate(matView, vec4(0.7f, 0.7f, 0.7f, 1.0f));
-}
-
-DLL_PUBLIC void renderer_initQueue(const char * szFilename)
-{
-	g_pRendering->initQueue(szFilename);
-}
-
-DLL_PUBLIC void renderer_releaseQueue(void)
-{
-	g_pRendering->releaseQueue();
-}
-
-DLL_PUBLIC unsigned int renderer_getRenderTexture(const char * szName)
-{
-	const GPU::Texture<GL_TEXTURE_2D> * pRenderTexture = g_pRendering->GetRenderTexture(szName);
-
-	if (nullptr != pRenderTexture)
-	{
-		return(pRenderTexture->GetObject());
-	}
-
-	return(0);
 }
 
 }

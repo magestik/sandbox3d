@@ -6,7 +6,7 @@
  * @brief Constructor
  * @param rendering
  */
-BlurH::BlurH(Rendering & rendering, RHI::Framebuffer & framebuffer) : GraphicsAlgorithm(rendering, framebuffer), m_pTexture(nullptr)
+BlurH::BlurH() : GraphicsAlgorithm()
 {
 	// ...
 }
@@ -25,9 +25,9 @@ BlurH::~BlurH(void)
  * @param framebuffer
  * @return
  */
-GraphicsAlgorithm * BlurH::Create(Rendering & rendering, RHI::Framebuffer & framebuffer)
+RenderGraph::Pass * BlurH::Create()
 {
-	return(new BlurH(rendering, framebuffer));
+	return(new BlurH());
 }
 
 /**
@@ -93,9 +93,9 @@ bool BlurH::init(void)
  * @brief BlurH::release
  * @return
  */
-bool BlurH::release(void)
+void BlurH::release(void)
 {
-	return(false); // TODO
+	// TODO
 }
 
 /**
@@ -103,8 +103,10 @@ bool BlurH::release(void)
  * @param commandBuffer
  * @return
  */
-bool BlurH::render(RHI::CommandBuffer & commandBuffer)
+bool BlurH::render(const RenderGraph::Parameters & parameters, RHI::CommandBuffer & commandBuffer)
 {
+	assert(parameters.size() == 1);
+
 	rmt_ScopedOpenGLSample(BlurH);
 
 	ivec2 viewport(m_rendering.GetWidth(), m_rendering.GetHeight()); // FIXME : m_pTexture H/W
@@ -113,7 +115,7 @@ bool BlurH::render(RHI::CommandBuffer & commandBuffer)
 	{
 		commandBuffer.Bind(m_pipeline);
 
-		SetTexture(m_pipeline.m_uShaderObject, "texSampler", 0, *m_pTexture, m_sampler);
+		SetTexture<GL_TEXTURE_2D>(m_pipeline.m_uShaderObject, "texSampler", 0, parameters[0], m_sampler);
 
 		m_rendering.m_pQuadMesh->draw(commandBuffer);
 
@@ -121,21 +123,4 @@ bool BlurH::render(RHI::CommandBuffer & commandBuffer)
 	commandBuffer.EndRenderPass();
 
 	return(true);
-}
-
-/**
- * @brief BlurH::setParameter
- * @param name
- * @param value
- */
-void BlurH::setParameter(const char * name, const char * value)
-{
-	if (!strcmp("texture", name))
-	{
-		m_pTexture = m_rendering.m_mapTargets[value].getTexture();
-	}
-	else
-	{
-		assert(false);
-	}
 }

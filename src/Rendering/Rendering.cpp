@@ -12,8 +12,7 @@
 
 #include "utils.inl"
 
-#include "RenderXML.h"
-
+#include "Algorithms/RenderDepthOnly.h"
 #include "Algorithms/RenderSceneToGBuffer.h"
 #include "Algorithms/RenderSceneToShadowMap.h"
 #include "Algorithms/RenderLightsToAccumBuffer.h"
@@ -25,6 +24,9 @@
 #include "Algorithms/BlurH.h"
 #include "Algorithms/BlurV.h"
 #include "Algorithms/Bloom.h"
+#include "Algorithms/SSAO.h"
+#include "Algorithms/SobelFilter.h"
+#include "Algorithms/CelShading.h"
 
 #define _min(x, y) ((x < y) ? x : y)
 #define _max(x, y) ((x > y) ? x : y)
@@ -63,7 +65,7 @@ static inline unsigned int toPOT(unsigned int v)
 /**
  * @brief Rendering::onInitialize
  */
-Rendering::Rendering(Scene & scene)
+Rendering::Rendering(Scene & scene, RenderGraph::Factory & factory)
 : m_uWidth(1280)
 , m_uHeight(720)
 , m_fMinZ(MIN_Z)
@@ -71,13 +73,28 @@ Rendering::Rendering(Scene & scene)
 , m_pQuadMesh(nullptr)
 , m_pCameraBuffer(nullptr)
 , m_pObjectsBuffer(nullptr)
-, m_mapTargets()
 , m_bReady(false)
 , m_bInitialized(false)
 , m_depthClipSpace(NEGATIVE_ONE_TO_ONE)
 , m_scene(scene)
 {
-	GraphicsAlgorithm::RegisterEverything();
+	factory.registerPass("depth-only", RenderDepthOnly::Create);
+	factory.registerPass("geometry", RenderSceneToGBuffer::Create);
+	factory.registerPass("lights", RenderLightsToAccumBuffer::Create);
+	factory.registerPass("shadowmap-directional", RenderSceneToShadowMap::Create);
+
+	factory.registerPass("bloom", Bloom::Create);
+	factory.registerPass("BlurH", BlurH::Create);
+	factory.registerPass("BlurV", BlurV::Create);
+	factory.registerPass("bright", BrightFilter::Create);
+	factory.registerPass("lighting", Compose::Create);
+	factory.registerPass("fog", Fog::Create);
+	factory.registerPass("FXAA", FXAA::Create);
+	factory.registerPass("SSAO", SSAO::Create);
+	factory.registerPass("sobel", SobelFilter::Create);
+	factory.registerPass("tone-mapping", ToneMapping::Create);
+	factory.registerPass("cel-shading", CelShading::Create);
+
 	m_scene.registerListener(this);
 	m_scene.getResourceManager().registerListener(this);
 }
@@ -115,61 +132,6 @@ void Rendering::onReady(const char * szBaseDir)
 	rmt_BindOpenGL();
 
 	m_bReady = true;
-}
-
-/**
- * @brief Rendering::initQueue
- */
-void Rendering::initQueue(const char * szFilename)
-{
-	if (!m_bReady)
-	{
-		return;
-	}
-
-	if (m_bInitialized)
-	{
-		releaseQueue();
-	}
-
-	RenderXML renderXML(szFilename);
-
-	renderXML.initializeTargets(*this);
-
-	onResize(m_uWidth, m_uHeight);
-
-	renderXML.initializeFramebuffers(*this);
-
-	renderXML.initializeQueue(*this);
-
-	for (GraphicsAlgorithm * qElmt : m_renderQueue)
-	{
-		qElmt->init();
-	}
-
-	m_bInitialized = true;
-}
-
-/**
- * @brief Rendering::initQueue
- */
-void Rendering::releaseQueue(void)
-{
-	for (GraphicsAlgorithm * qElmt : m_renderQueue)
-	{
-		qElmt->release();
-		delete qElmt;
-	}
-
-	m_renderQueue.clear();
-
-	// TODO : delete framebuffers
-
-	m_mapFramebuffer.clear();
-
-	// TODO : delete targets
-
-	m_mapTargets.clear();
 }
 
 /**
@@ -395,11 +357,6 @@ void Rendering::onResize(int width, int height)
 
 	//m_matShadowMapProjection = _perspective(45.0f, 1.0f, 1.0f, 100.0f); // FIXME : spot light 45° hardcoded
 	m_matShadowMapProjection = _ortho(-20.0f, 20.0f, -20.0f, 20.0f, -10.0f, 100.0f); // FIXME : use scene AABB and/or camera frustrum to compute this
-
-	for (std::map<std::string, RenderTexture>::iterator it = m_mapTargets.begin(); it != m_mapTargets.end(); ++it)
-	{
-		it->second.resize(m_uWidth, m_uHeight);
-	}
 }
 
 /**
@@ -419,23 +376,6 @@ void Rendering::onUpdate(const mat4x4 & mView, const vec4 & clearColor)
 
 	m_matCurrentView = mView;
 	m_vCurrentClearColor = clearColorXYZ;
-
-	rmt_BeginCPUSample(loop, 0);
-
-	for (GraphicsAlgorithm * a : m_renderQueue)
-	{
-		rmt_ScopedCPUSample(iteration, 0)
-
-		RHI::CommandBuffer commandBuffer;
-
-		commandBuffer.Begin();
-
-		a->render(commandBuffer);
-
-		commandBuffer.End();
-	}
-
-	rmt_EndCPUSample();
 }
 
 /**
@@ -466,7 +406,7 @@ void Rendering::onMeshImported(const ResourceManager & scene, unsigned int MeshI
 	GPU::Buffer<GL_ELEMENT_ARRAY_BUFFER> * indexBuffer = new GPU::Buffer<GL_ELEMENT_ARRAY_BUFFER>();
 
 	GPU::realloc(*vertexBuffer, NumVertices * sizeof(SubMesh::VertexSimple));
-	GPU::realloc(*indexBuffer, NumIndices * 3 * sizeof(unsigned int));
+	GPU::realloc(*indexBuffer, NumIndices * sizeof(unsigned int));
 
 	void * pVertexGPU = GPU::mmap(*vertexBuffer, GL_WRITE_ONLY);
 	void * pIndexGPU = GPU::mmap(*indexBuffer, GL_WRITE_ONLY);

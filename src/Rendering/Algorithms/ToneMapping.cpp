@@ -6,7 +6,7 @@
  * @brief Constructor
  * @param rendering
  */
-ToneMapping::ToneMapping(Rendering & rendering, RHI::Framebuffer & framebuffer) : GraphicsAlgorithm(rendering, framebuffer), m_pTexture(nullptr),  m_fAverageLuminance(0.5f), m_fWhite2(0.5f)
+ToneMapping::ToneMapping() : GraphicsAlgorithm(), m_fAverageLuminance(0.5f), m_fWhite2(0.5f)
 {
 	// ...
 }
@@ -25,9 +25,9 @@ ToneMapping::~ToneMapping(void)
  * @param framebuffer
  * @return
  */
-GraphicsAlgorithm * ToneMapping::Create(Rendering & rendering, RHI::Framebuffer & framebuffer)
+RenderGraph::Pass * ToneMapping::Create()
 {
-	return(new ToneMapping(rendering, framebuffer));
+	return(new ToneMapping());
 }
 
 /**
@@ -93,9 +93,9 @@ bool ToneMapping::init(void)
  * @brief ToneMapping::release
  * @return
  */
-bool ToneMapping::release(void)
+void ToneMapping::release(void)
 {
-	return(false); // TODO
+	// TODO
 }
 
 /**
@@ -103,15 +103,17 @@ bool ToneMapping::release(void)
  * @param commandBuffer
  * @return
  */
-bool ToneMapping::render(RHI::CommandBuffer & commandBuffer)
+bool ToneMapping::render(const RenderGraph::Parameters & parameters, RHI::CommandBuffer & commandBuffer)
 {
+	assert(parameters.size() == 1);
+
 	rmt_ScopedOpenGLSample(ToneMapping);
 
 	commandBuffer.BeginRenderPass(m_renderPass, m_framebuffer, ivec2(0, 0), ivec2(m_rendering.GetWidth(), m_rendering.GetHeight()));
 	{
 		commandBuffer.Bind(m_pipeline);
 
-		SetTexture(m_pipeline.m_uShaderObject, "texSampler", 0, *m_pTexture, m_sampler);
+		SetTexture<GL_TEXTURE_2D>(m_pipeline.m_uShaderObject, "texSampler", 0, parameters[0], m_sampler);
 
 		SetUniform(m_pipeline.m_uShaderObject, "avLum", m_fAverageLuminance);
 		SetUniform(m_pipeline.m_uShaderObject, "white2", m_fWhite2);
@@ -121,29 +123,4 @@ bool ToneMapping::render(RHI::CommandBuffer & commandBuffer)
 	commandBuffer.EndRenderPass();
 
 	return(true);
-}
-
-/**
- * @brief ToneMapping::setParameter
- * @param name
- * @param value
- */
-void ToneMapping::setParameter(const char * name, const char * value)
-{
-	if (!strcmp("texture", name))
-	{
-		m_pTexture = m_rendering.m_mapTargets[value].getTexture();
-	}
-	else if (!strcmp("avLum", name))
-	{
-		m_fAverageLuminance = atof(value);
-	}
-	else if (!strcmp("white2", name))
-	{
-		m_fWhite2 = atof(value);
-	}
-	else
-	{
-		assert(false);
-	}
 }

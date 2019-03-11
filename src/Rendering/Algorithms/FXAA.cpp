@@ -6,7 +6,7 @@
  * @brief Constructor
  * @param rendering
  */
-FXAA::FXAA(Rendering & rendering, RHI::Framebuffer & framebuffer) : GraphicsAlgorithm(rendering, framebuffer), m_pTexture(nullptr)
+FXAA::FXAA() : GraphicsAlgorithm()
 {
 	// ...
 }
@@ -25,9 +25,9 @@ FXAA::~FXAA(void)
  * @param framebuffer
  * @return
  */
-GraphicsAlgorithm * FXAA::Create(Rendering & rendering, RHI::Framebuffer & framebuffer)
+RenderGraph::Pass * FXAA::Create()
 {
-	return(new FXAA(rendering, framebuffer));
+	return(new FXAA());
 }
 
 /**
@@ -93,9 +93,9 @@ bool FXAA::init(void)
  * @brief FXAA::release
  * @return
  */
-bool FXAA::release(void)
+void FXAA::release(void)
 {
-	return(false); // TODO
+	// TODO
 }
 
 /**
@@ -103,15 +103,17 @@ bool FXAA::release(void)
  * @param commandBuffer
  * @return
  */
-bool FXAA::render(RHI::CommandBuffer & commandBuffer)
+bool FXAA::render(const RenderGraph::Parameters & parameters, RHI::CommandBuffer & commandBuffer)
 {
+	assert(parameters.size() == 1);
+
 	rmt_ScopedOpenGLSample(FXAA);
 
 	commandBuffer.BeginRenderPass(m_renderPass, m_framebuffer, ivec2(0, 0), ivec2(m_rendering.GetWidth(), m_rendering.GetHeight()));
 	{
 		commandBuffer.Bind(m_pipeline);
 
-		SetTexture(m_pipeline.m_uShaderObject, "texSampler", 0, *m_pTexture, m_sampler);
+		SetTexture<GL_TEXTURE_2D>(m_pipeline.m_uShaderObject, "texSampler", 0, parameters[0], m_sampler);
 
 		SetUniform(m_pipeline.m_uShaderObject, "fxaaQualityRcpFrame", vec2(1.0/m_rendering.GetWidth(), 1.0/m_rendering.GetHeight()));
 
@@ -120,21 +122,4 @@ bool FXAA::render(RHI::CommandBuffer & commandBuffer)
 	commandBuffer.EndRenderPass();
 
 	return(true);
-}
-
-/**
- * @brief FXAA::setParameter
- * @param name
- * @param value
- */
-void FXAA::setParameter(const char * name, const char * value)
-{
-	if (!strcmp("texture", name))
-	{
-		m_pTexture = m_rendering.m_mapTargets[value].getTexture();
-	}
-	else
-	{
-		assert(false);
-	}
 }

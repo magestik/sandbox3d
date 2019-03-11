@@ -27,6 +27,8 @@ else (USE_VULKAN)
 
 endif (USE_VULKAN)
 
+find_package(RenderGraph REQUIRED)
+
 # TinyXML
 find_package(TinyXML2 REQUIRED)
 
@@ -41,7 +43,7 @@ set_target_properties(Sandbox3D_EditorInterface PROPERTIES CXX_VISIBILITY_PRESET
 
 target_link_libraries(Sandbox3D PUBLIC "rt" "dl")
 
-target_link_libraries(Sandbox3D PUBLIC scene linear-algebra ${OPENGL_LIBRARIES} ${TINYXML2_LIBRARY} Remotery)
+target_link_libraries(Sandbox3D PUBLIC scene linear-algebra RenderGraph ${OPENGL_LIBRARIES} ${TINYXML2_LIBRARY} Remotery)
 
 add_custom_target(deploy_shaders ALL COMMAND "${PROJECT_SOURCE_DIR}/scripts/deploy_shaders.sh" WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
 

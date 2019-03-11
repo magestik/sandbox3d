@@ -6,7 +6,7 @@
  * @brief Constructor
  * @param rendering
  */
-Bloom::Bloom(Rendering & rendering, RHI::Framebuffer & framebuffer) : GraphicsAlgorithm(rendering, framebuffer), m_pTexture(nullptr)
+Bloom::Bloom() : GraphicsAlgorithm()
 {
 	// ...
 }
@@ -25,9 +25,9 @@ Bloom::~Bloom(void)
  * @param framebuffer
  * @return
  */
-GraphicsAlgorithm * Bloom::Create(Rendering & rendering, RHI::Framebuffer & framebuffer)
+RenderGraph::Pass * Bloom::Create()
 {
-	return(new Bloom(rendering, framebuffer));
+	return(new Bloom());
 }
 
 /**
@@ -97,9 +97,9 @@ bool Bloom::init(void)
  * @brief Bloom::release
  * @return
  */
-bool Bloom::release(void)
+void Bloom::release(void)
 {
-	return(false); // TODO
+	// TODO
 }
 
 /**
@@ -107,36 +107,21 @@ bool Bloom::release(void)
  * @param commandBuffer
  * @return
  */
-bool Bloom::render(RHI::CommandBuffer & commandBuffer)
+bool Bloom::render(const RenderGraph::Parameters & parameters, RHI::CommandBuffer & commandBuffer)
 {
+	assert(parameters.size() == 1);
+
 	rmt_ScopedOpenGLSample(Bloom);
 
 	commandBuffer.BeginRenderPass(m_renderPass, m_framebuffer, ivec2(0, 0), ivec2(m_rendering.GetWidth(), m_rendering.GetHeight()));
 	{
 		commandBuffer.Bind(m_pipeline);
 
-		SetTexture(m_pipeline.m_uShaderObject, "texSampler", 0, *m_pTexture, m_sampler);
+		SetTexture<GL_TEXTURE_2D>(m_pipeline.m_uShaderObject, "texSampler", 0, parameters[0], m_sampler);
 
 		m_rendering.m_pQuadMesh->draw(commandBuffer);
 	}
 	commandBuffer.EndRenderPass();
 
 	return(true);
-}
-
-/**
- * @brief Bloom::setParameter
- * @param name
- * @param value
- */
-void Bloom::setParameter(const char * name, const char * value)
-{
-	if (!strcmp("texture", name))
-	{
-		m_pTexture = m_rendering.m_mapTargets[value].getTexture();
-	}
-	else
-	{
-		assert(false);
-	}
 }

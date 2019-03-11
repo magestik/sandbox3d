@@ -8,7 +8,7 @@
  * @brief Constructor
  * @param rendering
  */
-SSAO::SSAO(Rendering & rendering, RHI::Framebuffer & framebuffer) : GraphicsAlgorithm(rendering, framebuffer), m_pTextureDepth(nullptr), m_pTextureNormals(nullptr)
+SSAO::SSAO() : GraphicsAlgorithm()
 {
 	// ...
 }
@@ -27,9 +27,9 @@ SSAO::~SSAO(void)
  * @param framebuffer
  * @return
  */
-GraphicsAlgorithm * SSAO::Create(Rendering & rendering, RHI::Framebuffer & framebuffer)
+RenderGraph::Pass * SSAO::Create()
 {
-	return(new SSAO(rendering, framebuffer));
+	return(new SSAO());
 }
 
 /**
@@ -122,7 +122,8 @@ bool SSAO::init(void)
 			ssaoNoise.push_back(noise);
 		}
 
-		m_noiseTexture.init<GL_RGB32F>(4, 4, (void*)ssaoNoise.data(), GL_RGB, GL_FLOAT);
+		m_pNoiseTexture = new GPU::Texture<GL_TEXTURE_2D>();
+		m_pNoiseTexture->init<GL_RGB32F>(4, 4, (void*)ssaoNoise.data(), GL_RGB, GL_FLOAT);
 	}
 
 	//
@@ -130,7 +131,7 @@ bool SSAO::init(void)
 	SetUniformBlockBinding(m_pipeline.m_uShaderObject, "CameraBlock", Rendering::BLOCK_BINDING_CAMERA);
 	SetUniformBlockBinding(m_pipeline.m_uShaderObject, "ObjectBlock", Rendering::BLOCK_BINDING_OBJECT);
 
-	SetUniformBlockBinding(m_pipeline.m_uShaderObject, "CameraBlockFrag", Rendering::BLOCK_BINDING_CAMERA);
+//	SetUniformBlockBinding(m_pipeline.m_uShaderObject, "CameraBlockFrag", Rendering::BLOCK_BINDING_CAMERA);
 
 	return(true);
 }
@@ -139,11 +140,11 @@ bool SSAO::init(void)
  * @brief SSAO::release
  * @return
  */
-bool SSAO::release(void)
+void SSAO::release(void)
 {
 	m_kernel.clear();
 
-	return(false); // TODO
+	// TODO
 }
 
 /**
@@ -151,17 +152,20 @@ bool SSAO::release(void)
  * @param commandBuffer
  * @return
  */
-bool SSAO::render(RHI::CommandBuffer & commandBuffer)
+bool SSAO::render(const RenderGraph::Parameters & parameters, RHI::CommandBuffer & commandBuffer)
 {
+	assert(parameters.size() == 2);
+
 	rmt_ScopedOpenGLSample(SSAO);
 
 	commandBuffer.BeginRenderPass(m_renderPass, m_framebuffer, ivec2(0, 0), ivec2(m_rendering.GetWidth(), m_rendering.GetHeight()));
 	{
 		commandBuffer.Bind(m_pipeline);
 
-		SetTexture(m_pipeline.m_uShaderObject, "depthSampler", 0, *m_pTextureDepth, m_sampler);
-		SetTexture(m_pipeline.m_uShaderObject, "normalSampler", 1, *m_pTextureNormals, m_sampler);
-		SetTexture(m_pipeline.m_uShaderObject, "noiseSampler", 2, m_noiseTexture, m_samplerNoise);
+		SetTexture<GL_TEXTURE_2D>(m_pipeline.m_uShaderObject, "depthSampler", 0, parameters[1], m_sampler);
+		SetTexture<GL_TEXTURE_2D>(m_pipeline.m_uShaderObject, "normalSampler", 1, parameters[0], m_sampler);
+
+		SetTexture(m_pipeline.m_uShaderObject, "noiseSampler", 2, *m_pNoiseTexture, m_samplerNoise);
 
 		SetUniform(m_pipeline.m_uShaderObject, "noiseScale", vec2(m_rendering.GetWidth()/4.0f, m_rendering.GetHeight()/4.0f));
 		SetUniform(m_pipeline.m_uShaderObject, "samples", m_kernel.data(), m_kernel.size());
@@ -171,25 +175,4 @@ bool SSAO::render(RHI::CommandBuffer & commandBuffer)
 	commandBuffer.EndRenderPass();
 
 	return(true);
-}
-
-/**
- * @brief SSAO::setParameter
- * @param name
- * @param value
- */
-void SSAO::setParameter(const char * name, const char * value)
-{
-	if (!strcmp("geometry_depth", name))
-	{
-		m_pTextureDepth = m_rendering.m_mapTargets[value].getTexture();
-	}
-	else if (!strcmp("geometry_normals", name))
-	{
-		m_pTextureNormals = m_rendering.m_mapTargets[value].getTexture();
-	}
-	else
-	{
-		assert(false);
-	}
 }

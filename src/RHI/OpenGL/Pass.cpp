@@ -109,9 +109,11 @@ void RHI::RenderPass::End(void)
 	assert(m_bActive);
 	assert(m_uCurrentSubpass == (m_aPass.size() - 1));
 
-	glDrawBuffer(GL_BACK);
-
 	m_bActive = false;
+
+	return;
+
+	glDrawBuffer(GL_BACK);
 }
 
 /**
@@ -131,6 +133,8 @@ void RHI::RenderPass::Next(void)
 void RHI::RenderPass::SetCurrent(unsigned int current)
 {
 	m_uCurrentSubpass = current;
+
+	return;
 
 	if (!m_bDefaultFramebuffer)
 	{
