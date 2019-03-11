@@ -134,9 +134,9 @@ bool Fog::render(const RenderGraph::Parameters & parameters, RHI::CommandBuffer 
 
 		SetTexture<GL_TEXTURE_2D>(m_pipeline.m_uShaderObject, "depthMapSampler", 0, inputTexture, m_samplerDepthMap);
 
-		SetUniform(m_pipeline.m_uShaderObject, "FogScattering", m_rendering.environment.fog.Scattering);
-		SetUniform(m_pipeline.m_uShaderObject, "FogExtinction", m_rendering.environment.fog.Extinction);
-		SetUniform(m_pipeline.m_uShaderObject, "FogColor", m_rendering.environment.fog.Color);
+		SetUniform(m_pipeline.m_uShaderObject, "FogScattering", m_rendering.GetScene().fog.Scattering);
+		SetUniform(m_pipeline.m_uShaderObject, "FogExtinction", m_rendering.GetScene().fog.Extinction);
+		SetUniform(m_pipeline.m_uShaderObject, "FogColor", m_rendering.GetScene().fog.Color);
 		SetUniform(m_pipeline.m_uShaderObject, "camera_near", 1.0f);
 		SetUniform(m_pipeline.m_uShaderObject, "camera_far", 1000.0f);
 		SetUniform(m_pipeline.m_uShaderObject, "near_plane_half_size", vec2(m_rendering.GetHeight() * float(m_rendering.GetWidth()/(float)m_rendering.GetHeight()), tanf(75.0f/2.0)));

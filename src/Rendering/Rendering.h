@@ -23,8 +23,6 @@
 
 #include "GraphicsAlgorithm.h"
 
-#include "Environment.h"
-
 #include "Shader/Interface.h"
 
 #include "RenderGraph.h"
@@ -253,9 +251,4 @@ public:
 	};
 
 	DEPTH_CLIP_SPACE m_depthClipSpace;
-
-public:
-
-	EnvironmentSettings environment;
-
 };

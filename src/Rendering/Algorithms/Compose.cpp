@@ -268,7 +268,7 @@ bool Compose::render(const RenderGraph::Parameters & parameters, RHI::CommandBuf
 			SetTexture<GL_TEXTURE_2D>(m_pipeline_diffuse_specular.m_uShaderObject, "shadowMap", 2, 0, m_samplerShadowMap);
 		}
 
-		SetUniform(m_pipeline_diffuse_specular.m_uShaderObject, "ambientColor", RGB_to_XYZ * m_rendering.environment.ambient.Color);
+		SetUniform(m_pipeline_diffuse_specular.m_uShaderObject, "ambientColor", RGB_to_XYZ * m_rendering.GetScene().m_vAmbientColor);
 		SetUniform(m_pipeline_diffuse_specular.m_uShaderObject, "DepthTransformation", mDepthViewProjection);
 		SetUniform(m_pipeline_diffuse_specular.m_uShaderObject, "View", m_rendering.m_matCurrentView);
 
@@ -328,7 +328,7 @@ bool Compose::render(const RenderGraph::Parameters & parameters, RHI::CommandBuf
 			SetTexture<GL_TEXTURE_2D>(m_pipeline_diffuse_only.m_uShaderObject, "shadowMap", 2, 0, m_samplerShadowMap);
 		}
 
-		SetUniform(m_pipeline_diffuse_only.m_uShaderObject, "ambientColor", RGB_to_XYZ * m_rendering.environment.ambient.Color);
+		SetUniform(m_pipeline_diffuse_only.m_uShaderObject, "ambientColor", RGB_to_XYZ * m_rendering.GetScene().m_vAmbientColor);
 		SetUniform(m_pipeline_diffuse_only.m_uShaderObject, "DepthTransformation", mDepthViewProjection);
 		SetUniform(m_pipeline_diffuse_only.m_uShaderObject, "View", m_rendering.m_matCurrentView);
 
@@ -387,7 +387,7 @@ bool Compose::render(const RenderGraph::Parameters & parameters, RHI::CommandBuf
 			SetTexture<GL_TEXTURE_2D>(m_pipeline_specular_only.m_uShaderObject, "shadowMap", 2, 0, m_samplerShadowMap);
 		}
 
-		SetUniform(m_pipeline_specular_only.m_uShaderObject, "ambientColor", RGB_to_XYZ * m_rendering.environment.ambient.Color);
+		SetUniform(m_pipeline_specular_only.m_uShaderObject, "ambientColor", RGB_to_XYZ * m_rendering.GetScene().m_vAmbientColor);
 		SetUniform(m_pipeline_specular_only.m_uShaderObject, "DepthTransformation", mDepthViewProjection);
 		SetUniform(m_pipeline_specular_only.m_uShaderObject, "View", m_rendering.m_matCurrentView);
 
@@ -446,7 +446,7 @@ bool Compose::render(const RenderGraph::Parameters & parameters, RHI::CommandBuf
 			SetTexture<GL_TEXTURE_2D>(m_pipeline_none.m_uShaderObject, "shadowMap", 2, 0, m_samplerShadowMap);
 		}
 
-		SetUniform(m_pipeline_none.m_uShaderObject, "ambientColor", RGB_to_XYZ * m_rendering.environment.ambient.Color);
+		SetUniform(m_pipeline_none.m_uShaderObject, "ambientColor", RGB_to_XYZ * m_rendering.GetScene().m_vAmbientColor);
 		SetUniform(m_pipeline_none.m_uShaderObject, "DepthTransformation", mDepthViewProjection);
 		SetUniform(m_pipeline_none.m_uShaderObject, "View", m_rendering.m_matCurrentView);
 
