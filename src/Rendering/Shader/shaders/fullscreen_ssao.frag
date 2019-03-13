@@ -4,28 +4,25 @@
 
 #include "fullscreen_viewray.h"
 
+#define KERNEL_SIZE 64
+
 uniform sampler2D depthSampler;
 uniform sampler2D normalSampler;
 
 uniform sampler2D noiseSampler;
 
-uniform vec3 samples[64];
+uniform vec3 samples[KERNEL_SIZE];
 
 uniform vec2 noiseScale;
 
-uniform vec3 viewPos;
-uniform vec3 lightDir;
-uniform vec3 lightColor;
+uniform float radius = 0.5;
 
-layout (std140) uniform CAMERA_BLOCK_DEFINITION(CameraBlockFrag);
+//layout (std140) uniform CAMERA_BLOCK_DEFINITION(CameraBlockFrag);
+layout (std140) uniform CAMERA_BLOCK_DEFINITION(CameraBlock);
 
 in VS_OUTPUT vsOut;
 
 layout (location = 0) out float outOcclusion;
-
-int kernelSize = 64;
-float radius = 0.5;
-float bias = 0.025;
 
 vec3 reconstruct_view_pos(vec2 screenCoord)
 {
@@ -62,7 +59,7 @@ void main(void)
 
 	float occlusion = 0.0;
 
-	for(int i = 0; i < kernelSize; ++i)
+	for(int i = 0; i < KERNEL_SIZE; ++i)
 	{
 		// get sample position
 		vec3 s = TBN * samples[i]; // From tangent to view-space
@@ -79,5 +76,5 @@ void main(void)
 		occlusion += (sampleDepth >= s.z ? 1.0 : 0.0) * rangeCheck;
 	}
 
-	outOcclusion = 1.0 - (occlusion / kernelSize);
+	outOcclusion = 1.0 - (occlusion / KERNEL_SIZE);
 }

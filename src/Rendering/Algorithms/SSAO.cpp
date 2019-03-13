@@ -156,7 +156,7 @@ bool SSAO::render(const RenderGraph::Parameters & parameters, RHI::CommandBuffer
 {
 	rmt_ScopedOpenGLSample(SSAO);
 
-	if (parameters.size() != 2)
+	if (parameters.size() < 2)
 	{
 		glClearColor(0.0f, 1.0f, 0.0f, 0.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
@@ -165,6 +165,7 @@ bool SSAO::render(const RenderGraph::Parameters & parameters, RHI::CommandBuffer
 
 	GLuint inputTextureDepth = 0;
 	GLuint inputTextureNormal = 0;
+	float radius = 0.5f;
 
 	for (auto & parameter : parameters)
 	{
@@ -175,6 +176,10 @@ bool SSAO::render(const RenderGraph::Parameters & parameters, RHI::CommandBuffer
 		else if (parameter.first == 1)
 		{
 			inputTextureNormal = parameter.second.asUInt;
+		}
+		else if (parameter.first == 2)
+		{
+			radius = parameter.second.asFloat;
 		}
 	}
 
@@ -187,8 +192,9 @@ bool SSAO::render(const RenderGraph::Parameters & parameters, RHI::CommandBuffer
 
 		SetTexture(m_pipeline.m_uShaderObject, "noiseSampler", 2, *m_pNoiseTexture, m_samplerNoise);
 
-		SetUniform(m_pipeline.m_uShaderObject, "noiseScale", vec2(m_rendering.GetWidth()/4.0f, m_rendering.GetHeight()/4.0f));
 		SetUniform(m_pipeline.m_uShaderObject, "samples", m_kernel.data(), m_kernel.size());
+		SetUniform(m_pipeline.m_uShaderObject, "noiseScale", vec2(m_rendering.GetWidth()/4.0f, m_rendering.GetHeight()/4.0f));
+		SetUniform(m_pipeline.m_uShaderObject, "radius", radius);
 
 		m_rendering.m_pQuadMesh->draw(commandBuffer);
 	}
