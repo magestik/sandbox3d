@@ -29,9 +29,6 @@ endif (USE_VULKAN)
 
 find_package(RenderGraph REQUIRED)
 
-# TinyXML
-find_package(TinyXML2 REQUIRED)
-
 # Compile application
 add_library(Sandbox3D STATIC ${RENDERING_SOURCE_FILES} ${RHI_SOURCE_FILES} ${UI_FILES} ${SHADERS_FILES})
 target_include_directories(Sandbox3D PUBLIC . ../include/)
@@ -41,11 +38,8 @@ target_link_libraries(Sandbox3D_EditorInterface PRIVATE Sandbox3D)
 set_target_properties(Sandbox3D_EditorInterface PROPERTIES C_VISIBILITY_PRESET hidden)
 set_target_properties(Sandbox3D_EditorInterface PROPERTIES CXX_VISIBILITY_PRESET hidden)
 
-target_link_libraries(Sandbox3D PUBLIC "rt" "dl")
-
-target_link_libraries(Sandbox3D PUBLIC scene linear-algebra RenderGraph ${OPENGL_LIBRARIES} ${TINYXML2_LIBRARY} Remotery)
+target_link_libraries(Sandbox3D PUBLIC scene linear-algebra RenderGraph ${OPENGL_LIBRARIES} Remotery)
 
 add_custom_target(deploy_shaders ALL COMMAND "${PROJECT_SOURCE_DIR}/scripts/deploy_shaders.sh" WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
 
 add_test(NAME check_shaders COMMAND "${PROJECT_SOURCE_DIR}/scripts/check_shaders.sh" WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}/data/shaders")
-add_test(NAME check_renderer COMMAND xmllint --noout --valid render.xml WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}/data")
