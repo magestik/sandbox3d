@@ -33,13 +33,11 @@ RenderLightsToAccumBuffer::~RenderLightsToAccumBuffer(void)
 
 /**
  * @brief RenderLightsToAccumBuffer::Create
- * @param rendering
- * @param framebuffer
  * @return
  */
-RenderGraph::Pass * RenderLightsToAccumBuffer::Create()
+RenderGraph::Operation * RenderLightsToAccumBuffer::Create()
 {
-	return(new RenderLightsToAccumBuffer());
+	return new RenderLightsToAccumBuffer();
 }
 
 /**
@@ -157,40 +155,24 @@ void RenderLightsToAccumBuffer::release(void)
  * @param commandBuffer
  * @return
  */
-bool RenderLightsToAccumBuffer::render(const RenderGraph::Parameters & parameters, RHI::CommandBuffer & commandBuffer)
+bool RenderLightsToAccumBuffer::render(RenderGraph::Parameters & parameters, RHI::CommandBuffer & commandBuffer)
 {
 	rmt_ScopedOpenGLSample(RenderLightsToAccumBuffer);
 
-	if (parameters.size() != 3)
+	if (parameters.size() < 3)
 	{
 		glClearColor(0.0f, 1.0f, 0.0f, 0.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 		return false;
 	}
 
-	GLuint inputTextureAO = 0;
-	GLuint inputTextureDepth = 0;
-	GLuint inputTextureNormal = 0;
-
-	for (auto & parameter : parameters)
-	{
-		if (parameter.first == 0)
-		{
-			inputTextureDepth = parameter.second.asUInt;
-		}
-		else if (parameter.first == 1)
-		{
-			inputTextureNormal = parameter.second.asUInt;
-		}
-		else if (parameter.first == 2)
-		{
-			inputTextureAO = parameter.second.asUInt;
-		}
-	}
+	const GLuint inputTextureAO = parameters.pop().asUInt;
+	const GLuint inputTextureNormal = parameters.pop().asUInt;
+	const GLuint inputTextureDepth = parameters.pop().asUInt;
 
 	commandBuffer.BeginRenderPass(m_renderPass, m_framebuffer, ivec2(0, 0), ivec2(m_rendering.GetWidth(), m_rendering.GetHeight()), vec4(0.0f, 0.0f, 0.0f, 0.0f));
 
-	if (parameters.size() == 3)
+	if (inputTextureAO != 0)
 	{
 		commandBuffer.Bind(m_pipelineAmbientLight);
 
@@ -227,6 +209,24 @@ bool RenderLightsToAccumBuffer::render(const RenderGraph::Parameters & parameter
 	// TODO : render all lights
 
 	commandBuffer.EndRenderPass();
+
+	{
+		GLint texture = 0;
+		glGetFramebufferAttachmentParameteriv(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME, &texture);
+
+		RenderGraph::Value v;
+		v.asUInt = texture;
+		parameters.push(v);
+	}
+
+	{
+		GLint texture = 0;
+		glGetFramebufferAttachmentParameteriv(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME, &texture);
+
+		RenderGraph::Value v;
+		v.asUInt = texture;
+		parameters.push(v);
+	}
 
 	return(true);
 }

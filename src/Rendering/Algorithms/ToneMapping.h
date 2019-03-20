@@ -12,13 +12,13 @@ public:
 	explicit		ToneMapping		(void);
 	virtual			~ToneMapping	(void) override;
 
-	static RenderGraph::Pass * Create();
+	static RenderGraph::Operation * Create();
 
 	//
 	// override GraphicsAlgorithm
 	virtual bool	init			(void) override;
 	virtual void	release			(void) override;
-	virtual bool	render			(const RenderGraph::Parameters & parameters, RHI::CommandBuffer & commandBuffer) override;
+	virtual bool	render			(RenderGraph::Parameters & parameters, RHI::CommandBuffer & commandBuffer) override;
 
 private:
 

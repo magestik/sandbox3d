@@ -21,13 +21,11 @@ SobelFilter::~SobelFilter(void)
 
 /**
  * @brief SobelFilter::Create
- * @param rendering
- * @param framebuffer
  * @return
  */
-RenderGraph::Pass * SobelFilter::Create()
+RenderGraph::Operation * SobelFilter::Create()
 {
-	return(new SobelFilter());
+	return new SobelFilter();
 }
 
 /**
@@ -103,19 +101,18 @@ void SobelFilter::release(void)
  * @param commandBuffer
  * @return
  */
-bool SobelFilter::render(const RenderGraph::Parameters & parameters, RHI::CommandBuffer & commandBuffer)
+bool SobelFilter::render(RenderGraph::Parameters & parameters, RHI::CommandBuffer & commandBuffer)
 {
 	rmt_ScopedOpenGLSample(SobelFilter);
 
-	if (parameters.size() != 1)
+	if (parameters.size() < 1)
 	{
 		glClearColor(0.0f, 1.0f, 0.0f, 0.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 		return false;
 	}
 
-	assert(parameters[0].first == 0);
-	const GLuint inputTexture = parameters[0].second.asUInt;
+	const GLuint inputTexture = parameters.pop().asUInt;
 
 	commandBuffer.BeginRenderPass(m_renderPass, m_framebuffer, ivec2(0, 0), ivec2(m_rendering.GetWidth(), m_rendering.GetHeight()));
 	{
@@ -126,6 +123,15 @@ bool SobelFilter::render(const RenderGraph::Parameters & parameters, RHI::Comman
 		m_rendering.m_pQuadMesh->draw(commandBuffer);
 	}
 	commandBuffer.EndRenderPass();
+
+	{
+		GLint texture = 0;
+		glGetFramebufferAttachmentParameteriv(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME, &texture);
+
+		RenderGraph::Value v;
+		v.asUInt = texture;
+		parameters.push(v);
+	}
 
 	return(true);
 }

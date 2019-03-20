@@ -21,13 +21,11 @@ BlurH::~BlurH(void)
 
 /**
  * @brief BlurH::Create
- * @param rendering
- * @param framebuffer
  * @return
  */
-RenderGraph::Pass * BlurH::Create()
+RenderGraph::Operation * BlurH::Create()
 {
-	return(new BlurH());
+	return new BlurH();
 }
 
 /**
@@ -103,19 +101,18 @@ void BlurH::release(void)
  * @param commandBuffer
  * @return
  */
-bool BlurH::render(const RenderGraph::Parameters & parameters, RHI::CommandBuffer & commandBuffer)
+bool BlurH::render(RenderGraph::Parameters & parameters, RHI::CommandBuffer & commandBuffer)
 {
 	rmt_ScopedOpenGLSample(BlurH);
 
-	if (parameters.size() != 1)
+	if (parameters.size() < 1)
 	{
 		glClearColor(0.0f, 1.0f, 0.0f, 0.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 		return false;
 	}
 
-	assert(parameters[0].first == 0);
-	const GLuint inputTexture = parameters[0].second.asUInt;
+	const GLuint inputTexture = parameters.pop().asUInt;
 
 	ivec2 viewport(m_rendering.GetWidth(), m_rendering.GetHeight()); // FIXME : m_pTexture H/W
 
@@ -129,6 +126,15 @@ bool BlurH::render(const RenderGraph::Parameters & parameters, RHI::CommandBuffe
 
 	}
 	commandBuffer.EndRenderPass();
+
+	{
+		GLint texture = 0;
+		glGetFramebufferAttachmentParameteriv(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME, &texture);
+
+		RenderGraph::Value v;
+		v.asUInt = texture;
+		parameters.push(v);
+	}
 
 	return(true);
 }

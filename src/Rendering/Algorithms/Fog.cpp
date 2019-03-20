@@ -26,13 +26,11 @@ Fog::~Fog(void)
 
 /**
  * @brief Fog::Create
- * @param rendering
- * @param framebuffer
  * @return
  */
-RenderGraph::Pass * Fog::Create()
+RenderGraph::Operation * Fog::Create()
 {
-	return(new Fog());
+	return new Fog();
 }
 
 /**
@@ -113,19 +111,18 @@ void Fog::release(void)
  * @param commandBuffer
  * @return
  */
-bool Fog::render(const RenderGraph::Parameters & parameters, RHI::CommandBuffer & commandBuffer)
+bool Fog::render(RenderGraph::Parameters & parameters, RHI::CommandBuffer & commandBuffer)
 {
 	rmt_ScopedOpenGLSample(Fog);
 
-	if (parameters.size() != 1)
+	if (parameters.size() < 1)
 	{
 		glClearColor(0.0f, 1.0f, 0.0f, 0.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 		return false;
 	}
 
-	assert(parameters[0].first == 0);
-	const GLuint inputTexture = parameters[0].second.asUInt;
+	const GLuint inputTexture = parameters.pop().asUInt;
 
 	commandBuffer.BeginRenderPass(m_renderPass, m_framebuffer, ivec2(0, 0), ivec2(m_rendering.GetWidth(), m_rendering.GetHeight()));
 
@@ -145,6 +142,15 @@ bool Fog::render(const RenderGraph::Parameters & parameters, RHI::CommandBuffer 
 	}
 
 	commandBuffer.EndRenderPass();
+
+	{
+		GLint texture = 0;
+		glGetFramebufferAttachmentParameteriv(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME, &texture);
+
+		RenderGraph::Value v;
+		v.asUInt = texture;
+		parameters.push(v);
+	}
 
 	return(true);
 }

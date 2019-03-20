@@ -37,13 +37,11 @@ Compose::~Compose(void)
 
 /**
  * @brief Compose::Create
- * @param rendering
- * @param framebuffer
  * @return
  */
-RenderGraph::Pass * Compose::Create()
+RenderGraph::Operation * Compose::Create()
 {
-	return(new Compose());
+	return new Compose();
 }
 
 /**
@@ -196,36 +194,20 @@ void Compose::release(void)
  * @param commandBuffer
  * @return
  */
-bool Compose::render(const RenderGraph::Parameters & parameters, RHI::CommandBuffer & commandBuffer)
+bool Compose::render(RenderGraph::Parameters & parameters, RHI::CommandBuffer & commandBuffer)
 {
 	rmt_ScopedOpenGLSample(Compose);
 
-	if (parameters.size() != 3)
+	if (parameters.size() < 3)
 	{
 		glClearColor(0.0f, 1.0f, 0.0f, 0.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 		return false;
 	}
 
-	GLuint inputTextureDepth = 0;
-	GLuint inputTextureDiffuse = 0;
-	GLuint inputTextureSpecular = 0;
-
-	for (auto & parameter : parameters)
-	{
-		if (parameter.first == 0)
-		{
-			inputTextureDepth = parameter.second.asUInt;
-		}
-		else if (parameter.first == 1)
-		{
-			inputTextureDiffuse = parameter.second.asUInt;
-		}
-		else if (parameter.first == 2)
-		{
-			inputTextureSpecular = parameter.second.asUInt;
-		}
-	}
+	const GLuint inputTextureSpecular = parameters.pop().asUInt;
+	const GLuint inputTextureDiffuse = parameters.pop().asUInt;
+	const GLuint inputTextureDepth = parameters.pop().asUInt;
 
 	GLint drawFboId = 0;
 	glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &drawFboId);
@@ -489,6 +471,15 @@ bool Compose::render(const RenderGraph::Parameters & parameters, RHI::CommandBuf
 		GLenum status = glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER);
 
 		assert(GL_FRAMEBUFFER_COMPLETE == status);
+	}
+
+	{
+		GLint texture = 0;
+		glGetFramebufferAttachmentParameteriv(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME, &texture);
+
+		RenderGraph::Value v;
+		v.asUInt = texture;
+		parameters.push(v);
 	}
 
 	return(true);

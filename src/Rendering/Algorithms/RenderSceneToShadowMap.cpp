@@ -24,13 +24,11 @@ RenderSceneToShadowMap::~RenderSceneToShadowMap(void)
 
 /**
  * @brief RenderSceneToShadowMap::Create
- * @param rendering
- * @param framebuffer
  * @return
  */
-RenderGraph::Pass * RenderSceneToShadowMap::Create()
+RenderGraph::Operation * RenderSceneToShadowMap::Create()
 {
-	return(new RenderSceneToShadowMap());
+	return new RenderSceneToShadowMap();
 }
 
 /**
@@ -103,7 +101,7 @@ void RenderSceneToShadowMap::release(void)
  * @param commandBuffer
  * @return
  */
-bool RenderSceneToShadowMap::render(const RenderGraph::Parameters & parameters, RHI::CommandBuffer & commandBuffer)
+bool RenderSceneToShadowMap::render(RenderGraph::Parameters & parameters, RHI::CommandBuffer & commandBuffer)
 {
 	rmt_ScopedOpenGLSample(RenderSceneToShadowMap);
 
@@ -137,6 +135,15 @@ bool RenderSceneToShadowMap::render(const RenderGraph::Parameters & parameters, 
 		}
 	}
 	commandBuffer.EndRenderPass();
+
+	{
+		GLint texture = 0;
+		glGetFramebufferAttachmentParameteriv(GL_DRAW_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME, &texture);
+
+		RenderGraph::Value v;
+		v.asUInt = texture;
+		parameters.push(v);
+	}
 
 	return(true);
 }

@@ -25,11 +25,11 @@ public:
 	virtual bool init(void) override = 0;
 	virtual void release(void) override = 0;
 
-	virtual bool render(const RenderGraph::Parameters & parameters) override;
+	virtual bool render(RenderGraph::Parameters & parameters) override;
 
 protected:
 
-	virtual bool render(const RenderGraph::Parameters & parameters, RHI::CommandBuffer & commandBuffer) = 0;
+	virtual bool render(RenderGraph::Parameters & parameters, RHI::CommandBuffer & commandBuffer) = 0;
 
 protected:
 

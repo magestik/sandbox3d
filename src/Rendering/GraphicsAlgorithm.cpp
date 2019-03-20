@@ -41,15 +41,15 @@ GraphicsAlgorithm::~GraphicsAlgorithm()
  * @param parameters
  * @return
  */
-bool GraphicsAlgorithm::render(const RenderGraph::Parameters & parameters)
+bool GraphicsAlgorithm::render(RenderGraph::Parameters & parameters)
 {
 	RHI::CommandBuffer commandBuffer;
 
 	commandBuffer.Begin();
 
-	render(parameters, commandBuffer);
+	bool success = render(parameters, commandBuffer);
 
 	commandBuffer.End();
 
-	return true;
+	return success;
 }

@@ -23,13 +23,11 @@ SSAO::~SSAO(void)
 
 /**
  * @brief SSAO::Create
- * @param rendering
- * @param framebuffer
  * @return
  */
-RenderGraph::Pass * SSAO::Create()
+RenderGraph::Operation * SSAO::Create()
 {
-	return(new SSAO());
+	return new SSAO();
 }
 
 /**
@@ -152,35 +150,26 @@ void SSAO::release(void)
  * @param commandBuffer
  * @return
  */
-bool SSAO::render(const RenderGraph::Parameters & parameters, RHI::CommandBuffer & commandBuffer)
+bool SSAO::render(RenderGraph::Parameters & parameters, RHI::CommandBuffer & commandBuffer)
 {
 	rmt_ScopedOpenGLSample(SSAO);
 
-	if (parameters.size() < 2)
+	if (parameters.size() < 3)
 	{
 		glClearColor(0.0f, 1.0f, 0.0f, 0.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 		return false;
 	}
 
-	GLuint inputTextureDepth = 0;
-	GLuint inputTextureNormal = 0;
-	float radius = 0.5f;
+	const float radius = parameters.pop().asFloat;
+	const GLuint inputTextureNormal = parameters.pop().asUInt;
+	const GLuint inputTextureDepth = parameters.pop().asUInt;
 
-	for (auto & parameter : parameters)
+	if (inputTextureDepth == 0 || inputTextureNormal == 0)
 	{
-		if (parameter.first == 0)
-		{
-			inputTextureDepth = parameter.second.asUInt;
-		}
-		else if (parameter.first == 1)
-		{
-			inputTextureNormal = parameter.second.asUInt;
-		}
-		else if (parameter.first == 2)
-		{
-			radius = parameter.second.asFloat;
-		}
+		glClearColor(0.0f, 1.0f, 0.0f, 0.0f);
+		glClear(GL_COLOR_BUFFER_BIT);
+		return false;
 	}
 
 	commandBuffer.BeginRenderPass(m_renderPass, m_framebuffer, ivec2(0, 0), ivec2(m_rendering.GetWidth(), m_rendering.GetHeight()));
@@ -199,6 +188,15 @@ bool SSAO::render(const RenderGraph::Parameters & parameters, RHI::CommandBuffer
 		m_rendering.m_pQuadMesh->draw(commandBuffer);
 	}
 	commandBuffer.EndRenderPass();
+
+	{
+		GLint texture = 0;
+		glGetFramebufferAttachmentParameteriv(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME, &texture);
+
+		RenderGraph::Value v;
+		v.asUInt = texture;
+		parameters.push(v);
+	}
 
 	return(true);
 }

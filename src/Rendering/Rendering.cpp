@@ -25,6 +25,7 @@
 #include "Algorithms/BlurV.h"
 #include "Algorithms/Bloom.h"
 #include "Algorithms/SSAO.h"
+#include "Algorithms/SSAO_kernel.h"
 #include "Algorithms/SobelFilter.h"
 #include "Algorithms/CelShading.h"
 
@@ -78,22 +79,22 @@ Rendering::Rendering(Scene & scene, RenderGraph::Factory & factory)
 , m_depthClipSpace(NEGATIVE_ONE_TO_ONE)
 , m_scene(scene)
 {
-	factory.registerPass("depth-only", RenderDepthOnly::Create);
-	factory.registerPass("geometry", RenderSceneToGBuffer::Create);
-	factory.registerPass("lights", RenderLightsToAccumBuffer::Create);
-	factory.registerPass("shadowmap-directional", RenderSceneToShadowMap::Create);
+	factory.registerOperation("depth-only", RenderDepthOnly::Create);
+	factory.registerOperation("geometry", RenderSceneToGBuffer::Create);
+	factory.registerOperation("lights", RenderLightsToAccumBuffer::Create);
+	factory.registerOperation("shadowmap-directional", RenderSceneToShadowMap::Create);
 
-	factory.registerPass("bloom", Bloom::Create);
-	factory.registerPass("BlurH", BlurH::Create);
-	factory.registerPass("BlurV", BlurV::Create);
-	factory.registerPass("bright", BrightFilter::Create);
-	factory.registerPass("lighting", Compose::Create);
-	factory.registerPass("fog", Fog::Create);
-	factory.registerPass("FXAA", FXAA::Create);
-	factory.registerPass("SSAO", SSAO::Create);
-	factory.registerPass("sobel", SobelFilter::Create);
-	factory.registerPass("tone-mapping", ToneMapping::Create);
-	factory.registerPass("cel-shading", CelShading::Create);
+	factory.registerOperation("bloom", Bloom::Create);
+	factory.registerOperation("BlurH", BlurH::Create);
+	factory.registerOperation("BlurV", BlurV::Create);
+	factory.registerOperation("bright", BrightFilter::Create);
+	factory.registerOperation("lighting", Compose::Create);
+	factory.registerOperation("fog", Fog::Create);
+	factory.registerOperation("FXAA", FXAA::Create);
+	factory.registerOperation("SSAO", SSAO::Create);
+	factory.registerOperation("sobel", SobelFilter::Create);
+	factory.registerOperation("tone-mapping", ToneMapping::Create);
+	factory.registerOperation("cel-shading", CelShading::Create);
 
 	m_scene.registerListener(this);
 	m_scene.getResourceManager().registerListener(this);

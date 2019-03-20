@@ -29,13 +29,11 @@ RenderSceneToGBuffer::~RenderSceneToGBuffer(void)
 
 /**
  * @brief RenderSceneToGBuffer::Create
- * @param rendering
- * @param framebuffer
  * @return
  */
-RenderGraph::Pass * RenderSceneToGBuffer::Create()
+RenderGraph::Operation * RenderSceneToGBuffer::Create()
 {
-	return(new RenderSceneToGBuffer());
+	return new RenderSceneToGBuffer();
 }
 
 /**
@@ -131,7 +129,7 @@ void RenderSceneToGBuffer::release(void)
  * @param commandBuffer
  * @return
  */
-bool RenderSceneToGBuffer::render(const RenderGraph::Parameters & parameters, RHI::CommandBuffer & commandBuffer)
+bool RenderSceneToGBuffer::render(RenderGraph::Parameters & parameters, RHI::CommandBuffer & commandBuffer)
 {
 	rmt_ScopedOpenGLSample(RenderSceneToGBuffer);
 
@@ -213,6 +211,24 @@ bool RenderSceneToGBuffer::render(const RenderGraph::Parameters & parameters, RH
 	}
 
 	commandBuffer.EndRenderPass();
+
+	{
+		GLint texture = 0;
+		glGetFramebufferAttachmentParameteriv(GL_DRAW_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME, &texture);
+
+		RenderGraph::Value v;
+		v.asUInt = texture;
+		parameters.push(v);
+	}
+
+	{
+		GLint texture = 0;
+		glGetFramebufferAttachmentParameteriv(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME, &texture);
+
+		RenderGraph::Value v;
+		v.asUInt = texture;
+		parameters.push(v);
+	}
 
 	return(true);
 }

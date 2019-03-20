@@ -21,13 +21,11 @@ CelShading::~CelShading(void)
 
 /**
  * @brief CelShading::Create
- * @param rendering
- * @param framebuffer
  * @return
  */
-RenderGraph::Pass * CelShading::Create()
+RenderGraph::Operation * CelShading::Create()
 {
-	return(new CelShading());
+	return new CelShading();
 }
 
 /**
@@ -103,31 +101,19 @@ void CelShading::release(void)
  * @param commandBuffer
  * @return
  */
-bool CelShading::render(const RenderGraph::Parameters & parameters, RHI::CommandBuffer & commandBuffer)
+bool CelShading::render(RenderGraph::Parameters & parameters, RHI::CommandBuffer & commandBuffer)
 {
 	rmt_ScopedOpenGLSample(CelShading);
 
-	if (parameters.size() != 2)
+	if (parameters.size() < 2)
 	{
 		glClearColor(0.0f, 1.0f, 0.0f, 0.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 		return false;
 	}
 
-	GLuint inputTextureEdge = 0;
-	GLuint inputTextureColor = 0;
-
-	for (auto & parameter : parameters)
-	{
-		if (parameter.first == 0)
-		{
-			inputTextureEdge = parameter.second.asUInt;
-		}
-		else if (parameter.first == 1)
-		{
-			inputTextureColor = parameter.second.asUInt;
-		}
-	}
+	const GLuint inputTextureColor = parameters.pop().asUInt;
+	const GLuint inputTextureEdge = parameters.pop().asUInt;
 
 	commandBuffer.BeginRenderPass(m_renderPass, m_framebuffer, ivec2(0, 0), ivec2(m_rendering.GetWidth(), m_rendering.GetHeight()));
 	{
@@ -140,6 +126,15 @@ bool CelShading::render(const RenderGraph::Parameters & parameters, RHI::Command
 		m_rendering.m_pQuadMesh->draw(commandBuffer);
 	}
 	commandBuffer.EndRenderPass();
+
+	{
+		GLint texture = 0;
+		glGetFramebufferAttachmentParameteriv(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME, &texture);
+
+		RenderGraph::Value v;
+		v.asUInt = texture;
+		parameters.push(v);
+	}
 
 	return(true);
 }

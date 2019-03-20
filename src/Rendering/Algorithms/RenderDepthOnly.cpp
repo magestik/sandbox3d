@@ -26,13 +26,11 @@ RenderDepthOnly::~RenderDepthOnly(void)
 
 /**
  * @brief RenderDepthOnly::Create
- * @param rendering
- * @param framebuffer
  * @return
  */
-RenderGraph::Pass * RenderDepthOnly::Create()
+RenderGraph::Operation * RenderDepthOnly::Create()
 {
-	return(new RenderDepthOnly());
+	return new RenderDepthOnly();
 }
 
 /**
@@ -107,7 +105,7 @@ void RenderDepthOnly::release(void)
  * @param commandBuffer
  * @return
  */
-bool RenderDepthOnly::render(const RenderGraph::Parameters & parameters, RHI::CommandBuffer & commandBuffer)
+bool RenderDepthOnly::render(RenderGraph::Parameters & parameters, RHI::CommandBuffer & commandBuffer)
 {
 	rmt_ScopedOpenGLSample(RenderDepthOnly);
 
@@ -141,6 +139,15 @@ bool RenderDepthOnly::render(const RenderGraph::Parameters & parameters, RHI::Co
 	}
 
 	commandBuffer.EndRenderPass();
+
+	{
+		GLint texture = 0;
+		glGetFramebufferAttachmentParameteriv(GL_DRAW_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME, &texture);
+
+		RenderGraph::Value v;
+		v.asUInt = texture;
+		parameters.push(v);
+	}
 
 	return(true);
 }
